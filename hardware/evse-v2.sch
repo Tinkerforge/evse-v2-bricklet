@@ -2092,10 +2092,10 @@ U 1 1 6105EE2E
 P 1200 7350
 F 0 "P106" H 1278 7391 50  0000 L CNN
 F 1 "Power" H 1278 7300 50  0000 L CNN
-F 2 "kicad-libraries:JST-PH-3-THT2" H 1200 7350 50  0001 C CNN
+F 2 "kicad-libraries:JST-PH-3-THT" H 1200 7350 50  0001 C CNN
 F 3 "" H 1200 7350 50  0000 C CNN
 	1    1200 7350
-	1    0    0    -1  
+	1    0    0    1   
 $EndComp
 Wire Wire Line
 	850  7450 1000 7450

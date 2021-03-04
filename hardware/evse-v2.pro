@@ -1,4 +1,4 @@
-update=Wed Mar  3 12:56:41 2021
+update=Do 04 Mär 2021 09:08:35 CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -29,7 +29,7 @@ ERC_TestSimilarLabels=1
 [pcbnew]
 version=1
 PageLayoutDescrFile=
-LastNetListRead=evse.net
+LastNetListRead=evse-v2.net
 CopperLayerCount=4
 BoardThickness=1.6
 AllowMicroVias=0
@@ -84,7 +84,7 @@ OthersTextUpright=1
 SolderMaskClearance=0
 SolderMaskMinWidth=0
 SolderPasteClearance=0
-SolderPasteRatio=-0
+SolderPasteRatio=0
 [pcbnew/Layer.F.Cu]
 Name=F.Cu
 Type=0
