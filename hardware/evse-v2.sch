@@ -1108,7 +1108,7 @@ Connection ~ 4200 6200
 Wire Wire Line
 	3250 6200 3450 6200
 Text Notes 3250 5950 0    39   ~ 0
-12V->3.3V
+5V->3.3V
 $Comp
 L tinkerforge:TPS709 U110
 U 1 1 5F846350
@@ -2842,7 +2842,7 @@ Wire Wire Line
 	5250 5100 5100 5100
 NoConn ~ 5250 5850
 Text Notes 5200 10800 1    39   ~ 0
-OZCJ0016FF2E
+0ZCJ0016FF2E
 Wire Wire Line
 	1100 1400 750  1400
 Wire Wire Line
@@ -4219,4 +4219,6 @@ MOTOR_ENABLE
 Wire Wire Line
 	5150 4900 5250 4900
 NoConn ~ 5250 4800
+Text Notes 3800 6750 0    39   ~ 0
+Ersatz  TPS70933QDBVRQ1
 $EndSCHEMATC
