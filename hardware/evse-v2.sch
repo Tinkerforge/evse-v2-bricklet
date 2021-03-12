@@ -4037,7 +4037,7 @@ Text GLabel 5100 6250 0    39   Input ~ 0
 DC-X6
 Text GLabel 5100 6350 0    39   Input ~ 0
 DC-X30
-Text GLabel 2300 6650 2    39   Output ~ 0
+Text GLabel 1800 6550 2    39   Output ~ 0
 DC-PWM
 Text GLabel 1900 3300 0    39   Input ~ 0
 DC-PWM
@@ -4099,39 +4099,17 @@ $Comp
 L tinkerforge:R R140
 U 1 1 666CEBC4
 P 2000 6650
-F 0 "R140" V 1900 6650 50  0000 C CNN
-F 1 "100" V 2000 6650 50  0000 C CNN
+F 0 "R140" V 2100 6650 50  0000 C CNN
+F 1 "1k" V 2000 6650 50  0000 C CNN
 F 2 "kicad-libraries:R0603F" H 2000 6650 60  0001 C CNN
 F 3 "" H 2000 6650 60  0000 C CNN
 	1    2000 6650
-	0    -1   1    0   
-$EndComp
-$Comp
-L tinkerforge:3V3 #PWR0199
-U 1 1 666CF941
-P 1150 6650
-F 0 "#PWR0199" H 1150 6750 40  0001 C CNN
-F 1 "3V3" H 1150 6775 40  0000 C CNN
-F 2 "" H 1150 6650 60  0000 C CNN
-F 3 "" H 1150 6650 60  0000 C CNN
-	1    1150 6650
 	0    -1   1    0   
 $EndComp
 Wire Wire Line
 	2250 6650 2300 6650
 Wire Wire Line
 	1750 6650 1700 6650
-Wire Wire Line
-	1150 6450 1250 6450
-Wire Wire Line
-	1250 6450 1250 6550
-Wire Wire Line
-	1250 6550 1750 6550
-Wire Wire Line
-	1750 6550 1750 6650
-Connection ~ 1750 6650
-Wire Wire Line
-	1150 6650 1200 6650
 $Comp
 L tinkerforge:C C111
 U 1 1 667DA1BE
@@ -4221,4 +4199,26 @@ Wire Wire Line
 NoConn ~ 5250 4800
 Text Notes 3800 6750 0    39   ~ 0
 Ersatz  TPS70933QDBVRQ1
+$Comp
+L tinkerforge:GND #PWR?
+U 1 1 6055B7E7
+P 2300 6650
+F 0 "#PWR?" H 2300 6650 30  0001 C CNN
+F 1 "GND" H 2300 6580 30  0001 C CNN
+F 2 "" H 2300 6650 60  0000 C CNN
+F 3 "" H 2300 6650 60  0000 C CNN
+	1    2300 6650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1200 6650 1150 6650
+Wire Wire Line
+	1150 6650 1150 6450
+Wire Wire Line
+	1700 6550 1700 6650
+Connection ~ 1700 6650
+Wire Wire Line
+	1700 6550 1800 6550
+Text Notes 1200 6600 0    39   ~ 0
+5V PWM
 $EndSCHEMATC
