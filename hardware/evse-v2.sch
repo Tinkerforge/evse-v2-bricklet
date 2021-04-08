@@ -2026,12 +2026,12 @@ $EndComp
 $Comp
 L tinkerforge:5V #PWR0190
 U 1 1 60FFD4E6
-P 4500 1200
-F 0 "#PWR0190" H 4500 1300 40  0001 C CNN
-F 1 "5V" H 4509 1356 40  0000 C CNN
-F 2 "" H 4500 1200 60  0000 C CNN
-F 3 "" H 4500 1200 60  0000 C CNN
-	1    4500 1200
+P 3600 1150
+F 0 "#PWR0190" H 3600 1250 40  0001 C CNN
+F 1 "5V" H 3609 1306 40  0000 C CNN
+F 2 "" H 3600 1150 60  0000 C CNN
+F 3 "" H 3600 1150 60  0000 C CNN
+	1    3600 1150
 	-1   0    0    -1  
 $EndComp
 $Comp
@@ -2048,11 +2048,11 @@ $EndComp
 Wire Wire Line
 	5300 1350 5050 1350
 Wire Wire Line
-	4500 1200 4500 1350
+	4000 -450 4000 -300
 Wire Wire Line
-	4500 1350 4850 1350
-Text Notes 4450 1350 2    39   ~ 0
-5V Power Resupply
+	4000 -300 4350 -300
+Text Notes 4700 1050 2    39   ~ 0
+Ideal Diode 5V Power Resupply
 $Comp
 L tinkerforge:5V #PWR0191
 U 1 1 610555F0
@@ -4155,4 +4155,105 @@ F 3 "" H 2100 6400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 2100 6200
+$Comp
+L tinkerforge:MOSFET_P_CH Q?
+U 1 1 60CA079A
+P 4000 1450
+F 0 "Q?" V 4328 1450 50  0000 C CNN
+F 1 "SSM3J355R,LF" V 4237 1450 50  0000 C CNN
+F 2 "kicad-libraries:SOT23GDS" H 4200 1550 50  0001 C CNN
+F 3 "" H 4000 1450 50  0000 C CNN
+	1    4000 1450
+	0    1    -1   0   
+$EndComp
+$Comp
+L tinkerforge:DMMT5401 U?
+U 1 1 60CACE56
+P 4000 1850
+F 0 "U?" H 3700 1950 39  0000 L CNN
+F 1 "DMMT5401" H 3450 1850 39  0000 L CNN
+F 2 "kicad-libraries:SOT26" H 4000 1850 39  0001 C CNN
+F 3 "" H 4000 1850 39  0001 C CNN
+	1    4000 1850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4200 1350 4200 1600
+Wire Wire Line
+	4200 1600 4150 1600
+Wire Wire Line
+	3850 1600 3800 1600
+Wire Wire Line
+	3800 1600 3800 1350
+$Comp
+L tinkerforge:R R?
+U 1 1 60D4761B
+P 3850 2300
+F 0 "R?" V 3930 2300 50  0000 C CNN
+F 1 "47k" V 3850 2300 50  0000 C CNN
+F 2 "kicad-libraries:R0603F" H 3850 2300 60  0001 C CNN
+F 3 "" H 3850 2300 60  0000 C CNN
+	1    3850 2300
+	-1   0    0    1   
+$EndComp
+$Comp
+L tinkerforge:R R?
+U 1 1 60D50A9F
+P 4150 2300
+F 0 "R?" V 4230 2300 50  0000 C CNN
+F 1 "10k" V 4150 2300 50  0000 C CNN
+F 2 "kicad-libraries:R0603F" H 4150 2300 60  0001 C CNN
+F 3 "" H 4150 2300 60  0000 C CNN
+	1    4150 2300
+	-1   0    0    1   
+$EndComp
+$Comp
+L tinkerforge:GND #PWR?
+U 1 1 60D5203D
+P 3850 2600
+F 0 "#PWR?" H 3850 2600 30  0001 C CNN
+F 1 "GND" H 3850 2530 30  0001 C CNN
+F 2 "" H 3850 2600 60  0000 C CNN
+F 3 "" H 3850 2600 60  0000 C CNN
+	1    3850 2600
+	-1   0    0    -1  
+$EndComp
+$Comp
+L tinkerforge:GND #PWR?
+U 1 1 60D5280D
+P 4150 2600
+F 0 "#PWR?" H 4150 2600 30  0001 C CNN
+F 1 "GND" H 4150 2530 30  0001 C CNN
+F 2 "" H 4150 2600 60  0000 C CNN
+F 3 "" H 4150 2600 60  0000 C CNN
+	1    4150 2600
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	3850 2600 3850 2550
+Wire Wire Line
+	3850 2050 3850 2000
+Wire Wire Line
+	3850 2050 4000 2050
+Connection ~ 3850 2050
+Wire Wire Line
+	3950 2000 4050 2000
+Wire Wire Line
+	4050 2000 4150 2000
+Connection ~ 4050 2000
+Wire Wire Line
+	4150 2050 4150 2000
+Connection ~ 4150 2000
+Wire Wire Line
+	4150 2600 4150 2550
+Wire Wire Line
+	4000 2050 4000 1650
+Wire Wire Line
+	4850 1350 4200 1350
+Connection ~ 4200 1350
+Wire Wire Line
+	3800 1350 3600 1350
+Wire Wire Line
+	3600 1350 3600 1150
+Connection ~ 3800 1350
 $EndSCHEMATC
