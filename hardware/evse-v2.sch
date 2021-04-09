@@ -4256,4 +4256,31 @@ Wire Wire Line
 Wire Wire Line
 	3600 1350 3600 1150
 Connection ~ 3800 1350
+$Comp
+L tinkerforge:R R141
+U 1 1 60756E90
+P 15350 2750
+F 0 "R141" V 15430 2750 50  0000 C CNN
+F 1 "2k" V 15350 2750 50  0000 C CNN
+F 2 "kicad-libraries:R0603F" H 15350 2750 60  0001 C CNN
+F 3 "" H 15350 2750 60  0000 C CNN
+	1    15350 2750
+	-1   0    0    1   
+$EndComp
+Connection ~ 15350 2500
+$Comp
+L tinkerforge:GND #PWR0199
+U 1 1 60767024
+P 15350 3200
+F 0 "#PWR0199" H 15350 3200 30  0001 C CNN
+F 1 "GND" H 15350 3130 30  0001 C CNN
+F 2 "" H 15350 3200 60  0000 C CNN
+F 3 "" H 15350 3200 60  0000 C CNN
+	1    15350 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	15350 3200 15350 3000
+Text Notes 14550 3500 0    39   ~ 0
+Rpp =  (VPP*1k*2k)/(5V*2k-VPP*(1k+2k))
 $EndSCHEMATC
