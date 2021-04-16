@@ -29,7 +29,8 @@ typedef enum {
     DC_FAULT_NORMAL_CONDITION = 0,
     DC_FAULT_6MA,
     DC_FAULT_SYSTEM,
-    DC_FAULT_UNKOWN
+    DC_FAULT_UNKOWN,
+    DC_FAULT_CALIBRATION
 } DCFaultState;
 
 typedef struct {
@@ -44,6 +45,7 @@ typedef struct {
     bool     calibration_running;
     uint8_t  calibration_state;
     uint32_t calibration_time;
+    bool     calibration_check[3];
 } DCFault;
 
 extern DCFault dc_fault;

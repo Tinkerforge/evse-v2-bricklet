@@ -26,7 +26,7 @@
 
 #define DC_FAULT_X6_PIN     P4_4
 #define DC_FAULT_X30_PIN    P4_5
-#define DC_FAULT_ERR_PIN    P0_4
+#define DC_FAULT_ERR_PIN    P0_3
 #define DC_FAULT_TST_PIN    P0_8
 
 #endif
