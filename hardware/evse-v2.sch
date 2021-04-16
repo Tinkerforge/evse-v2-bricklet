@@ -995,13 +995,13 @@ Wire Wire Line
 Wire Wire Line
 	5300 7250 5350 7250
 Text GLabel 5500 7350 2    39   Output ~ 0
-AC1
+AC2
 Text GLabel 5500 7450 2    39   Output ~ 0
-AC2
-Text GLabel 5150 4700 0    39   Input ~ 0
 AC1
-Text GLabel 5150 4600 0    39   Input ~ 0
+Text GLabel 5150 4700 0    39   Input ~ 0
 AC2
+Text GLabel 5150 4600 0    39   Input ~ 0
+AC1
 Wire Wire Line
 	5300 7350 5500 7350
 Wire Wire Line
@@ -4269,10 +4269,10 @@ Wire Wire Line
 Text Notes 14550 3500 0    39   ~ 0
 Rpp =  (VPP*1k*2k)/(5V*2k-VPP*(1k+2k))
 $Comp
-L tinkerforge:3V3 #PWR?
+L tinkerforge:3V3 #PWR0161
 U 1 1 6080D189
 P 10850 9000
-F 0 "#PWR?" H 10850 9100 40  0001 C CNN
+F 0 "#PWR0161" H 10850 9100 40  0001 C CNN
 F 1 "3V3" H 10850 9125 40  0000 C CNN
 F 2 "" H 10850 9000 60  0000 C CNN
 F 3 "" H 10850 9000 60  0000 C CNN
