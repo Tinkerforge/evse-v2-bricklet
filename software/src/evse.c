@@ -90,13 +90,13 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 	// not completely closed, we start the locking procedure and return.
 	// The contactor will only be enabled after the lock is closed.
 	if(contactor) {
-		if(lock_get_state() != LOCK_STATE_CLOSE) {
+		/*if(lock_get_state() != LOCK_STATE_CLOSE) {
 			lock_set_locked(true);
 			return;
-		}
+		}*/
 	}
 
-	if(((bool)XMC_GPIO_GetInput(EVSE_RELAY_PIN)) != contactor) {
+	if(((bool)!XMC_GPIO_GetInput(EVSE_RELAY_PIN)) != contactor) {
 		// Ignore all ADC measurements for a while if the contactor is
 		// switched on or off, to be sure that the resulting EMI spike does
 		// not give us a wrong measurement.
@@ -106,9 +106,9 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
 		if(contactor) {
-			XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
-		} else {
 			XMC_GPIO_SetOutputLow(EVSE_RELAY_PIN);
+		} else {
+			XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
 		}
 	}
 

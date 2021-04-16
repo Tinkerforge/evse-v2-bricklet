@@ -72,7 +72,7 @@ void contactor_check_tick(void) {
 
 			contactor_check.state = ac1_live | (ac2_live << 1);
 
-			if(XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+			if(!XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
 				// If contact is switched on, we expect to have 230V AC on both sides of it
 				switch(contactor_check.state) {
 					case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE: contactor_check.error = 1; break;

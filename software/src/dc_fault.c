@@ -167,7 +167,7 @@ void dc_fault_tick(void) {
 		return;
 	}
 
-	if(dc_fault.calibration_start && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && !XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+	if(dc_fault.calibration_start && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
 		dc_fault.calibration_running  = true;
 		dc_fault_calibration_reset();
 		return;
@@ -192,7 +192,7 @@ void dc_fault_tick(void) {
 		// Contactor is normally only controlled in the iec61851 tick, 
 		// but in case of dc fault condition we turn the contactor off
 		// no matter what state we are in or similar.
-		XMC_GPIO_SetOutputLow(EVSE_RELAY_PIN);
+		XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
 		iec61851.state = IEC61851_STATE_EF;
 	}
 }
