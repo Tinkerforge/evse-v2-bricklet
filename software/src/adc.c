@@ -250,6 +250,12 @@ void adc_init(void) {
 	adc_init_adc();
 }
 
+void adc_ignore_results(const uint8_t count) {
+	for(uint8_t i = 0; i < ADC_NUM; i++) {
+		adc[i].ignore_count = MAX(adc[i].ignore_count, count);
+	}
+}
+
 void adc_enable_all(const bool all) {
 	if(all) { // If PWM is off we evaluate all ADC channels
 		for(uint8_t i = 0; i < ADC_NUM; i++) {
@@ -273,6 +279,7 @@ void adc_check_result(const uint8_t i) {
 	}
 }
 
+// TODO: Use invalid counter
 void adc_check_count(const uint8_t i) {
 	if(adc[i].result_count >= 50) {
 		__disable_irq();
@@ -281,6 +288,12 @@ void adc_check_count(const uint8_t i) {
 		adc[i].result_sum = 0;
 		adc[i].result_count = 0;
 		__enable_irq();
+
+		// Return if ADC count counter > 0
+		if(adc[i].ignore_count > 0) {
+			adc[i].ignore_count--;
+			return;
+		}
 
 		//uint32_t new_time = system_timer_get_ms();
 
@@ -297,6 +310,8 @@ void adc_check_count(const uint8_t i) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
 			}
+		} if(i == 3) { // +12V rail
+			adc[i].result_mv = adc[i].result*4*3300/4095;
 		} else {
 			adc[i].result_mv = (adc[i].result*600*3300/4095-990*1000)/75;
 			if(i == 1) {

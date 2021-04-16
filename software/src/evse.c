@@ -82,10 +82,6 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 	if(evse.last_cp_duty_cycle != cp_duty_cycle) {
 		evse.last_cp_duty_cycle = cp_duty_cycle;
 
-		// Ignore the next 10 ADC measurements between CP/PE after we 
-		// change PWM duty cycle of CP to be sure that that the measurement
-		// is not of any in-between state.
-		adc_result.cp_invalid_counter = MAX(2, adc_result.cp_invalid_counter);
 		adc_enable_all(cp_duty_cycle == 1000);
 		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 48000 - cp_duty_cycle*48);
 	}
@@ -104,8 +100,7 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 		// Ignore all ADC measurements for a while if the contactor is
 		// switched on or off, to be sure that the resulting EMI spike does
 		// not give us a wrong measurement.
-		adc_result.cp_invalid_counter = MAX(4, adc_result.cp_invalid_counter);
-		adc_result.pp_invalid_counter = MAX(4, adc_result.pp_invalid_counter);
+		adc_ignore_results(4);
 
 		// Also ignore contactor check for a while when contactor changes state
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);

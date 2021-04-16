@@ -57,6 +57,8 @@ typedef struct {
 
 	int32_t result_mv;
 
+	uint8_t ignore_count;
+
 	// Channel config
 	uint8_t averaging_duration;
 	int16_t offset;
@@ -69,10 +71,7 @@ typedef struct {
 
 typedef struct {
     uint32_t cp_pe_resistance;
-	uint8_t  cp_invalid_counter;
-
     uint32_t pp_pe_resistance;
-    uint8_t  pp_invalid_counter;
 } ADCResult;
 
 extern ADC adc[ADC_NUM];
@@ -81,5 +80,6 @@ extern ADCResult adc_result;
 void adc_init(void);
 void adc_tick(void);
 void adc_enable_all(const bool all);
+void adc_ignore_results(const uint8_t count);
 
 #endif

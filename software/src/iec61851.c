@@ -186,8 +186,8 @@ void iec61851_tick(void) {
 			led.state = LED_STATE_OFF;
 		}
 	} else {
-		// Wait for ADC measurements to be valid
-		if(adc_result.cp_invalid_counter > 0) {
+		// Wait for ADC CP/PE measurements to be valid
+		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
 			return;
 		}
 
