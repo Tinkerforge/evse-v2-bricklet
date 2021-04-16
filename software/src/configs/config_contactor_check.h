@@ -24,7 +24,7 @@
 
 #include "xmc_gpio.h"
 
-#define CONTACTOR_CHECK_AC1_PIN P2_7
-#define CONTACTOR_CHECK_AC2_PIN P2_6
+#define CONTACTOR_CHECK_AC1_PIN P2_6
+#define CONTACTOR_CHECK_AC2_PIN P2_7
 
 #endif
