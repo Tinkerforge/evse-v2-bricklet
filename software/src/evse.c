@@ -265,27 +265,27 @@ void evse_tick_debug(void) {
 }
 
 void evse_tick(void) {
-	// TODO: Calibrate DC fault current module
 	if(evse.startup_time != 0 && !system_timer_is_time_elapsed_ms(evse.startup_time, 1000)) {
-		if(false) {
-			evse.calibration_error = true;
-			led_set_blinking(3);
-		}
+		// Wait for 1s so everything can start/boot properly
 		return;
 	}
 
 	// Turn LED on (LED flicker off after startup/calibration)
 	if(evse.startup_time != 0) {
 		evse.startup_time = 0;
-		led_set_on();
+
+		// Start a dc fault module calibration on startup
+		dc_fault.calibration_state = true;
+
+		// Return to make sure that the dc fault tick is called at least once before the iec61851 tick.
+		return;
 	}
 
 	else if((evse.config_jumper_current == EVSE_CONFIG_JUMPER_SOFTWARE) || (evse.config_jumper_current == EVSE_CONFIG_JUMPER_UNCONFIGURED)) {
 		led_set_blinking(2);
-	} else if(evse.calibration_error) {
-		led_set_blinking(3);
 	} else if(dc_fault.calibration_running) {
-		// TODO: Do nothing here? Or LED flicker?
+		// TODO: Just do nothing here, right?
+		// LED flickering here would just be confusing, this is not an error state.
 	} else {
 		// Otherwise we implement the EVSE according to IEC 61851.
 		iec61851_tick();
