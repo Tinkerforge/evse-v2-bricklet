@@ -35,6 +35,7 @@
 #include "contactor_check.h"
 #include "led.h"
 #include "button.h"
+#include "dc_fault.h"
 
 // Resistance between CP/PE
 // inf  Ohm -> no car present
@@ -170,7 +171,10 @@ void iec61851_state_ef(void) {
 }
 
 void iec61851_tick(void) {
-	if(contactor_check.error != 0) {
+	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+		led_set_blinking(3);
+		iec61851_set_state(IEC61851_STATE_EF);
+	} else if(contactor_check.error != 0) {
 		led_set_blinking(4);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if(evse.config_jumper_current == EVSE_CONFIG_JUMPER_UNCONFIGURED) {
