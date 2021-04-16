@@ -84,6 +84,12 @@ void communication_init(void);
 #define EVSE_V2_CHARGE_RELEASE_MANUAL 1
 #define EVSE_V2_CHARGE_RELEASE_DEACTIVATED 2
 
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_NORMAL_CONDITION 0
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA 1
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_SYSTEM 2
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN 3
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION 4
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -237,6 +243,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint32_t password;
 } __attribute__((__packed__)) ResetDCFaultCurrent;
 
 typedef struct {

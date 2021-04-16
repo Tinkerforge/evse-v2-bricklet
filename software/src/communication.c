@@ -39,6 +39,7 @@
 #include "button.h"
 #include "sdm72dm.h"
 #include "rs485.h"
+#include "dc_fault.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -110,6 +111,10 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+bool get_bit(const uint32_t value, uint8_t const bit_position) {
+	return (bool)(value & (1 << bit_position));
+}
+
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response) {
 	response->header.length          = sizeof(GetLowLevelState_Response);
 	response->led_state              = led.state;
@@ -126,9 +131,34 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 	response->voltages[4]            = adc[4].result_mv;
 	response->resistances[0]         = adc_result.cp_pe_resistance;
 	response->resistances[1]         = adc_result.pp_pe_resistance;
-	response->gpio[0]                = 0; // TODO
-	response->gpio[1]                = 0; // TODO
-	response->gpio[2]                = 0; // TODO
+
+	const uint32_t port0 = XMC_GPIO_PORT0->IN;
+	const uint32_t port1 = XMC_GPIO_PORT1->IN;
+	const uint32_t port2 = XMC_GPIO_PORT2->IN;
+	const uint32_t port4 = XMC_GPIO_PORT4->IN;
+
+	response->gpio[0] = (get_bit(port0, 0)  << 0) | //  0: Config Jumper 0
+	                    (get_bit(port0, 1)  << 1) | //  1: Motor Fault
+	                    (get_bit(port0, 3)  << 2) | //  2: DC Error
+	                    (get_bit(port0, 5)  << 3) | //  3: Config Jumper 1
+	                    (get_bit(port0, 8)  << 4) | //  4: DC Test
+	                    (get_bit(port0, 9)  << 5) | //  5: Enable
+	                    (get_bit(port0, 12) << 6) | //  6: Switch
+	                    (get_bit(port1, 0)  << 7);  //  7: CP PWM
+
+	response->gpio[1] = (get_bit(port1, 1)  << 0) | //  8: Input Motor Switch
+	                    (get_bit(port1, 2)  << 1) | //  9: Relay (Contactor)
+	                    (get_bit(port1, 3)  << 2) | // 10: GP Output
+	                    (get_bit(port1, 4)  << 3) | // 11: CP Disconnect
+	                    (get_bit(port1, 5)  << 4) | // 12: Motor Enable
+	                    (get_bit(port1, 6)  << 5) | // 13: Motor Phase
+	                    (get_bit(port2, 6)  << 6) | // 14: AC 2
+	                    (get_bit(port2, 7)  << 7);  // 15: AC 1
+
+	response->gpio[2] = (get_bit(port2, 9)  << 0) | // 16: GP Input
+	                    (get_bit(port4, 4)  << 1) | // 17: DC X6
+	                    (get_bit(port4, 5)  << 2) | // 18: DC X30
+	                    (get_bit(port4, 6)  << 3);  // 19: LED
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -217,9 +247,8 @@ BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data)
 }
 
 BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurrentState *data, GetDCFaultCurrentState_Response *response) {
-	response->header.length = sizeof(GetDCFaultCurrentState_Response);
-
-	// TODO
+	response->header.length          = sizeof(GetDCFaultCurrentState_Response);
+	response->dc_fault_current_state = dc_fault.state;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
