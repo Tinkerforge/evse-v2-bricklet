@@ -225,7 +225,10 @@ BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurre
 }
 
 BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data) {
-	// TODO
+	if(data->password == 0xDC42FA23) {
+		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
+		led_set_on();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
