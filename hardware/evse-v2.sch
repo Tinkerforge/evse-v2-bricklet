@@ -4311,4 +4311,6 @@ Wire Wire Line
 	3050 7550 3000 7550
 Wire Wire Line
 	2450 7550 2600 7550
+Text Notes 600  8650 0    39   ~ 0
+Phoenix\n1755736\n1757019\n
 $EndSCHEMATC
