@@ -708,7 +708,7 @@ U 1 1 5F033544
 P 7500 9650
 F 0 "P102" H 7450 9400 50  0000 L CNN
 F 1 "Relay" V 7500 9550 50  0000 L CNN
-F 2 "kicad-libraries:OQ_2P_Vertical" H 7500 9650 60  0001 C CNN
+F 2 "kicad-libraries:OQ_2P_5mm_Vertical" H 7500 9650 60  0001 C CNN
 F 3 "" H 7500 9650 60  0000 C CNN
 	1    7500 9650
 	-1   0    0    1   
@@ -1689,12 +1689,12 @@ Wire Wire Line
 $Comp
 L tinkerforge:FUSE F102
 U 1 1 607CE1E8
-P 2800 7250
-F 0 "F102" H 2800 7490 50  0000 C CNN
-F 1 "FUSE" H 2800 7399 50  0000 C CNN
-F 2 "kicad-libraries:Fuse-Holder-5x20" H 2800 7250 50  0001 C CNN
-F 3 "" H 2800 7250 50  0000 C CNN
-	1    2800 7250
+P 2300 7250
+F 0 "F102" H 2300 7490 50  0000 C CNN
+F 1 "FUSE" H 2300 7399 50  0000 C CNN
+F 2 "kicad-libraries:Fuse-Holder-5x20" H 2300 7250 50  0001 C CNN
+F 3 "" H 2300 7250 50  0000 C CNN
+	1    2300 7250
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -2207,10 +2207,6 @@ Wire Wire Line
 	12800 6600 12850 6600
 Wire Wire Line
 	1700 8150 1850 8150
-Wire Wire Line
-	2000 7250 2550 7250
-Wire Wire Line
-	2450 7550 3050 7550
 Wire Wire Line
 	7850 9550 8450 9550
 Connection ~ 8450 9550
@@ -4283,4 +4279,36 @@ Wire Wire Line
 	10500 9000 10500 9350
 Wire Wire Line
 	10850 9050 10850 9000
+$Comp
+L tinkerforge:DIODE D115
+U 1 1 60A403B5
+P 2800 7250
+F 0 "D115" H 2800 7444 40  0000 C CNN
+F 1 "1N4007" H 2800 7368 40  0000 C CNN
+F 2 "kicad-libraries:DO-41" H 2800 7250 60  0001 C CNN
+F 3 "" H 2800 7250 60  0000 C CNN
+	1    2800 7250
+	1    0    0    -1  
+$EndComp
+$Comp
+L tinkerforge:DIODE D116
+U 1 1 60A43EA7
+P 2800 7550
+F 0 "D116" H 2800 7744 40  0000 C CNN
+F 1 "1N4007" H 2800 7668 40  0000 C CNN
+F 2 "kicad-libraries:DO-41" H 2800 7550 60  0001 C CNN
+F 3 "" H 2800 7550 60  0000 C CNN
+	1    2800 7550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2000 7250 2050 7250
+Wire Wire Line
+	2550 7250 2600 7250
+Wire Wire Line
+	3000 7250 3050 7250
+Wire Wire Line
+	3050 7550 3000 7550
+Wire Wire Line
+	2450 7550 2600 7550
 $EndSCHEMATC
