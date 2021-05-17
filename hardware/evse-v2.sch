@@ -708,10 +708,10 @@ U 1 1 5F033544
 P 7500 9650
 F 0 "P102" H 7450 9400 50  0000 L CNN
 F 1 "Relay" V 7500 9550 50  0000 L CNN
-F 2 "kicad-libraries:OQ_2P_5mm_Vertical" H 7500 9650 60  0001 C CNN
+F 2 "kicad-libraries:LSF-SMT-500-02-135" H 7500 9650 60  0001 C CNN
 F 3 "" H 7500 9650 60  0000 C CNN
 	1    7500 9650
-	-1   0    0    1   
+	-1   0    0    -1  
 $EndComp
 Text Notes 11050 8750 0    157  ~ 0
 Relay
