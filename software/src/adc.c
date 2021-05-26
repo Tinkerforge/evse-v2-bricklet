@@ -279,7 +279,6 @@ void adc_check_result(const uint8_t i) {
 	}
 }
 
-// TODO: Use invalid counter
 void adc_check_count(const uint8_t i) {
 	if(adc[i].result_count >= 50) {
 		__disable_irq();
@@ -317,10 +316,10 @@ void adc_check_count(const uint8_t i) {
 			if(i == 1) {
 				// resistance divider, 910 ohm on EVSE
 				// diode voltage drop 650mV (value is educated guess)
-				const uint32_t divisor = adc[0].result_mv - adc[1].result_mv;
-				if(divisor == 0) {
+				if(adc[0].result_mv <= adc[1].result_mv) {
 					adc_result.cp_pe_resistance = 0xFFFFFFFF;
 				} else {
+					const uint32_t divisor = adc[0].result_mv - adc[1].result_mv;
 					adc_result.cp_pe_resistance = 910*(adc[1].result_mv - ADC_DIODE_DROP)/divisor;
 					if(adc_result.cp_pe_resistance > 32000) {
 						adc_result.cp_pe_resistance = 0xFFFFFFFF;
