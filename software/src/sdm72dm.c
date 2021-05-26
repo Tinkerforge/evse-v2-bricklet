@@ -220,7 +220,7 @@ void sdm72dm_tick(void) {
 			if(sdm72dm_get_read_input(&sdm72dm.energy_absolute.data)) {
 				modbus_clear_request(&rs485);
 				sdm72dm.state++;
-				logd("power: %d, energy (rel): %d, energy (abs): %d\n\r", (int32_t)sdm72dm.power.f, (int32_t)sdm72dm.energy_relative.f, (int32_t)sdm72dm.energy_absolute.f);
+//				logd("power: %d, energy (rel): %d, energy (abs): %d\n\r", (int32_t)sdm72dm.power.f, (int32_t)sdm72dm.energy_relative.f, (int32_t)sdm72dm.energy_absolute.f);
 			}
 			break;
 		}
@@ -241,7 +241,7 @@ void sdm72dm_tick(void) {
 				if(exception_code == 0) {
 					sdm72dm.reset_energy_meter = false;
 				}
-				logd("reset response: %d\n\r", exception_code);
+//				logd("reset response: %d\n\r", exception_code);
 				modbus_clear_request(&rs485);
 				sdm72dm.state++;
 			}
