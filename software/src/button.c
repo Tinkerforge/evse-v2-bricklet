@@ -48,7 +48,7 @@ void button_init(void) {
 }
 
 void button_tick(void) {
-	const bool value = XMC_GPIO_GetInput(EVSE_BUTTON_PIN) | XMC_GPIO_GetInput(EVSE_ENABLE_PIN);
+	const bool value = XMC_GPIO_GetInput(EVSE_BUTTON_PIN); // | XMC_GPIO_GetInput(EVSE_ENABLE_PIN);
 
 	if(value != button.last_value) {
 		button.last_value = value;
