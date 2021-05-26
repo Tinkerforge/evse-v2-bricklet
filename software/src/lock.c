@@ -62,6 +62,7 @@ void lock_init(void) {
 }
 
 void lock_tick(void) {
+#ifdef EVSE_LOCK_ENABLE
 	if((lock.state == LOCK_STATE_CLOSING) || (lock.state == LOCK_STATE_OPENING)) {
 		if(lock.state == LOCK_STATE_CLOSING) {
 			XMC_GPIO_SetOutputHigh(EVSE_MOTOR_PHASE_PIN);
@@ -131,4 +132,5 @@ void lock_tick(void) {
 		lock.duty_cycle = 6400;
 		ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, lock.duty_cycle);
 	}
+#endif
 }
