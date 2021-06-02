@@ -45,34 +45,7 @@
 EVSE evse;
 
 #define evse_cp_pwm_irq IRQ_Hdlr_30
-
-#define __NOP10() \
-	__NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); 
-
-#define __NOP100() \
-	__NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); __NOP10(); 
-
-#define __NOP1000() \
-	__NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); __NOP100(); 
-
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) evse_cp_pwm_irq(void) {
-	// Use a precise amount of NOPs found by trial and error to move the ADC measurement exactly in the middle of the CP/PE PWM
-	__NOP1000();
-	__NOP100();
-	__NOP100();
-	__NOP100();
-	__NOP100();
-	__NOP100();
-	__NOP100();
-	__NOP100();
-	__NOP10();
-	__NOP10();
-	__NOP10();
-	__NOP10();
-	__NOP10();
-	__NOP10();
-	__NOP10();
-	__NOP10();
 	XMC_VADC_GLOBAL_BackgroundTriggerConversion(VADC);
 	XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
 }
@@ -202,6 +175,73 @@ void evse_init_jumper(void) {
 	}
 }
 
+// Use CCU40 slice 0 for CP/PE PWM on P1_0
+// Use CCU40 slice 1 synchronously with slice 0 but with fixed duty-cycle
+// Slice 1 is used to generate IRQ for ADC measurements to make sure that CP/PE PWM high level is measured at end of duty-cycle
+void evse_init_cp_pwm(void) {
+	const XMC_CCU4_SLICE_COMPARE_CONFIG_t compare_config = {
+		.timer_mode          = XMC_CCU4_SLICE_TIMER_COUNT_MODE_EA,
+		.monoshot            = false,
+		.shadow_xfer_clear   = 0,
+		.dither_timer_period = 0,
+		.dither_duty_cycle   = 0,
+		.prescaler_mode      = XMC_CCU4_SLICE_PRESCALER_MODE_NORMAL,
+		.mcm_enable          = 0,
+		.prescaler_initval   = XMC_CCU4_SLICE_PRESCALER_2,
+		.float_limit         = 0,
+		.dither_limit        = 0,
+		.passive_level       = XMC_CCU4_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
+		.timer_concatenation = 0
+	};
+
+ 	const XMC_CCU4_SLICE_EVENT_CONFIG_t event_config = {
+		 .duration = XMC_CCU4_SLICE_EVENT_FILTER_5_CYCLES,
+		 .edge = XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+		 .level = XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+		 .mapped_input = XMC_CCU4_SLICE_INPUT_AI
+	};
+
+	const XMC_GPIO_CONFIG_t gpio_out_config	= {
+		.mode                = XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT2,
+		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
+		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
+	};
+
+	XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU4_StartPrescaler(CCU40);
+	XMC_CCU4_SLICE_CompareInit(CCU40_CC40, &compare_config);
+	XMC_CCU4_SLICE_CompareInit(CCU40_CC41, &compare_config);
+
+	// Set the period and compare register values
+	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC40, EVSE_CP_PWM_PERIOD-1);
+	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC41, EVSE_CP_PWM_PERIOD-1);
+	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC40, 48000 - 0*48);
+	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC41, 48000 - 30*48); // 3% duty-cycle (this puts the ADC measurement right at the end of duty-cycle)
+
+	XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_1);
+
+	XMC_GPIO_Init(EVSE_CP_PWM_PIN, &gpio_out_config);
+
+	XMC_CCU4_EnableClock(CCU40, 0);
+	XMC_CCU4_EnableClock(CCU40, 1);
+
+	// Start CCU40 slice 0 and 1 in sync.
+	XMC_CCU4_SLICE_ConfigureEvent(CCU40_CC40, XMC_CCU4_SLICE_EVENT_1, &event_config);
+	XMC_CCU4_SLICE_ConfigureEvent(CCU40_CC41, XMC_CCU4_SLICE_EVENT_1, &event_config);
+	XMC_CCU4_SLICE_StartConfig(CCU40_CC40, XMC_CCU4_SLICE_EVENT_1, XMC_CCU4_SLICE_START_MODE_TIMER_START_CLEAR);
+	XMC_CCU4_SLICE_StartConfig(CCU40_CC41, XMC_CCU4_SLICE_EVENT_1, XMC_CCU4_SLICE_START_MODE_TIMER_START_CLEAR);
+	XMC_SCU_SetCcuTriggerHigh(SCU_GENERAL_CCUCON_GSC40_Msk);
+
+	// Enable interrupt for CP PWM (on slice 1)
+	XMC_CCU4_SLICE_EnableEvent(CCU40_CC41, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP);
+	XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC41, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
+
+	// Interrupt for testing
+//	NVIC_SetPriority(30, 1);
+//	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU40_SR2_IRQ30);
+//	NVIC_EnableIRQ(30);
+}
+
 void evse_init(void) {
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
@@ -224,20 +264,12 @@ void evse_init(void) {
 	XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN,     &pin_config_output_low);
 
 	XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
-	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
+	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);;
 
-	ccu4_pwm_init(EVSE_CP_PWM_PIN, EVSE_CP_PWM_SLICE_NUMBER, EVSE_CP_PWM_PERIOD-1); // 1kHz
-	ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 0);
+	evse_init_cp_pwm();
 
-	// Enable interrupt for CP PWM
-	XMC_CCU4_SLICE_EnableEvent(CCU40_CC40, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP);
-    XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC40, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
-
-	ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
-	ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
-	NVIC_SetPriority(30, 1);
-	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU40_SR2_IRQ30);
-	NVIC_EnableIRQ(30);
+//	ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
+//	ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
 
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.max_current_configured = 32000; // default user defined current ist 32A
@@ -279,7 +311,7 @@ void evse_tick(void) {
 		evse.startup_time = 0;
 
 		// Start a dc fault module calibration on startup
-		dc_fault.calibration_state = true;
+		dc_fault.calibration_start = true;
 
 		// Return to make sure that the dc fault tick is called at least once before the iec61851 tick.
 		return;

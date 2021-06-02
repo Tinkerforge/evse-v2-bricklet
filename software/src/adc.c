@@ -21,6 +21,8 @@
 
 #include "adc.h"
 
+#include "configs/config_evse.h"
+
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/bootloader/bootloader.h"
@@ -86,7 +88,19 @@ ADCResult adc_result;
 #define adc_conversion_done_irq IRQ_Hdlr_15
 
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) adc_conversion_done_irq(void) {
-	XMC_GPIO_SetOutputLow(P1_3);
+	XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	__NOP();
+	XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 }
 
 void adc_init_adc(void) {
@@ -131,7 +145,7 @@ void adc_init_adc(void) {
 	XMC_VADC_RESULT_CONFIG_t adc_global_result_config = {
 		.data_reduction_control = 0,  // Accumulate 1 result values
 		.post_processing_mode   = XMC_VADC_DMM_REDUCTION_MODE,
-		.wait_for_read_mode  	= 1, // Enabled
+		.wait_for_read_mode  	= 0, // Enabled
 		.part_of_fifo       	= 0, // No FIFO
 		.event_gen_enable   	= 0  // Disable Result event
 	};
@@ -144,7 +158,7 @@ void adc_init_adc(void) {
 		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
 		.gate_signal       = XMC_VADC_REQ_GT_A,			   // If Gating needed then this denotes the Gating signal
 		.timer_mode        = 0,							   // Timer Mode Disabled
-		.external_trigger  = 0,                            // Trigger is Disabled
+		.external_trigger  = 1,                            // Trigger is Enabled
 		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled
 		.enable_auto_scan  = 0,
 		.load_mode         = XMC_VADC_SCAN_LOAD_OVERWRITE
@@ -155,7 +169,7 @@ void adc_init_adc(void) {
 			.stce_usage                  = 0, 					           // Use STCE when the setting changes
 			.emux_mode                   = XMC_VADC_GROUP_EMUXMODE_SWCTRL, // Mode for Emux conversion
 			.emux_coding                 = XMC_VADC_GROUP_EMUXCODE_BINARY, // Channel progression - binary format
-			.starting_external_channel   = 0,                              // Channel starts at 0 for EMUX
+			.starting_external_channel   = 1,                              // Channel starts at 0 for EMUX
 			.connected_channel           = 0                               // Channel connected to EMUX
 		},
 		.class0 = {
@@ -220,8 +234,8 @@ void adc_init_adc(void) {
 		XMC_VADC_RESULT_CONFIG_t channel_result_config = {
 			.data_reduction_control = 0,                         // Accumulate 1 result values
 			.post_processing_mode   = XMC_VADC_DMM_REDUCTION_MODE,  // Use reduction mode
-			.wait_for_read_mode  	= 1,                            // Enabled
-			.part_of_fifo       	= 0 ,                           // No FIFO
+			.wait_for_read_mode  	= 0,                            // Enabled
+			.part_of_fifo       	= 0,                            // No FIFO
 			.event_gen_enable   	= 0                             // Disable Result event
 		};
 
@@ -236,7 +250,6 @@ void adc_init_adc(void) {
 	}
 
 	XMC_VADC_GLOBAL_SetResultEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
-	//XMC_VADC_GLOBAL_BackgroundTriggerConversion(VADC);
 
 	NVIC_SetPriority(15, 2);
 	XMC_VADC_GLOBAL_BackgroundSetReqSrcEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
