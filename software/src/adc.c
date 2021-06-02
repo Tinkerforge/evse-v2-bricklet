@@ -281,12 +281,10 @@ void adc_check_result(const uint8_t i) {
 
 void adc_check_count(const uint8_t i) {
 	if(adc[i].result_count >= 50) {
-		__disable_irq();
 		adc[i].result = adc[i].result_sum/adc[i].result_count;
 
 		adc[i].result_sum = 0;
 		adc[i].result_count = 0;
-		__enable_irq();
 
 		// Return if ADC count counter > 0
 		if(adc[i].ignore_count > 0) {
