@@ -276,6 +276,8 @@ void adc_check_result(const uint8_t i) {
 	if(result & (1 << 31)) {
 		adc[i].result_sum += result & 0xFFFF;
 		adc[i].result_count++;
+	} else {
+		// TODO: If no result for long time (5 seconds or so? trigger watchdog)
 	}
 }
 
