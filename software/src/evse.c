@@ -85,6 +85,8 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 		} else {
 			XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
 		}
+
+		evse.last_contactor_switch = system_timer_get_ms();
 	}
 
 #ifdef EVSE_LOCK_ENABLE
@@ -274,6 +276,7 @@ void evse_init(void) {
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.max_current_configured = 32000; // default user defined current ist 32A
 	evse.charging_autostart = true;
+	evse.last_contactor_switch = system_timer_get_ms();
 
 	evse_init_jumper();
 	evse_init_lock_switch();

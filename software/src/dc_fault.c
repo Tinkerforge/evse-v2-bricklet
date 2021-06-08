@@ -30,6 +30,7 @@
 #include "iec61851.h"
 #include "adc.h"
 #include "led.h"
+#include "evse.h"
 
 #include "xmc_gpio.h"
 
@@ -57,7 +58,10 @@ void dc_fault_init(void) {
 void dc_fault_update_values(void) {
 	static uint32_t t[3] = {0};
 
-	// TODO: Add an additional timeout directly after the contactor is turned on/off
+	// Add an additional 1s timeout directly after the contactor is turned on/off
+	if(!system_timer_is_time_elapsed_ms(evse.last_contactor_switch, 1000)) {
+		return;
+	}
 
 	bool values[3] = {
 		XMC_GPIO_GetInput(DC_FAULT_X6_PIN),
