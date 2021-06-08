@@ -59,6 +59,8 @@ typedef struct {
 
 	uint8_t ignore_count;
 
+	uint32_t timeout;
+
 	char name[5];
 } ADC;
 

@@ -259,6 +259,7 @@ void adc_init_adc(void) {
 
 void adc_init(void) {
 	adc_init_adc();
+	adc->timeout = system_timer_get_ms();
 }
 
 void adc_ignore_results(const uint8_t count) {
@@ -287,8 +288,17 @@ void adc_check_result(const uint8_t i) {
 	if(result & (1 << 31)) {
 		adc[i].result_sum += result & 0xFFFF;
 		adc[i].result_count++;
+		if(i == 0) {
+			adc->timeout = system_timer_get_ms();
+		}
 	} else {
-		// TODO: If no result for long time (5 seconds or so? trigger watchdog)
+		if((i == 0) && system_timer_is_time_elapsed_ms(adc->timeout, 60000)) {
+			// Trigger watchdog if we did not get a new result for adc channel 0 for 60 seconds.
+			// In this case something went horribly wrong, since the adc should be triggered automatically in the background at all times.
+			while(true) {
+				__NOP();
+			}
+		}
 	}
 }
 
