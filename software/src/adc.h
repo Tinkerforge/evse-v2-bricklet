@@ -59,13 +59,6 @@ typedef struct {
 
 	uint8_t ignore_count;
 
-	// Channel config
-	uint8_t averaging_duration;
-	int16_t offset;
-
-	// Channel config changed by API
-	bool new_averaging_duration;
-
 	char name[5];
 } ADC;
 

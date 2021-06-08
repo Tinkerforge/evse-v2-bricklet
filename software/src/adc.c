@@ -257,9 +257,6 @@ void adc_init_adc(void) {
 }
 
 void adc_init(void) {
-	for(uint8_t i = 0; i < ADC_NUM; i++) {
-		adc[i].averaging_duration = 255;
-	}
 	adc_init_adc();
 }
 
