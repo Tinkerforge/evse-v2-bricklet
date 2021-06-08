@@ -249,11 +249,12 @@ void adc_init_adc(void) {
 		XMC_VADC_GLOBAL_BackgroundAddChannelToSequence(VADC, adc[i].group_index, adc[i].channel_num);
 	}
 
-	XMC_VADC_GLOBAL_SetResultEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
+	// Uncomment to turn on debug in IRQ (toggles GP output pin when adc conversion is ready)
+//	XMC_VADC_GLOBAL_SetResultEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
 
-	NVIC_SetPriority(15, 2);
-	XMC_VADC_GLOBAL_BackgroundSetReqSrcEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
-	NVIC_EnableIRQ(15);
+//	NVIC_SetPriority(15, 2);
+//	XMC_VADC_GLOBAL_BackgroundSetReqSrcEventInterruptNode(VADC, XMC_VADC_SR_SHARED_SR0);
+//	NVIC_EnableIRQ(15);
 }
 
 void adc_init(void) {
