@@ -46,6 +46,8 @@ typedef struct {
     bool available;
 
     bool reset_energy_meter;
+
+    uint32_t timeout;
 } SDM72DM;
 
 extern SDM72DM sdm72dm;

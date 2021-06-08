@@ -179,8 +179,20 @@ bool sdm72dm_write_register_response(int8_t *exception_code) {
 }
 
 void sdm72dm_tick(void) {
-	// TODO: Add additional external timeout for all states 
-	//       with hardware unit reset in case of timeout
+	static uint8_t last_state = 255;
+	if(last_state != sdm72dm.state) {
+		sdm72dm.timeout = system_timer_get_ms();
+		last_state = sdm72dm.state;
+	} else {
+		// If there is no state change at all for 60 seconds we assume that something is broken and trigger the watchdog.
+		// This should never happen.
+		if(system_timer_is_time_elapsed_ms(sdm72dm.timeout, 60000)) {
+			while(true) {
+				__NOP();
+			}
+		}
+	}
+
 	switch(sdm72dm.state) {
 		case 0: { // read power request
 			sdm72dm_read_input_registers(1, 1281, 2);
