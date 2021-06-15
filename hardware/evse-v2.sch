@@ -5,8 +5,8 @@ $Descr A3 16535 11693
 encoding utf-8
 Sheet 1 1
 Title "EVSE Bricklet"
-Date "2021-05-25"
-Rev "2.4"
+Date "2021-06-15"
+Rev "2.5"
 Comp "Tinkerforge GmbH"
 Comment1 "Licensed under CERN OHL v.1.1"
 Comment2 "Copyright (©) 2021, B.Nordmeyer <bastian@tinkerforge.com>"
@@ -4313,4 +4313,6 @@ Connection ~ 3700 1350
 Wire Wire Line
 	4100 1350 4850 1350
 Connection ~ 4100 1350
+Text Notes 7350 10100 0    39   ~ 0
+135° 1888570000\n180° 1825960000\n
 $EndSCHEMATC
