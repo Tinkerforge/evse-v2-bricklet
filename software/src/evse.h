@@ -38,6 +38,12 @@
 #define EVSE_CONFIG_JUMPER_SOFTWARE     7
 #define EVSE_CONFIG_JUMPER_UNCONFIGURED 8
 
+#define EVSE_CONFIG_PAGE                1
+#define EVSE_CONFIG_MAGIC_POS           0
+#define EVSE_CONFIG_MANAGED_POS         1
+
+#define EVSE_CONFIG_MAGIC               0x34567890
+
 typedef struct {
     uint32_t startup_time;
 
@@ -53,6 +59,9 @@ typedef struct {
 	bool charging_autostart;
 
 	uint32_t last_contactor_switch;
+
+	bool managed;
+	uint16_t max_managed_current;
 } EVSE;
 
 extern EVSE evse;

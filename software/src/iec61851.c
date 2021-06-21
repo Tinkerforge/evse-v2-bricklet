@@ -72,13 +72,18 @@ void iec61851_set_state(IEC61851State state) {
 			led_set_on();
 		}
 
-		if((iec61851.state == IEC61851_STATE_C) && ((state == IEC61851_STATE_A ) || (state == IEC61851_STATE_B))) {
+		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
 			if(!evse.charging_autostart) {
 				// If we change from state C to either A or B and autostart is disabled,
 				// we set the buttom pressed flag.
 				// This means that the user needs to call "StartCharging()" through the API
 				// before the car starts to charge again.
 				button.was_pressed = true;
+			}
+
+			// If state changed from C to A or B and the EVSE is managed externally, we invalidate the managed current
+			if(evse.managed) {
+				evse.max_managed_current = 0;
 			}
 		}
 
@@ -117,11 +122,25 @@ uint32_t iec61851_get_ma_from_jumper(void) {
 }
 
 uint32_t iec61851_get_max_ma(void) {
-	return MIN(evse.max_current_configured, MIN(iec61851_get_ma_from_pp_resistance(), iec61851_get_ma_from_jumper()));
+	uint32_t max_conf_pp_jumper = MIN(evse.max_current_configured, MIN(iec61851_get_ma_from_pp_resistance(), iec61851_get_ma_from_jumper()));
+	if(evse.managed) {
+		return MIN(max_conf_pp_jumper, evse.max_managed_current);
+	}
+
+	return max_conf_pp_jumper;
 }
 
 // Duty cycle in pro mille (1/10 %)
 uint16_t iec61851_get_duty_cycle_for_ma(uint32_t ma) {
+	// Special case for managed mode.
+	// In managed mode we support a temporary stop of charging without disconnecting the vehicle.
+	if(ma == 0) {
+		// 100% duty cycle => charging not allowed
+		// we do 100% here instead of 0% (both mean charging not allowed)
+		// to be able to still properly measure the resistance that the car applies.
+		return 1000;
+	}
+
 	uint32_t duty_cycle;
 	if(ma <= 51000) {
 		duty_cycle = ma/60; // For 6A-51A: xA = %duty*0.6
@@ -200,7 +219,11 @@ void iec61851_tick(void) {
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {
 			iec61851_set_state(IEC61851_STATE_B);
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
-			iec61851_set_state(IEC61851_STATE_C);
+			if(evse.managed && (evse.max_managed_current == 0)) {
+				iec61851_set_state(IEC61851_STATE_B);
+			} else {
+				iec61851_set_state(IEC61851_STATE_C);
+			}
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_D) {
 			led_set_blinking(5);
 			iec61851_set_state(IEC61851_STATE_D);

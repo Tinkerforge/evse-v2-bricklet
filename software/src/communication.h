@@ -83,6 +83,7 @@ void communication_init(void);
 #define EVSE_V2_CHARGE_RELEASE_AUTOMATIC 0
 #define EVSE_V2_CHARGE_RELEASE_MANUAL 1
 #define EVSE_V2_CHARGE_RELEASE_DEACTIVATED 2
+#define EVSE_V2_CHARGE_RELEASE_MANAGED 3
 
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_NORMAL_CONDITION 0
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA 1
@@ -125,6 +126,9 @@ void communication_init(void);
 #define FID_RESET_DC_FAULT_CURRENT 14
 #define FID_SET_GPIO_CONFIGURATION 15
 #define FID_GET_GPIO_CONFIGURATION 16
+#define FID_GET_MANAGED 17
+#define FID_SET_MANAGED 18
+#define FID_SET_MANAGED_CURRENT 19
 
 
 typedef struct {
@@ -183,6 +187,7 @@ typedef struct {
 	uint16_t max_current_configured;
 	uint16_t max_current_incoming_cable;
 	uint16_t max_current_outgoing_cable;
+	uint16_t max_current_managed;
 } __attribute__((__packed__)) GetMaxChargingCurrent_Response;
 
 typedef struct {
@@ -262,6 +267,26 @@ typedef struct {
 	uint8_t output_configuration;
 } __attribute__((__packed__)) GetGPIOConfiguration_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetManaged;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool managed;
+} __attribute__((__packed__)) GetManaged_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool managed;
+	uint32_t password;
+} __attribute__((__packed__)) SetManaged;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t current;
+} __attribute__((__packed__)) SetManagedCurrent;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -280,6 +305,9 @@ BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurre
 BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data);
 BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguration *data);
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response);
+BootloaderHandleMessageResponse get_managed(const GetManaged *data, GetManaged_Response *response);
+BootloaderHandleMessageResponse set_managed(const SetManaged *data);
+BootloaderHandleMessageResponse set_managed_current(const SetManagedCurrent *data);
 
 // Callbacks
 

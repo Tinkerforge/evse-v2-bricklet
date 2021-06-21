@@ -98,6 +98,32 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 #endif
 }
 
+void evse_load_config(void) {
+	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
+	bootloader_read_eeprom_page(EVSE_CONFIG_PAGE, page);
+
+	// The magic number is not where it is supposed to be.
+	// This is either our first startup or something went wrong.
+	// We initialize the config data with sane default values.
+	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
+		evse.managed = false;
+	} else {
+		evse.managed = page[EVSE_CONFIG_MANAGED_POS];
+	}
+
+	logd("Load config:\n\r");
+	logd(" * managed %d\n\r", evse.managed);
+}
+
+void evse_save_config(void) {
+	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
+
+	page[EVSE_CONFIG_MAGIC_POS]   = EVSE_CONFIG_MAGIC;
+	page[EVSE_CONFIG_MANAGED_POS] = evse.managed;
+
+	bootloader_write_eeprom_page(EVSE_CONFIG_PAGE, page);
+}
+
 // TODO: For now we don't support lock switch
 void evse_init_lock_switch(void) {
 	evse.has_lock_switch = false;
@@ -275,9 +301,11 @@ void evse_init(void) {
 
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.max_current_configured = 32000; // default user defined current ist 32A
+	evse.max_managed_current = 32000;
 	evse.charging_autostart = true;
 	evse.last_contactor_switch = system_timer_get_ms();
 
+	evse_load_config();
 	evse_init_jumper();
 	evse_init_lock_switch();
 
