@@ -123,7 +123,7 @@ bool get_bit(const uint32_t value, uint8_t const bit_position) {
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response) {
 	response->header.length          = sizeof(GetLowLevelState_Response);
 	response->led_state              = led.state;
-	response->cp_pwm_duty_cycle      = (48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48;
+	response->cp_pwm_duty_cycle      = evse_get_cp_duty_cycle();
 	response->adc_values[0]          = adc[0].result;
 	response->adc_values[1]          = adc[1].result;
 	response->adc_values[2]          = adc[2].result;

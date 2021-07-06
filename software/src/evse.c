@@ -52,12 +52,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ev
 
 
 void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
-	if(evse.last_cp_duty_cycle != cp_duty_cycle) {
-		evse.last_cp_duty_cycle = cp_duty_cycle;
-
-		adc_enable_all(cp_duty_cycle == 1000);
-		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 48000 - cp_duty_cycle*48);
-	}
+	evse_set_cp_duty_cycle(cp_duty_cycle);
 
 	// If the contactor is to be enabled and the lock is currently
 	// not completely closed, we start the locking procedure and return.
@@ -122,6 +117,20 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_MANAGED_POS] = evse.managed;
 
 	bootloader_write_eeprom_page(EVSE_CONFIG_PAGE, page);
+}
+
+
+uint16_t evse_get_cp_duty_cycle(void) {
+	return (48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48;
+}
+
+void evse_set_cp_duty_cycle(const uint16_t duty_cycle) {
+	const uint16_t current_cp_duty_cycle = evse_get_cp_duty_cycle();
+	if(current_cp_duty_cycle != duty_cycle) {
+
+		adc_enable_all(duty_cycle == 1000);
+		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 48000 - duty_cycle*48);
+	}
 }
 
 // TODO: For now we don't support lock switch

@@ -47,8 +47,6 @@
 typedef struct {
     uint32_t startup_time;
 
-	uint16_t last_cp_duty_cycle;
-
 	uint8_t config_jumper_current;
 	bool has_lock_switch;
 
@@ -67,6 +65,8 @@ typedef struct {
 extern EVSE evse;
 
 void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor);
+uint16_t evse_get_cp_duty_cycle(void);
+void evse_set_cp_duty_cycle(const uint16_t duty_cycle);
 void evse_init(void);
 void evse_tick(void);
 
