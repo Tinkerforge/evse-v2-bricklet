@@ -129,6 +129,8 @@ void communication_init(void);
 #define FID_GET_MANAGED 17
 #define FID_SET_MANAGED 18
 #define FID_SET_MANAGED_CURRENT 19
+#define FID_GET_DATA_STORAGE 20
+#define FID_SET_DATA_STORAGE 21
 
 
 typedef struct {
@@ -287,6 +289,22 @@ typedef struct {
 	uint16_t current;
 } __attribute__((__packed__)) SetManagedCurrent;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t page;
+} __attribute__((__packed__)) GetDataStorage;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t data[63];
+} __attribute__((__packed__)) GetDataStorage_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t page;
+	uint8_t data[63];
+} __attribute__((__packed__)) SetDataStorage;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -308,6 +326,8 @@ BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguratio
 BootloaderHandleMessageResponse get_managed(const GetManaged *data, GetManaged_Response *response);
 BootloaderHandleMessageResponse set_managed(const SetManaged *data);
 BootloaderHandleMessageResponse set_managed_current(const SetManagedCurrent *data);
+BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, GetDataStorage_Response *response);
+BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data);
 
 // Callbacks
 

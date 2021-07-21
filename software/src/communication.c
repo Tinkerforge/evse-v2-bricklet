@@ -64,6 +64,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_MANAGED: return get_managed(message, response);
 		case FID_SET_MANAGED: return set_managed(message);
 		case FID_SET_MANAGED_CURRENT: return set_managed_current(message);
+		case FID_GET_DATA_STORAGE: return get_data_storage(message, response);
+		case FID_SET_DATA_STORAGE: return set_data_storage(message);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -314,6 +316,27 @@ BootloaderHandleMessageResponse set_managed(const SetManaged *data) {
 
 BootloaderHandleMessageResponse set_managed_current(const SetManagedCurrent *data) {
 	evse.max_managed_current = data->current;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, GetDataStorage_Response *response) {
+	if(data->page >= EVSE_STORAGE_PAGES) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	response->header.length = sizeof(GetDataStorage_Response);
+	memcpy(response->data, evse.storage[data->page], 63);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data) {
+	if(data->page >= EVSE_STORAGE_PAGES) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	memcpy(evse.storage[data->page], data->data, 63);
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }

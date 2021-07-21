@@ -44,6 +44,8 @@
 
 #define EVSE_CONFIG_MAGIC               0x34567890
 
+#define EVSE_STORAGE_PAGES              16
+
 typedef struct {
     uint32_t startup_time;
 
@@ -60,6 +62,8 @@ typedef struct {
 
 	bool managed;
 	uint16_t max_managed_current;
+
+	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
 
 extern EVSE evse;
