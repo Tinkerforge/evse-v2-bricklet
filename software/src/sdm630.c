@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
  * Copyright (C) 2021 Olaf Lüke <olaf@tinkerforge.com>
  *
- * sdm72dm.c: SDM72DM driver
+ * sdm630.c: SDM630 driver
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "sdm72dm.h"
+#include "sdm630.h"
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/utility/util_definitions.h"
@@ -29,7 +29,14 @@
 #include "rs485.h"
 #include "modbus.h"
 
-SDM72DM sdm72dm;
+const uint16_t sdm630_registers_to_read[] = {
+	1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,47,49,53,57,61,63,67,71,73,75,77,79,81,83,85,87,101,103,105,201,203,205,207,225,235,237,239,241,243,245,249,251,259,261,263,265,267,269,335,337,339,341,343,345,347,349,351,353,355,357,359,361,363,365,367,369,371,373,375,377,379,381
+};
+
+SDM630 sdm630;
+SDM630Register sdm630_register;
+
+#define SDM630_REGISTER_NUM (sizeof(sdm630_registers_to_read)/sizeof(uint16_t))
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
@@ -56,7 +63,7 @@ static void modbus_add_tx_frame_checksum(void) {
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum >> 8);
 }
 
-void sdm72dm_read_input_registers(uint8_t slave_address, uint16_t starting_address, uint16_t count) {
+void sdm630_read_input_registers(uint8_t slave_address, uint16_t starting_address, uint16_t count) {
 	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 10);
 
 	uint8_t fc = MODBUS_FC_READ_INPUT_REGISTERS;
@@ -81,7 +88,7 @@ void sdm72dm_read_input_registers(uint8_t slave_address, uint16_t starting_addre
 	modbus_start_tx_from_buffer(&rs485);
 }
 
-void sdm72dm_write_register(uint8_t slave_address, uint16_t starting_address, uint16_t payload) {
+void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, uint16_t payload) {
 	uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
 	uint16_t count = HTONS(1);
 	uint8_t byte_count = 2;
@@ -105,11 +112,13 @@ void sdm72dm_write_register(uint8_t slave_address, uint16_t starting_address, ui
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
 }
 
-void sdm72dm_init(void) {
-	memset(&sdm72dm, 0, sizeof(SDM72DM));
+void sdm630_init(void) {
+	memset(&sdm630, 0, sizeof(SDM630));
+	memset(&sdm630_register, 0 , sizeof(SDM630Register));
+	_Static_assert(SDM630_REGISTER_NUM == (sizeof(sdm630_register)/sizeof(uint32_t)), "Register size doesnt match register numbers");
 }
 
-bool sdm72dm_get_read_input(uint32_t *data) {
+bool sdm630_get_read_input(uint32_t *data) {
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 		(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 		(rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_INPUT_REGISTERS) ||
@@ -137,8 +146,8 @@ bool sdm72dm_get_read_input(uint32_t *data) {
 		}
 	} else {
 		// As soon as we were able to read our first package (including correct crc etc)
-		// we assume that a SDM72DM is attached to the EVSE.
-		sdm72dm.available = true;
+		// we assume that a SDM630 is attached to the EVSE.
+		sdm630.available = true;
 
 		uint8_t *d = &rs485.modbus_rtu.request.rx_frame[3];
 		*data = (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | (d[3] << 0);
@@ -147,7 +156,7 @@ bool sdm72dm_get_read_input(uint32_t *data) {
 	return true; // increment state
 }
 
-bool sdm72dm_write_register_response(int8_t *exception_code) {
+bool sdm630_write_register_response(int8_t *exception_code) {
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_WRITE_MULTIPLE_REGISTERS) ||
@@ -178,90 +187,65 @@ bool sdm72dm_write_register_response(int8_t *exception_code) {
 	return true; // increment state
 }
 
-void sdm72dm_tick(void) {
+void sdm630_tick(void) {
 	static uint8_t last_state = 255;
-	if(last_state != sdm72dm.state) {
-		sdm72dm.timeout = system_timer_get_ms();
-		last_state = sdm72dm.state;
+	if(last_state != sdm630.state) {
+		sdm630.timeout = system_timer_get_ms();
+		last_state = sdm630.state;
 	} else {
 		// If there is no state change at all for 60 seconds we assume that something is broken and trigger the watchdog.
 		// This should never happen.
-		if(system_timer_is_time_elapsed_ms(sdm72dm.timeout, 60000)) {
+		if(system_timer_is_time_elapsed_ms(sdm630.timeout, 60000)) {
 			while(true) {
 				__NOP();
 			}
 		}
 	}
 
-	switch(sdm72dm.state) {
-		case 0: { // read power request
-			sdm72dm_read_input_registers(1, 1281, 2);
-			sdm72dm.state++;
+	switch(sdm630.state) {
+		case 0: { // request
+			sdm630_read_input_registers(1, sdm630_registers_to_read[sdm630.register_position], 2);
+			sdm630.state++;
 			break;
 		}
 
-		case 1: { // read power
-			if(sdm72dm_get_read_input(&sdm72dm.power.data)) {
+		case 1: { // read
+			if(sdm630_get_read_input(&(((uint32_t*)&sdm630_register)[sdm630.register_position]))) {
 				modbus_clear_request(&rs485);
-				sdm72dm.state++;
+				sdm630.state++;
+				sdm630.register_position++;
+				if(sdm630.register_position >= SDM630_REGISTER_NUM) {
+					sdm630.register_position = 0;
+				}
 			}
 			break;
 		}
 
-		case 2: { // read relative energy request
-			sdm72dm_read_input_registers(1, 389, 2);
-			sdm72dm.state++;
-			break;
-		}
-
-		case 3: { // read relative energy
-			if(sdm72dm_get_read_input(&sdm72dm.energy_relative.data)) {
-				modbus_clear_request(&rs485);
-				sdm72dm.state++;
-			}
-			break;
-		}
-
-		case 4: { // read absolute energy request
-			sdm72dm_read_input_registers(1, 73, 2);
-			sdm72dm.state++;
-			break;
-		}
-
-		case 5: { // read absolute energy
-			if(sdm72dm_get_read_input(&sdm72dm.energy_absolute.data)) {
-				modbus_clear_request(&rs485);
-				sdm72dm.state++;
-//				logd("power: %d, energy (rel): %d, energy (abs): %d\n\r", (int32_t)sdm72dm.power.f, (int32_t)sdm72dm.energy_relative.f, (int32_t)sdm72dm.energy_absolute.f);
-			}
-			break;
-		}
-
-		case 6: { // write reset
-			if(sdm72dm.reset_energy_meter) {
-				sdm72dm_write_register(1, 61457, 0x0003);
-				sdm72dm.state++;
+		case 2: { // write reset
+			if(sdm630.reset_energy_meter) {
+				sdm630_write_register(1, 61457, 0x0003);
+				sdm630.state++;
 			} else {
-				sdm72dm.state = 0;
+				sdm630.state = 0;
 			}
 			break;
 		}
 
-		case 7: { // read write reset response
+		case 3: { // read write reset response
 			int8_t exception_code;
-			if(sdm72dm_write_register_response(&exception_code)) {
+			if(sdm630_write_register_response(&exception_code)) {
 				if(exception_code == 0) {
-					sdm72dm.reset_energy_meter = false;
+					sdm630.reset_energy_meter = false;
 				}
 //				logd("reset response: %d\n\r", exception_code);
 				modbus_clear_request(&rs485);
-				sdm72dm.state++;
+				sdm630.state++;
 			}
 			break;
 		}
 	}
 
-	if(sdm72dm.state >= 8) {
-		sdm72dm.state = 0;
+	if(sdm630.state >= 4) {
+		sdm630.state = 0;
 	}
 }

@@ -120,17 +120,18 @@ void communication_init(void);
 #define FID_SET_CHARGING_AUTOSTART 8
 #define FID_GET_CHARGING_AUTOSTART 9
 #define FID_GET_ENERGY_METER_VALUES 10
-#define FID_GET_ENERGY_METER_STATE 11
-#define FID_RESET_ENERGY_METER 12
-#define FID_GET_DC_FAULT_CURRENT_STATE 13
-#define FID_RESET_DC_FAULT_CURRENT 14
-#define FID_SET_GPIO_CONFIGURATION 15
-#define FID_GET_GPIO_CONFIGURATION 16
-#define FID_GET_MANAGED 17
-#define FID_SET_MANAGED 18
-#define FID_SET_MANAGED_CURRENT 19
-#define FID_GET_DATA_STORAGE 20
-#define FID_SET_DATA_STORAGE 21
+#define FID_GET_ENERGY_METER_DETAILED_VALUES_LOW_LEVEL 11
+#define FID_GET_ENERGY_METER_STATE 12
+#define FID_RESET_ENERGY_METER 13
+#define FID_GET_DC_FAULT_CURRENT_STATE 14
+#define FID_RESET_DC_FAULT_CURRENT 15
+#define FID_SET_GPIO_CONFIGURATION 16
+#define FID_GET_GPIO_CONFIGURATION 17
+#define FID_GET_MANAGED 18
+#define FID_SET_MANAGED 19
+#define FID_SET_MANAGED_CURRENT 20
+#define FID_GET_DATA_STORAGE 21
+#define FID_SET_DATA_STORAGE 22
 
 
 typedef struct {
@@ -227,6 +228,16 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEnergyMeterDetailedValuesLowLevel;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t values_chunk_offset;
+	float values_chunk_data[15];
+} __attribute__((__packed__)) GetEnergyMeterDetailedValuesLowLevel_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 } __attribute__((__packed__)) GetEnergyMeterState;
 
 typedef struct {
@@ -317,6 +328,7 @@ BootloaderHandleMessageResponse stop_charging(const StopCharging *data);
 BootloaderHandleMessageResponse set_charging_autostart(const SetChargingAutostart *data);
 BootloaderHandleMessageResponse get_charging_autostart(const GetChargingAutostart *data, GetChargingAutostart_Response *response);
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response);
+BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const GetEnergyMeterDetailedValuesLowLevel *data, GetEnergyMeterDetailedValuesLowLevel_Response *response);
 BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState *data, GetEnergyMeterState_Response *response);
 BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data);
 BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurrentState *data, GetDCFaultCurrentState_Response *response);

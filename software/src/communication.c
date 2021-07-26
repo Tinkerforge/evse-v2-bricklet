@@ -37,7 +37,7 @@
 #include "contactor_check.h"
 #include "lock.h"
 #include "button.h"
-#include "sdm72dm.h"
+#include "sdm630.h"
 #include "rs485.h"
 #include "dc_fault.h"
 
@@ -55,6 +55,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_CHARGING_AUTOSTART: return set_charging_autostart(message);
 		case FID_GET_CHARGING_AUTOSTART: return get_charging_autostart(message, response);
 		case FID_GET_ENERGY_METER_VALUES: return get_energy_meter_values(message, response);
+		case FID_GET_ENERGY_METER_DETAILED_VALUES_LOW_LEVEL: return get_energy_meter_detailed_values_low_level(message, response);
 		case FID_GET_ENERGY_METER_STATE: return get_energy_meter_state(message, response);
 		case FID_RESET_ENERGY_METER: return reset_energy_meter(message);
 		case FID_GET_DC_FAULT_CURRENT_STATE: return get_dc_fault_current_state(message, response);
@@ -228,16 +229,41 @@ BootloaderHandleMessageResponse get_charging_autostart(const GetChargingAutostar
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
 	response->header.length   = sizeof(GetEnergyMeterValues_Response);
-	response->power           = (uint32_t)sdm72dm.power.f;
-	response->energy_absolute = (uint32_t)(sdm72dm.energy_absolute.f*1000.0f);
-	response->energy_relative = (uint32_t)(sdm72dm.energy_relative.f*1000.0f);
+//	response->power           = (uint32_t)sdm630.power.f;
+//	response->energy_absolute = (uint32_t)(sdm630.energy_absolute.f*1000.0f);
+//	response->energy_relative = (uint32_t)(sdm630.energy_relative.f*1000.0f);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+
+BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const GetEnergyMeterDetailedValuesLowLevel *data, GetEnergyMeterDetailedValuesLowLevel_Response *response) {
+	static uint32_t packet_payload_index = 0;
+
+	response->header.length = sizeof(GetEnergyMeterDetailedValuesLowLevel_Response);
+
+	const uint8_t packet_length = 60;
+	const uint16_t max_end = 84*sizeof(float);
+	const uint16_t start = packet_payload_index * packet_length;
+	const uint16_t end = MIN(start + packet_length, max_end);
+	const uint16_t copy_num = end-start;
+	uint8_t *copy_from = (uint8_t*)&sdm630_register;
+
+	response->values_chunk_offset = start/4;
+	memcpy(response->values_chunk_data, &copy_from[start], copy_num);
+
+	if(end < max_end) {
+		packet_payload_index++;
+	} else {
+		packet_payload_index = 0;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState *data, GetEnergyMeterState_Response *response) {
 	response->header.length  = sizeof(GetEnergyMeterState_Response);
-	response->available      = sdm72dm.available;
+	response->available      = sdm630.available;
 	response->error_count[0] = rs485.modbus_common_error_counters.timeout;
 	response->error_count[1] = 0; // global timeout TODO
 	response->error_count[2] = rs485.modbus_common_error_counters.illegal_function;
@@ -249,7 +275,7 @@ BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState
 }
 
 BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data) {
-	sdm72dm.reset_energy_meter = true;
+	sdm630.reset_energy_meter = true;
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
