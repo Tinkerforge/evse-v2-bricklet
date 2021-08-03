@@ -29,6 +29,7 @@
 #include "rs485.h"
 #include "modbus.h"
 
+// Maps to registers in SDM630Register
 const uint16_t sdm630_registers_to_read[] = {
 	1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,47,49,53,57,61,63,67,71,73,75,77,79,81,83,85,87,101,103,105,201,203,205,207,225,235,237,239,241,243,245,249,251,259,261,263,265,267,269,335,337,339,341,343,345,347,349,351,353,355,357,359,361,363,365,367,369,371,373,375,377,379,381
 };
@@ -115,7 +116,9 @@ void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, uin
 void sdm630_init(void) {
 	memset(&sdm630, 0, sizeof(SDM630));
 	memset(&sdm630_register, 0 , sizeof(SDM630Register));
-	_Static_assert(SDM630_REGISTER_NUM == (sizeof(sdm630_register)/sizeof(uint32_t)), "Register size doesnt match register numbers");
+	_Static_assert(SDM630_REGISTER_NUM == (sizeof(sdm630_register)/sizeof(uint32_t)), "Register size doesnt matcoh register numbers");
+
+	sdm630.first_tick = system_timer_get_ms();
 }
 
 bool sdm630_get_read_input(uint32_t *data) {
@@ -189,6 +192,14 @@ bool sdm630_write_register_response(int8_t *exception_code) {
 
 void sdm630_tick(void) {
 	static uint8_t last_state = 255;
+
+	if(sdm630.first_tick != 0) {
+		if(!system_timer_is_time_elapsed_ms(sdm630.first_tick, 2500)) {
+			return;
+		}
+		sdm630.first_tick = 0;
+	}
+
 	if(last_state != sdm630.state) {
 		sdm630.timeout = system_timer_get_ms();
 		last_state = sdm630.state;

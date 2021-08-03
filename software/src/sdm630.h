@@ -94,6 +94,7 @@ typedef struct {
 	bool reset_energy_meter;
 
 	uint32_t timeout;
+	uint32_t first_tick;
 } SDM630;
 
 extern SDM630 sdm630;
