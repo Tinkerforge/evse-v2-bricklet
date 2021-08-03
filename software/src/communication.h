@@ -69,6 +69,7 @@ void communication_init(void);
 #define EVSE_V2_ERROR_STATE_CALIBRATION 3
 #define EVSE_V2_ERROR_STATE_CONTACTOR 4
 #define EVSE_V2_ERROR_STATE_COMMUNICATION 5
+#define EVSE_V2_ERROR_STATE_DC_FAULT 6
 
 #define EVSE_V2_JUMPER_CONFIGURATION_6A 0
 #define EVSE_V2_JUMPER_CONFIGURATION_10A 1
@@ -86,14 +87,14 @@ void communication_init(void);
 #define EVSE_V2_CHARGE_RELEASE_MANAGED 3
 
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_NORMAL_CONDITION 0
-#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA 1
-#define EVSE_V2_DC_FAULT_CURRENT_STATE_SYSTEM 2
-#define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN 3
-#define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION 4
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA_ERROR 1
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_SYSTEM_ERROR 2
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN_ERROR 3
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION_ERROR 4
 
-#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_DEACTIVATED 0
-#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_ACTIVE_OPEN 1
-#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_ACTIVE_CLOSE 2
+#define EVSE_V2_ENABLE_INPUT_DEACTIVATED 0
+#define EVSE_V2_ENABLE_INPUT_ACTIVE_OPEN 1
+#define EVSE_V2_ENABLE_INPUT_ACTIVE_CLOSE 2
 
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
@@ -225,9 +226,10 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint32_t power;
-	uint32_t energy_relative;
-	uint32_t energy_absolute;
+	float power;
+	float energy_relative;
+	float energy_absolute;
+	uint8_t phases_active[1];
 } __attribute__((__packed__)) GetEnergyMeterValues_Response;
 
 typedef struct {
@@ -270,7 +272,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t charge_release_input_configuration;
+	uint8_t enable_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) SetGPIOConfiguration;
@@ -281,7 +283,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t charge_release_input_configuration;
+	uint8_t enable_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) GetGPIOConfiguration_Response;

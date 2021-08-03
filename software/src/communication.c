@@ -228,10 +228,11 @@ BootloaderHandleMessageResponse get_charging_autostart(const GetChargingAutostar
 }
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
-	response->header.length   = sizeof(GetEnergyMeterValues_Response);
-//	response->power           = (uint32_t)sdm630.power.f;
-//	response->energy_absolute = (uint32_t)(sdm630.energy_absolute.f*1000.0f);
-//	response->energy_relative = (uint32_t)(sdm630.energy_relative.f*1000.0f);
+	response->header.length    = sizeof(GetEnergyMeterValues_Response);
+//	response->power            = (uint32_t)sdm630.power.f;
+//	response->energy_absolute  = (uint32_t)(sdm630.energy_absolute.f*1000.0f);
+//	response->energy_relative  = (uint32_t)(sdm630.energy_relative.f*1000.0f);
+//	response->phases_active[0] =  // TODO
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -303,10 +304,10 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 }
 
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response) {
-	response->header.length                      = sizeof(GetGPIOConfiguration_Response);
-	response->charge_release_input_configuration = EVSE_V2_CHARGE_RELEASE_DEACTIVATED; // TODO
-	response->input_configuration                = 0; // TODO
-	response->output_configuration               = 0; // TODO
+	response->header.length               = sizeof(GetGPIOConfiguration_Response);
+	response->enable_input_configuration  = EVSE_V2_ENABLE_INPUT_DEACTIVATED; // TODO
+	response->input_configuration         = 0; // TODO
+	response->output_configuration        = 0; // TODO
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
