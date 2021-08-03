@@ -91,6 +91,10 @@ void communication_init(void);
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN 3
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION 4
 
+#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_DEACTIVATED 0
+#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_ACTIVE_OPEN 1
+#define EVSE_V2_CHARGE_RELEASE_INPUT_CHARGE_RELEASE_INPUT_ACTIVE_CLOSE 2
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -266,6 +270,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint8_t charge_release_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) SetGPIOConfiguration;
@@ -276,6 +281,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint8_t charge_release_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) GetGPIOConfiguration_Response;

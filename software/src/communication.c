@@ -303,9 +303,10 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 }
 
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response) {
-	response->header.length        = sizeof(GetGPIOConfiguration_Response);
-	response->input_configuration  = 0; // TODO
-	response->output_configuration = 0; // TODO
+	response->header.length                      = sizeof(GetGPIOConfiguration_Response);
+	response->charge_release_input_configuration = EVSE_V2_CHARGE_RELEASE_DEACTIVATED; // TODO
+	response->input_configuration                = 0; // TODO
+	response->output_configuration               = 0; // TODO
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
