@@ -31,6 +31,7 @@
 #include "adc.h"
 #include "led.h"
 #include "evse.h"
+#include "communication.h"
 
 #include "xmc_gpio.h"
 
@@ -160,6 +161,7 @@ void dc_fault_calibration_tick(void) {
 
 void dc_fault_tick(void) {
 	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+		led_set_blinking(EVSE_V2_ERROR_STATE_DC_FAULT);
 		// In case of any dc fault error we don't run the dc fault code anymore.
 		// We never want to accidentially reset back to normal condition 
 		// (only the user of the wallbox should be able to do this).
