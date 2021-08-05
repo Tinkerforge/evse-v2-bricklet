@@ -229,10 +229,12 @@ BootloaderHandleMessageResponse get_charging_autostart(const GetChargingAutostar
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
 	response->header.length    = sizeof(GetEnergyMeterValues_Response);
-//	response->power            = (uint32_t)sdm630.power.f;
-//	response->energy_absolute  = (uint32_t)(sdm630.energy_absolute.f*1000.0f);
-//	response->energy_relative  = (uint32_t)(sdm630.energy_relative.f*1000.0f);
-//	response->phases_active[0] =  // TODO
+	response->power            = sdm630_register_fast.power.f;
+	response->energy_absolute  = sdm630_register_fast.absolute_energy.f;
+	response->energy_relative  = sdm630_register_fast.absolute_energy.f - sdm630.relative_energy.f;
+	response->phases_active[0] = ((sdm630_register_fast.current_per_phase[0].f > 0.01f) << 0) |
+	                             ((sdm630_register_fast.current_per_phase[1].f > 0.01f) << 1) |
+	                             ((sdm630_register_fast.current_per_phase[2].f > 0.01f) << 2);
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -277,6 +279,7 @@ BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState
 
 BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data) {
 	sdm630.reset_energy_meter = true;
+	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }

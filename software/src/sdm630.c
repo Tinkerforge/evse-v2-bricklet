@@ -34,10 +34,16 @@ const uint16_t sdm630_registers_to_read[] = {
 	1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,47,49,53,57,61,63,67,71,73,75,77,79,81,83,85,87,101,103,105,201,203,205,207,225,235,237,239,241,243,245,249,251,259,261,263,265,267,269,335,337,339,341,343,345,347,349,351,353,355,357,359,361,363,365,367,369,371,373,375,377,379,381
 };
 
+const uint16_t sdm630_registers_fast_to_read[] = {
+	53, 343, 7, 9, 11
+};
+
 SDM630 sdm630;
 SDM630Register sdm630_register;
+SDM630RegisterFast sdm630_register_fast;
 
-#define SDM630_REGISTER_NUM (sizeof(sdm630_registers_to_read)/sizeof(uint16_t))
+#define SDM630_REGISTER_NUM      (sizeof(sdm630_registers_to_read)/sizeof(uint16_t))
+#define SDM630_REGISTER_FAST_NUM (sizeof(sdm630_registers_fast_to_read)/sizeof(uint16_t))
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
@@ -114,11 +120,15 @@ void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, uin
 }
 
 void sdm630_init(void) {
+	uint32_t relative_energy_save = sdm630.relative_energy.data;
 	memset(&sdm630, 0, sizeof(SDM630));
 	memset(&sdm630_register, 0 , sizeof(SDM630Register));
 	_Static_assert(SDM630_REGISTER_NUM == (sizeof(sdm630_register)/sizeof(uint32_t)), "Register size doesnt matcoh register numbers");
+	_Static_assert(SDM630_REGISTER_FAST_NUM == (sizeof(sdm630_register_fast)/sizeof(uint32_t)), "Register Fast size doesnt matcoh register numbers");
 
+	sdm630.relative_energy.data = relative_energy_save;
 	sdm630.first_tick = system_timer_get_ms();
+	sdm630.register_fast_time = system_timer_get_ms();
 }
 
 bool sdm630_get_read_input(uint32_t *data) {
@@ -192,6 +202,7 @@ bool sdm630_write_register_response(int8_t *exception_code) {
 
 void sdm630_tick(void) {
 	static uint8_t last_state = 255;
+	static bool read_fast = false;
 
 	if(sdm630.first_tick != 0) {
 		if(!system_timer_is_time_elapsed_ms(sdm630.first_tick, 2500)) {
@@ -215,48 +226,48 @@ void sdm630_tick(void) {
 
 	switch(sdm630.state) {
 		case 0: { // request
-			sdm630_read_input_registers(1, sdm630_registers_to_read[sdm630.register_position], 2);
+			if(system_timer_is_time_elapsed_ms(sdm630.register_fast_time, 500) || (sdm630.register_fast_position > 0)) {
+				sdm630_read_input_registers(1, sdm630_registers_fast_to_read[sdm630.register_fast_position], 2);
+				read_fast = true;
+			} else {
+				sdm630_read_input_registers(1, sdm630_registers_to_read[sdm630.register_position], 2);
+				read_fast = false;
+			}
 			sdm630.state++;
 			break;
 		}
 
 		case 1: { // read
-			if(sdm630_get_read_input(&(((uint32_t*)&sdm630_register)[sdm630.register_position]))) {
-				modbus_clear_request(&rs485);
-				sdm630.state++;
-				sdm630.register_position++;
-				if(sdm630.register_position >= SDM630_REGISTER_NUM) {
-					sdm630.register_position = 0;
-				}
-			}
-			break;
-		}
-
-		case 2: { // write reset
-			if(sdm630.reset_energy_meter) {
-				sdm630_write_register(1, 61457, 0x0003);
-				sdm630.state++;
+			bool ret = false;
+			if(read_fast) {
+				ret = sdm630_get_read_input(&(((uint32_t*)&sdm630_register_fast)[sdm630.register_fast_position]));
 			} else {
-				sdm630.state = 0;
+				ret = sdm630_get_read_input(&(((uint32_t*)&sdm630_register)[sdm630.register_position]));
 			}
-			break;
-		}
-
-		case 3: { // read write reset response
-			int8_t exception_code;
-			if(sdm630_write_register_response(&exception_code)) {
-				if(exception_code == 0) {
-					sdm630.reset_energy_meter = false;
-				}
-//				logd("reset response: %d\n\r", exception_code);
+			if(ret) {
 				modbus_clear_request(&rs485);
 				sdm630.state++;
+				if(read_fast) {
+					sdm630.register_fast_position++;
+					if(sdm630.register_fast_position >= SDM630_REGISTER_FAST_NUM) {
+						sdm630.register_fast_position = 0;
+						sdm630.register_fast_time += 500;
+						if(system_timer_is_time_elapsed_ms(sdm630.register_fast_time, 500)) {
+							sdm630.register_fast_time = system_timer_get_ms();
+						}
+					}
+				} else {
+					sdm630.register_position++;
+					if(sdm630.register_position >= SDM630_REGISTER_NUM) {
+						sdm630.register_position = 0;
+					}
+				}
 			}
 			break;
 		}
 	}
 
-	if(sdm630.state >= 4) {
+	if(sdm630.state >= 2) {
 		sdm630.state = 0;
 	}
 }

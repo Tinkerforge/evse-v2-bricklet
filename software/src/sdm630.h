@@ -85,20 +85,32 @@ typedef struct {
 	SDM630RegisterType total_kvarh[SDM630_PHASE_NUM];
 } __attribute__((__packed__)) SDM630Register;
 
+typedef struct {
+	SDM630RegisterType power;
+	SDM630RegisterType absolute_energy;
+	SDM630RegisterType current_per_phase[SDM630_PHASE_NUM];
+} __attribute__((__packed__)) SDM630RegisterFast;
 
 typedef struct {
 	uint8_t state;
 	uint16_t register_position;
+	uint16_t register_fast_position;
+
+	uint32_t register_fast_time;
 
 	bool available;
 	bool reset_energy_meter;
 
 	uint32_t timeout;
 	uint32_t first_tick;
+
+	SDM630RegisterType relative_energy;
 } SDM630;
 
 extern SDM630 sdm630;
 extern SDM630Register sdm630_register;
+extern SDM630RegisterFast sdm630_register_fast;
+
 void sdm630_init(void);
 void sdm630_tick(void);
 

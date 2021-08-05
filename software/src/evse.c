@@ -34,6 +34,7 @@
 #include "contactor_check.h"
 #include "led.h"
 #include "dc_fault.h"
+#include "sdm630.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -101,21 +102,31 @@ void evse_load_config(void) {
 	// This is either our first startup or something went wrong.
 	// We initialize the config data with sane default values.
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
-		evse.managed = false;
+		evse.managed                = false;
+		sdm630.relative_energy.f    = 0.0f;
 	} else {
-		evse.managed = page[EVSE_CONFIG_MANAGED_POS];
+		evse.managed                = page[EVSE_CONFIG_MANAGED_POS];
+		sdm630.relative_energy.data = page[EVSE_CONFIG_REL_ENERGY_POS];
 	}
 
 	logd("Load config:\n\r");
 	logd(" * managed %d\n\r", evse.managed);
+	logd(" * relener %d\n\r", sdm630.relative_energy.data);
 }
 
 void evse_save_config(void) {
 	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
 
-	page[EVSE_CONFIG_MAGIC_POS]   = EVSE_CONFIG_MAGIC;
-	page[EVSE_CONFIG_MANAGED_POS] = evse.managed;
+	page[EVSE_CONFIG_MAGIC_POS]          = EVSE_CONFIG_MAGIC;
+	page[EVSE_CONFIG_MANAGED_POS]        = evse.managed;
+	if(sdm630.reset_energy_meter) {
+		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm630_register_fast.absolute_energy.data;
+		sdm630.relative_energy.data      = sdm630_register_fast.absolute_energy.data;
+	} else {
+		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm630.relative_energy.data;
+	}
 
+	sdm630.reset_energy_meter = false;
 	bootloader_write_eeprom_page(EVSE_CONFIG_PAGE, page);
 }
 

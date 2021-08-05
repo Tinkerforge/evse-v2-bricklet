@@ -41,8 +41,9 @@
 #define EVSE_CONFIG_PAGE                1
 #define EVSE_CONFIG_MAGIC_POS           0
 #define EVSE_CONFIG_MANAGED_POS         1
+#define EVSE_CONFIG_REL_ENERGY_POS      2
 
-#define EVSE_CONFIG_MAGIC               0x34567890
+#define EVSE_CONFIG_MAGIC               0x34567891
 
 #define EVSE_STORAGE_PAGES              16
 
