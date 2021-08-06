@@ -28,11 +28,11 @@
 #include "bricklib2/hal/uartbb/uartbb.h"
 
 bool timer_us_elapsed_since_last_timer_reset(const uint32_t us) {
-	if((CCU40_CC43->TCST & CCU4_CC4_TCST_TRB_Msk) == 0) {
+	if((CCU41_CC43->TCST & CCU4_CC4_TCST_TRB_Msk) == 0) {
 		return true;
 	}
 
-	return XMC_CCU4_SLICE_GetTimerValue(CCU40_CC43) >= us/10;
+	return XMC_CCU4_SLICE_GetTimerValue(CCU41_CC43) >= us/10;
 }
 
 void timer_init(void) {
@@ -67,26 +67,25 @@ void timer_init(void) {
 	};
 
 	// Initialize CCU4
-	// (CCU4 already initialized for EVSE CP/PE PWM)
-	//    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-	//    XMC_CCU4_StartPrescaler(CCU40);
+	XMC_CCU4_Init(CCU41, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU4_StartPrescaler(CCU41);
 
     // Slice 0: Count from 0 to 4800 (100us)
-    XMC_CCU4_EnableClock(CCU40, 2);
-    XMC_CCU4_SLICE_CompareInit(CCU40_CC42, &timer0_config);
-    XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC42, 480);
-    XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC42, 0);
-    XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_2 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_2);
+    XMC_CCU4_EnableClock(CCU41, 2);
+    XMC_CCU4_SLICE_CompareInit(CCU41_CC42, &timer0_config);
+    XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU41_CC42, 480);
+    XMC_CCU4_SLICE_SetTimerCompareMatch(CCU41_CC42, 0);
+    XMC_CCU4_EnableShadowTransfer(CCU41, XMC_CCU4_SHADOW_TRANSFER_SLICE_2 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_2);
 
     // Slice 1: Concatenate with Slice 0, count for every 100us (10000 counts per seconds)
-    XMC_CCU4_EnableClock(CCU40, 3);
-    XMC_CCU4_SLICE_CompareInit(CCU40_CC43, &timer1_config);
-    XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC43, 0xFFFF);
-    XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC43, 0);
+    XMC_CCU4_EnableClock(CCU41, 3);
+    XMC_CCU4_SLICE_CompareInit(CCU41_CC43, &timer1_config);
+    XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU41_CC43, 0xFFFF);
+    XMC_CCU4_SLICE_SetTimerCompareMatch(CCU41_CC43, 0);
 
-    XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_3 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_3);
+    XMC_CCU4_EnableShadowTransfer(CCU41, XMC_CCU4_SHADOW_TRANSFER_SLICE_3 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_3);
 
     // Start
-    XMC_CCU4_SLICE_StartTimer(CCU40_CC42);
-    XMC_CCU4_SLICE_StartTimer(CCU40_CC43);
+    XMC_CCU4_SLICE_StartTimer(CCU41_CC42);
+    XMC_CCU4_SLICE_StartTimer(CCU41_CC43);
 }

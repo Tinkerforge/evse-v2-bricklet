@@ -27,8 +27,8 @@
 
 #define TIMER_RESET() \
   do {\
-    CCU40_CC43->TCCLR = CCU4_CC4_TCCLR_TCC_Msk;\
-    CCU40_CC43->TCSET = CCU4_CC4_TCSET_TRBS_Msk;\
+    CCU41_CC43->TCCLR = CCU4_CC4_TCCLR_TCC_Msk;\
+    CCU41_CC43->TCSET = CCU4_CC4_TCSET_TRBS_Msk;\
   } while(false)
 
 bool timer_us_elapsed_since_last_timer_reset(const uint32_t us);
