@@ -174,8 +174,8 @@ typedef struct {
 	TFPMessageHeader header;
 	uint8_t led_state;
 	uint16_t cp_pwm_duty_cycle;
-	uint16_t adc_values[5];
-	int16_t voltages[5];
+	uint16_t adc_values[7];
+	int16_t voltages[7];
 	uint32_t resistances[2];
 	uint8_t gpio[3];
 } __attribute__((__packed__)) GetLowLevelState_Response;

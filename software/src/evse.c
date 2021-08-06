@@ -53,6 +53,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ev
 
 
 void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
+	static int16_t last_resistance_counter = -2;
 	evse_set_cp_duty_cycle(cp_duty_cycle);
 
 	// If the contactor is to be enabled and the lock is currently
@@ -68,6 +69,20 @@ void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
 #endif
 
 	if(((bool)!XMC_GPIO_GetInput(EVSE_RELAY_PIN)) != contactor) {
+		if(contactor) {
+			// If we are asked to turn the contactor on, we want to see at least two adc measurements in a row
+			// that supports this conclusion.
+			// To do this the ADC code increaes a counter every time a new CP/PE resistance is saved.
+			// We expect to see two consecutive measurements, otherwise we don't turn the contactor on.
+			// This is a generic method to ignore glitches that persist for only one adc measurement
+			if(((last_resistance_counter+1) & 0xFF) != adc_result.resistance_counter) {
+				last_resistance_counter = adc_result.resistance_counter;
+				return;
+			}
+		} else {
+			last_resistance_counter = -2;
+		}
+
 		// Ignore all ADC measurements for a while if the contactor is
 		// switched on or off, to be sure that the resulting EMI spike does
 		// not give us a wrong measurement.
@@ -259,30 +274,40 @@ void evse_init_cp_pwm(void) {
 	XMC_CCU4_StartPrescaler(CCU40);
 	XMC_CCU4_SLICE_CompareInit(CCU40_CC40, &compare_config);
 	XMC_CCU4_SLICE_CompareInit(CCU40_CC41, &compare_config);
+	XMC_CCU4_SLICE_CompareInit(CCU40_CC42, &compare_config);
 
 	// Set the period and compare register values
 	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC40, EVSE_CP_PWM_PERIOD-1);
 	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC41, EVSE_CP_PWM_PERIOD-1);
+	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC42, EVSE_CP_PWM_PERIOD-1);
 	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC40, 48000 - 0*48);
-	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC41, 48000 - 30*48); // 3% duty-cycle (this puts the ADC measurement right at the end of duty-cycle)
+	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC41, 48000 - 30*48); // 3% duty-cycle (this puts the first ADC measurement at the end of the high part of the PWM)
+	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC42, 48000 - 530*48); // 53% duty-cycle (this puts the second ADC measurement at the middle the low part of the PWM)
 
-	XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_1);
+	XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_SLICE_2 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_2);
 
 	XMC_GPIO_Init(EVSE_CP_PWM_PIN, &gpio_out_config);
 
 	XMC_CCU4_EnableClock(CCU40, 0);
 	XMC_CCU4_EnableClock(CCU40, 1);
+	XMC_CCU4_EnableClock(CCU40, 2);
 
-	// Start CCU40 slice 0 and 1 in sync.
+	// Start CCU40 slice 0, 1 and 2 in sync.
 	XMC_CCU4_SLICE_ConfigureEvent(CCU40_CC40, XMC_CCU4_SLICE_EVENT_1, &event_config);
 	XMC_CCU4_SLICE_ConfigureEvent(CCU40_CC41, XMC_CCU4_SLICE_EVENT_1, &event_config);
+	XMC_CCU4_SLICE_ConfigureEvent(CCU40_CC42, XMC_CCU4_SLICE_EVENT_1, &event_config);
 	XMC_CCU4_SLICE_StartConfig(CCU40_CC40, XMC_CCU4_SLICE_EVENT_1, XMC_CCU4_SLICE_START_MODE_TIMER_START_CLEAR);
 	XMC_CCU4_SLICE_StartConfig(CCU40_CC41, XMC_CCU4_SLICE_EVENT_1, XMC_CCU4_SLICE_START_MODE_TIMER_START_CLEAR);
+	XMC_CCU4_SLICE_StartConfig(CCU40_CC42, XMC_CCU4_SLICE_EVENT_1, XMC_CCU4_SLICE_START_MODE_TIMER_START_CLEAR);
 	XMC_SCU_SetCcuTriggerHigh(SCU_GENERAL_CCUCON_GSC40_Msk);
 
 	// Enable interrupt for CP PWM (on slice 1)
 	XMC_CCU4_SLICE_EnableEvent(CCU40_CC41, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP);
 	XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC41, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
+
+	// Enable interrupt for CP PWM (on slice 2)
+	XMC_CCU4_SLICE_EnableEvent(CCU40_CC42, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP);
+	XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC42, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
 
 	// Interrupt for testing
 //	NVIC_SetPriority(30, 1);

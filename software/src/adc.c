@@ -286,8 +286,15 @@ void adc_enable_all(const bool all) {
 void adc_check_result(const uint8_t i) {
 	uint32_t result = XMC_VADC_GROUP_GetDetailedResult(adc[i].group, adc[i].result_reg);
 	if(result & (1 << 31)) {
-		adc[i].result_sum += result & 0xFFFF;
-		adc[i].result_count++;
+		uint16_t r = result & 0xFFFF;
+		if((i <= 1) && (r < 2048)) {
+			adc[i].result_sum[1] += r;
+			adc[i].result_count[1]++;
+		} else {
+			adc[i].result_sum[0] += r;
+			adc[i].result_count[0]++;
+		}
+
 		if(i == 0) {
 			adc->timeout = system_timer_get_ms();
 		}
@@ -303,11 +310,21 @@ void adc_check_result(const uint8_t i) {
 }
 
 void adc_check_count(const uint8_t i) {
-	if(adc[i].result_count >= 50) {
-		adc[i].result = adc[i].result_sum/adc[i].result_count;
+	if(i <= 1) {
+		if(adc[i].result_count[1] >= 75) {
+			adc[i].result[1]       = adc[i].result_sum[1]/adc[i].result_count[1];
+			adc[i].result_sum[1]   = 0;
+			adc[i].result_count[1] = 0;
 
-		adc[i].result_sum = 0;
-		adc[i].result_count = 0;
+			adc[i].result_mv[1]    = (adc[i].result[1]*600*3300/4095-990*1000)/75;
+		}
+	}
+
+	if(adc[i].result_count[0] >= 75) {
+		adc[i].result[0] = adc[i].result_sum[0]/adc[i].result_count[0];
+
+		adc[i].result_sum[0] = 0;
+		adc[i].result_count[0] = 0;
 
 		// Return if ADC count counter > 0
 		if(adc[i].ignore_count > 0) {
@@ -318,30 +335,32 @@ void adc_check_count(const uint8_t i) {
 		//uint32_t new_time = system_timer_get_ms();
 
 		if(i == 2) { // PP/PE
-			adc[i].result_mv = adc[i].result*3300/4095;
+			adc[i].result_mv[0] = adc[i].result[0]*3300/4095;
 
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
-			const uint32_t divisor = 5000*2 - adc[2].result_mv*(1+2);
+			const uint32_t divisor = 5000*2 - adc[2].result_mv[0]*(1+2);
 			if(divisor == 0) {
 				adc_result.pp_pe_resistance = 0xFFFFFFFF;
 			} else {
-				adc_result.pp_pe_resistance = 1000*2*adc[2].result_mv/divisor;
+				adc_result.pp_pe_resistance = 1000*2*adc[2].result_mv[0]/divisor;
 				if(adc_result.pp_pe_resistance > 10000) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
 			}
 		} if(i == 3) { // +12V rail
-			adc[i].result_mv = adc[i].result*4*3300/4095;
+			adc[i].result_mv[0] = adc[i].result[0]*4*3300/4095;
 		} else {
-			adc[i].result_mv = (adc[i].result*600*3300/4095-990*1000)/75;
+			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/75;
 			if(i == 1) {
+				adc_result.resistance_counter++;
+
 				// resistance divider, 910 ohm on EVSE
 				// diode voltage drop 650mV (value is educated guess)
-				if(adc[0].result_mv <= adc[1].result_mv) {
+				if(adc[0].result_mv[0] <= adc[1].result_mv[0]) {
 					adc_result.cp_pe_resistance = 0xFFFFFFFF;
 				} else {
-					const uint32_t divisor = adc[0].result_mv - adc[1].result_mv;
-					adc_result.cp_pe_resistance = 910*(adc[1].result_mv - ADC_DIODE_DROP)/divisor;
+					const uint32_t divisor = adc[0].result_mv[0] - adc[1].result_mv[0];
+					adc_result.cp_pe_resistance = 910*(adc[1].result_mv[0] - ADC_DIODE_DROP)/divisor;
 					if(adc_result.cp_pe_resistance > 32000) {
 						adc_result.cp_pe_resistance = 0xFFFFFFFF;
 					}

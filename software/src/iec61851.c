@@ -208,10 +208,35 @@ void iec61851_tick(void) {
 		if(button.state == BUTTON_STATE_PRESSED) {
 			led.state = LED_STATE_OFF;
 		}
+	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
+	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000))) {
+		// Wait for ADC CP/PE measurements to be valid
+		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
+			return;
+		}
+
+		if(iec61851.diode_error_counter > 100) {
+			led_set_blinking(5);
+			iec61851.state = IEC61851_STATE_B;
+			iec61851_state_b();
+		} else {
+			iec61851.diode_error_counter++;
+		}
+
 	} else {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
 			return;
+		}
+
+		// If we reach here the diode error was fixed and we can turn the blinking off again
+		if(iec61851.diode_error_counter > 0) {
+			iec61851.diode_error_counter--;
+			if(iec61851.diode_error_counter == 0) {
+				led_set_on();
+			} else {
+				return;
+			}
 		}
 
 		if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
