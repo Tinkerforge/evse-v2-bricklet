@@ -38,7 +38,7 @@
 #define EVSE_INPUT_GP_PIN              P2_9
 #define EVSE_OUTPUT_GP_PIN             P1_3
 
-#define EVSE_CONFIG_JUMPER_PIN0        P0_0
-#define EVSE_CONFIG_JUMPER_PIN1        P0_5
+#define EVSE_CONFIG_JUMPER_PIN0        P0_5
+#define EVSE_CONFIG_JUMPER_PIN1        P0_0
 
 #endif
