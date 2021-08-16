@@ -175,7 +175,7 @@ void iec61851_state_c(void) {
 	// Apply 1kHz square wave to CP with appropriate duty cycle, enable contactor
 	uint32_t ma = iec61851_get_max_ma();
 	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
-	led.state = LED_STATE_BREATHING;
+	led_set_breathing();
 }
 
 void iec61851_state_d(void) {
@@ -206,7 +206,7 @@ void iec61851_tick(void) {
 		// As long as we are in "was_pressed"-state and the button is 
 		// still pressed (or key is turned to off) the LED stays off
 		if(button.state == BUTTON_STATE_PRESSED) {
-			led.state = LED_STATE_OFF;
+			led_set_off();
 		}
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
 	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000))) {

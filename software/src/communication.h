@@ -136,6 +136,8 @@ void communication_init(void);
 #define FID_SET_MANAGED_CURRENT 20
 #define FID_GET_DATA_STORAGE 21
 #define FID_SET_DATA_STORAGE 22
+#define FID_GET_INDICATOR_LED 23
+#define FID_SET_INDICATOR_LED 24
 
 
 typedef struct {
@@ -323,6 +325,27 @@ typedef struct {
 	uint8_t data[63];
 } __attribute__((__packed__)) SetDataStorage;
 
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetIndicatorLED;
+
+typedef struct {
+	TFPMessageHeader header;
+	int16_t indication;
+	uint16_t duration;
+} __attribute__((__packed__)) GetIndicatorLED_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	int16_t indication;
+	uint16_t duration;
+} __attribute__((__packed__)) SetIndicatorLED;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t status;
+} __attribute__((__packed__)) SetIndicatorLED_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -347,6 +370,8 @@ BootloaderHandleMessageResponse set_managed(const SetManaged *data);
 BootloaderHandleMessageResponse set_managed_current(const SetManagedCurrent *data);
 BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, GetDataStorage_Response *response);
 BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data);
+BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, GetIndicatorLED_Response *response);
+BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, SetIndicatorLED_Response *response);
 
 // Callbacks
 
