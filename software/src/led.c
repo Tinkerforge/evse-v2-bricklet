@@ -335,8 +335,6 @@ void led_tick_status_api(void) {
 }
 
 void led_tick(void) {
-	led_tick_status_api();
-	return;
 	switch(led.state) {
 		case LED_STATE_OFF:       led_tick_status_off();       break;
 		case LED_STATE_ON:        led_tick_status_on();        break;
