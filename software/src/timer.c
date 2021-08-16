@@ -71,14 +71,14 @@ void timer_init(void) {
 	XMC_CCU4_StartPrescaler(CCU41);
 
     // Slice 0: Count from 0 to 4800 (100us)
-    XMC_CCU4_EnableClock(CCU41, 2);
+    XMC_CCU4_EnableClock(CCU41, 0);
     XMC_CCU4_SLICE_CompareInit(CCU41_CC40, &timer0_config);
     XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU41_CC40, 480);
     XMC_CCU4_SLICE_SetTimerCompareMatch(CCU41_CC40, 0);
     XMC_CCU4_EnableShadowTransfer(CCU41, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0);
 
     // Slice 1: Concatenate with Slice 0, count for every 100us (10000 counts per seconds)
-    XMC_CCU4_EnableClock(CCU41, 3);
+    XMC_CCU4_EnableClock(CCU41, 1);
     XMC_CCU4_SLICE_CompareInit(CCU41_CC41, &timer1_config);
     XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU41_CC41, 0xFFFF);
     XMC_CCU4_SLICE_SetTimerCompareMatch(CCU41_CC41, 0);
