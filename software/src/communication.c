@@ -300,7 +300,7 @@ BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurre
 BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data) {
 	if(data->password == 0xDC42FA23) {
 		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
-		led_set_on();
+		led_set_on(false);
 	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -423,7 +423,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 		led.api_nag_time     = 0;
 
 		if(data->indication < 0) {
-			led_set_on();
+			led_set_on(true);
 		} else {
 			led.state          = LED_STATE_API;
 			led.api_indication = data->indication;

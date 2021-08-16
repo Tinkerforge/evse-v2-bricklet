@@ -69,7 +69,7 @@ void iec61851_set_state(IEC61851State state) {
 	if(state != iec61851.state) {
 		if((state == IEC61851_STATE_A ) || (state == IEC61851_STATE_B)) {
 			// Turn LED on with timer for standby if we have a state change to state A or B
-			led_set_on();
+			led_set_on(false);
 		}
 
 		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
@@ -160,7 +160,7 @@ void iec61851_state_a(void) {
 		// If the button was released while in a different state,
 		// we see the state change back to A as an event that turns the LED back on (until standby)
 		if(button_reset()) {
-			led_set_on();
+			led_set_on(false);
 		}
 	}
 }
@@ -233,7 +233,7 @@ void iec61851_tick(void) {
 		if(iec61851.diode_error_counter > 0) {
 			iec61851.diode_error_counter--;
 			if(iec61851.diode_error_counter == 0) {
-				led_set_on();
+				led_set_on(false);
 			} else {
 				return;
 			}

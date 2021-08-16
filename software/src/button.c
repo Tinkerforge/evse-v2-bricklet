@@ -61,7 +61,7 @@ void button_tick(void) {
 			button.state = BUTTON_STATE_RELEASED;
 
 			// We always see a button release as a state change that turns the LED on (until standby)
-			led_set_on();
+			led_set_on(false);
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
 			button.was_pressed = true;

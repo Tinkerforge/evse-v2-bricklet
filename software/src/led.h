@@ -78,7 +78,7 @@ typedef struct {
 
 extern LED led;
 
-void led_set_on(void);
+void led_set_on(const bool force);
 void led_set_blinking(const uint8_t num);
 void led_init();
 void led_tick();

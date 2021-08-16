@@ -144,7 +144,7 @@ void dc_fault_calibration_tick(void) {
 					// DC faul test and calibration OK
 					if(led.state == LED_STATE_FLICKER) {
 						// If we are during bootup turn of led flickering after calbration is finished
-						led_set_on();
+						led_set_on(false);
 					}
 				} else {
 					// DC faul test/calibration not OK

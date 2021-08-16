@@ -132,9 +132,9 @@ void led_set_blinking(const uint8_t num) {
 
 // Called whenever there is activity
 // LED will go to standby after 15 minutes again
-void led_set_on(void) {
+void led_set_on(const bool force) {
 	// led "on" does not overwrite API state
-	if(led.state == LED_STATE_API) {
+	if(!force && (led.state == LED_STATE_API)) {
 		return;
 	}
 	
@@ -319,7 +319,7 @@ void led_tick_status_api_nag(void) {
 void led_tick_status_api(void) {
 	if(system_timer_is_time_elapsed_ms(led.api_start, led.api_duration)) {
 		led_reset_api_state();
-		led_set_on();
+		led_set_on(false);
 		return;
 	}
 
