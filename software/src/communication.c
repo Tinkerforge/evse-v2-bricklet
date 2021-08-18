@@ -425,7 +425,13 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 		led.api_nag_time     = 0;
 
 		if(data->indication < 0) {
-			led_set_on(true);
+			// If LED state is currently LED_STATE_OFF or LED_STATE_ON we
+			// leave the LED where it is (and don't restart the standby timer).
+			// If LED state is currently in LED_STATE_API we
+			// turn the LED on (which brings it in LED_STATE_ON) and restarts the standby timer.
+			if(led.state == LED_STATE_API) {
+				led_set_on(true);
+			}
 		} else {
 			led.state          = LED_STATE_API;
 			led.api_indication = data->indication;
