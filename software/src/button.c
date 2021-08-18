@@ -33,7 +33,7 @@
 #include <string.h>
 
 #define BUTTON_DEBOUNCE_STANDARD 100 // ms
-#define BUTTON_DEBOUNCE_LONG     1000 // ms
+#define BUTTON_DEBOUNCE_LONG     2000 // ms
 
 Button button;
 
