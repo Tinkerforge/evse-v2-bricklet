@@ -95,6 +95,11 @@ void communication_init(void);
 #define EVSE_V2_ENABLE_INPUT_ACTIVE_OPEN 1
 #define EVSE_V2_ENABLE_INPUT_ACTIVE_CLOSE 2
 
+#define EVSE_V2_BUTTON_CONFIGURATION_DEACTIVATED 0
+#define EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING 1
+#define EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING 2
+#define EVSE_V2_BUTTON_CONFIGURATION_START_AND_STOP_CHARGING 3
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -138,6 +143,8 @@ void communication_init(void);
 #define FID_SET_DATA_STORAGE 22
 #define FID_GET_INDICATOR_LED 23
 #define FID_SET_INDICATOR_LED 24
+#define FID_SET_BUTTON_CONFIGURATION 25
+#define FID_GET_BUTTON_CONFIGURATION 26
 
 
 typedef struct {
@@ -346,6 +353,20 @@ typedef struct {
 	uint8_t status;
 } __attribute__((__packed__)) SetIndicatorLED_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t button_configuration;
+} __attribute__((__packed__)) SetButtonConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetButtonConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t button_configuration;
+} __attribute__((__packed__)) GetButtonConfiguration_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -372,6 +393,8 @@ BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, Get
 BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data);
 BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, GetIndicatorLED_Response *response);
 BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, SetIndicatorLED_Response *response);
+BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data);
+BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response);
 
 // Callbacks
 

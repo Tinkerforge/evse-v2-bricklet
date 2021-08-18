@@ -36,6 +36,9 @@ typedef struct {
 
     bool last_value;
     uint32_t last_change_time;
+    uint32_t debounce_time;
+
+    uint8_t configuration;
 } Button;
 
 extern Button button;

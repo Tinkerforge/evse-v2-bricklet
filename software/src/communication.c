@@ -69,6 +69,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_DATA_STORAGE: return set_data_storage(message);
 		case FID_GET_INDICATOR_LED: return get_indicator_led(message, response);
 		case FID_SET_INDICATOR_LED: return set_indicator_led(message, response);
+		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
+		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -437,6 +439,22 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data) {
+	if(data->button_configuration > EVSE_V2_BUTTON_CONFIGURATION_START_AND_STOP_CHARGING) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	button.configuration = data->button_configuration;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response) {
+	response->header.length        = sizeof(GetButtonConfiguration_Response);
+	response->button_configuration = button.configuration;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
 
 void communication_tick(void) {
 //	communication_callback_tick();

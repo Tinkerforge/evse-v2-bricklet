@@ -28,10 +28,12 @@
 #include "button.h"
 #include "evse.h"
 #include "led.h"
+#include "communication.h"
 
 #include <string.h>
 
-#define BUTTON_DEBOUNCE 100 // ms
+#define BUTTON_DEBOUNCE_STANDARD 100 // ms
+#define BUTTON_DEBOUNCE_LONG     1000 // ms
 
 Button button;
 
@@ -45,6 +47,9 @@ void button_init(void) {
 
 	XMC_GPIO_Init(EVSE_BUTTON_PIN, &pin_config_input);
 	XMC_GPIO_Init(EVSE_ENABLE_PIN, &pin_config_input);
+
+	button.configuration = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
+	button.debounce_time = BUTTON_DEBOUNCE_STANDARD;
 }
 
 void button_tick(void) {
@@ -55,8 +60,9 @@ void button_tick(void) {
 		button.last_change_time = system_timer_get_ms();
 	}
 
-	if(button.last_change_time != 0 && system_timer_is_time_elapsed_ms(button.last_change_time, BUTTON_DEBOUNCE)) {
+	if(button.last_change_time != 0 && system_timer_is_time_elapsed_ms(button.last_change_time, button.debounce_time)) {
 		button.last_change_time = 0;
+		button.debounce_time    = BUTTON_DEBOUNCE_STANDARD;
 		if(!value) {
 			button.state = BUTTON_STATE_RELEASED;
 
@@ -64,7 +70,40 @@ void button_tick(void) {
 			led_set_on(false);
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
-			button.was_pressed = true;
+
+			bool handled = false;
+			// If start charging through button pressed is enabled
+			if(button.configuration | EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
+				// If button was pressed (i.e. we currently don't start a charge automatically)
+				if(button.was_pressed) {
+					// Simulate start-charging API call
+					start_charging(NULL);
+					// If the API call did reset the button pressed state we ignore any other
+					// button configuration after this
+					if(!button.was_pressed) {
+						handled = true;
+
+						// In the case that we start the charging through a button press,
+						// we increase the button debounce to 2 seconds if the button is configured to also start charging, 
+						// to make sure to never start the charge and stop it again immediately.
+						if(button.configuration | EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
+							button.debounce_time = BUTTON_DEBOUNCE_LONG;
+						}
+					}
+				}
+			}
+			if(!handled && (button.configuration | EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING)) {
+				if(!button.was_pressed) {
+					button.was_pressed = true;
+
+					// In the case that we stop the charging through a button press,
+					// we increase the button debounce to 2 seconds if the button is configured to also stop charging, 
+					// to make sure to never stop the charge and start it again immediately.
+					if(button.configuration | EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
+						button.debounce_time = BUTTON_DEBOUNCE_LONG;
+					}
+				}
+			}
 		}
 	}
 
