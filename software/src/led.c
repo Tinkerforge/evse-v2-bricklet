@@ -319,7 +319,7 @@ void led_tick_status_api_nag(void) {
 void led_tick_status_api(void) {
 	if(system_timer_is_time_elapsed_ms(led.api_start, led.api_duration)) {
 		led_reset_api_state();
-		led_set_on(false);
+		led_set_on(true);
 		return;
 	}
 
