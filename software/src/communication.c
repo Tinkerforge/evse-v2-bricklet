@@ -276,7 +276,7 @@ BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState
 	response->header.length  = sizeof(GetEnergyMeterState_Response);
 	response->available      = sdm630.available;
 	response->error_count[0] = rs485.modbus_common_error_counters.timeout;
-	response->error_count[1] = 0; // global timeout TODO
+	response->error_count[1] = 0; // Global timeout. Currently global timeout triggers watchdog and EVSE will restart, so this will always be 0.
 	response->error_count[2] = rs485.modbus_common_error_counters.illegal_function;
 	response->error_count[3] = rs485.modbus_common_error_counters.illegal_data_address;
 	response->error_count[4] = rs485.modbus_common_error_counters.illegal_data_value;
