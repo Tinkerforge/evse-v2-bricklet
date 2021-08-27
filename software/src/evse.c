@@ -216,23 +216,23 @@ void evse_init_jumper(void) {
 	}
 
 	if(pin0 == 'h' && pin1 == 'h') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_SOFTWARE;
 	} else if(pin0 == 'o' && pin1 == 'h') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_6A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_32A;
 	} else if(pin0 == 'l' && pin1 == 'h') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_10A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_25A;
 	} else if(pin0 == 'h' && pin1 == 'o') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_13A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_20A;
 	} else if(pin0 == 'o' && pin1 == 'o') {
 		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_16A;
 	} else if(pin0 == 'l' && pin1 == 'o') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_20A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_13A;
 	} else if(pin0 == 'h' && pin1 == 'l') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_25A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_10A;
 	} else if(pin0 == 'o' && pin1 == 'l') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_32A;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_6A;
 	} else if(pin0 == 'l' && pin1 == 'l') {
-		evse.config_jumper_current = EVSE_CONFIG_JUMPER_SOFTWARE;
+		evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
 	} else {
 		evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
 	}
