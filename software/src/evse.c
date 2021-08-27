@@ -282,7 +282,7 @@ void evse_init_cp_pwm(void) {
 	XMC_CCU4_SLICE_SetTimerPeriodMatch(CCU40_CC42, EVSE_CP_PWM_PERIOD-1);
 	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC40, 48000 - 0*48);
 	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC41, 48000 - 30*48); // 3% duty-cycle (this puts the first ADC measurement at the end of the high part of the PWM)
-	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC42, 48000 - 530*48); // 53% duty-cycle (this puts the second ADC measurement at the middle the low part of the PWM)
+	XMC_CCU4_SLICE_SetTimerCompareMatch(CCU40_CC42, 48000 - 750*48); // 75% duty-cycle (this puts the second ADC measurement at the middle the low part of the PWM)
 
 	XMC_CCU4_EnableShadowTransfer(CCU40, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_1 | XMC_CCU4_SHADOW_TRANSFER_SLICE_2 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_2);
 
