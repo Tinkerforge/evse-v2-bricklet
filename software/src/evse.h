@@ -69,6 +69,7 @@ typedef struct {
 
 extern EVSE evse;
 
+void evse_save_config(void);
 void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor);
 uint16_t evse_get_cp_duty_cycle(void);
 void evse_set_cp_duty_cycle(const uint16_t duty_cycle);
