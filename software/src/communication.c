@@ -309,16 +309,25 @@ BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent
 }
 
 BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguration *data) {
-	// TODO
+	evse.shutdown_input_configuration = data->shutdown_input_configuration;
+	evse.input_configuration          = data->input_configuration;
+	evse.output_configuration         = data->output_configuration;
+
+	// n-channel mosfet (signals inverted)
+	if(evse.output_configuration == EVSE_V2_OUTPUT_LOW) {
+		XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
+	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH) {
+		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response) {
-	response->header.length               = sizeof(GetGPIOConfiguration_Response);
-	response->enable_input_configuration  = EVSE_V2_ENABLE_INPUT_DEACTIVATED; // TODO
-	response->input_configuration         = 0; // TODO
-	response->output_configuration        = 0; // TODO
+	response->header.length                = sizeof(GetGPIOConfiguration_Response);
+	response->shutdown_input_configuration = evse.shutdown_input_configuration;
+	response->input_configuration          = evse.input_configuration;
+	response->output_configuration         = evse.output_configuration;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

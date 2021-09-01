@@ -64,6 +64,10 @@ typedef struct {
 	bool managed;
 	uint16_t max_managed_current;
 
+	uint8_t shutdown_input_configuration;
+	uint8_t input_configuration;
+	uint8_t output_configuration;
+
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
 

@@ -91,9 +91,12 @@ void communication_init(void);
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN_ERROR 3
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION_ERROR 4
 
-#define EVSE_V2_ENABLE_INPUT_DEACTIVATED 0
-#define EVSE_V2_ENABLE_INPUT_ACTIVE_OPEN 1
-#define EVSE_V2_ENABLE_INPUT_ACTIVE_CLOSE 2
+#define EVSE_V2_SHUTDOWN_INPUT_IGNORED 0
+#define EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN 1
+#define EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE 2
+
+#define EVSE_V2_OUTPUT_LOW 0
+#define EVSE_V2_OUTPUT_HIGH 1
 
 #define EVSE_V2_BUTTON_CONFIGURATION_DEACTIVATED 0
 #define EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING 1
@@ -280,7 +283,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t enable_input_configuration;
+	uint8_t shutdown_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) SetGPIOConfiguration;
@@ -291,7 +294,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t enable_input_configuration;
+	uint8_t shutdown_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 } __attribute__((__packed__)) GetGPIOConfiguration_Response;

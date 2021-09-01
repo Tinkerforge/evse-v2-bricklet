@@ -35,6 +35,7 @@
 #include "led.h"
 #include "dc_fault.h"
 #include "sdm630.h"
+#include "communication.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -349,6 +350,7 @@ void evse_init(void) {
 	evse.max_managed_current = 32000;
 	evse.charging_autostart = true;
 	evse.last_contactor_switch = system_timer_get_ms();
+	evse.output_configuration = EVSE_V2_OUTPUT_HIGH;
 
 	evse_load_config();
 	evse_init_jumper();
