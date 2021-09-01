@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name tinkerforge)(type Legacy)(uri ${KIPRJMOD}/../../kicad-libraries/tinkerforge.lib)(options "")(descr ""))
+)
