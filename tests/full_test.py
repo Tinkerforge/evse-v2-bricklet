@@ -21,7 +21,7 @@ def test_value(value, expected, margin_percent=0.1, margin_absolute=20):
     return (value*(1-margin_percent) - margin_absolute) < expected < (value*(1+margin_percent) + margin_absolute)
 
 if __name__ == "__main__":
-    print('Schaltereinstellung auf 32A stellen')
+    print('Schaltereinstellung auf 32A stellen (mitte, rechts)')
     input("Enter drücken...")
     print('')
 
@@ -47,11 +47,11 @@ if __name__ == "__main__":
     print('... OK')
 
     hw_conf = evse_tester.evse.get_hardware_configuration()
-    print('Teste Jumper-Einstellung')
+    print('Teste Schalter-Einstellung')
     if hw_conf.jumper_configuration != 6:
-        print('Falsche Jumper-Einstellung: {0}'.format(hw_conf.jumper_configuration))
+        print('Falsche Schalter-Einstellung: {0}'.format(hw_conf.jumper_configuration))
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     if hw_conf.has_lock_switch:
         print('Falsche Lock-Switch-Einstellung: {0}'.format(hw_conf.has_lock_switch))
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     value = evse_tester.evse.get_low_level_state().gpio[16]
     if value:
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     value = evse_tester.evse.get_low_level_state().gpio[16]
     if not value:
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     value = evse_tester.evse.get_low_level_state().gpio[5]
     if value:
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     value = evse_tester.evse.get_low_level_state().gpio[5]
     if not value:
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -112,13 +112,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_cppe = evse_tester.get_cp_pe_voltage()
     if test_value(vol_cppe, 12213):
         print(' * ... OK ({0} mV)'.format(vol_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 2700 Ohm')
     evse_tester.set_cp_pe_resistor(True, False, False)
@@ -129,13 +129,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_cppe = evse_tester.get_cp_pe_voltage()
     if test_value(vol_cppe, 9069):
         print(' * ... OK ({0} mV)'.format(vol_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 880 Ohm')
     evse_tester.set_cp_pe_resistor(True, True, False)
@@ -146,13 +146,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_cppe = evse_tester.get_cp_pe_voltage()
     if test_value(vol_cppe, 6049):
         print(' * ... OK ({0} mV)'.format(vol_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 240 Ohm')
     evse_tester.set_cp_pe_resistor(True, True, True)
@@ -163,13 +163,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_cppe = evse_tester.get_cp_pe_voltage()
     if test_value(vol_cppe, 2646):
         print(' * ... OK ({0} mV)'.format(vol_cppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_cppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     evse_tester.set_cp_pe_resistor(False, False, False)
     time.sleep(0.5)
@@ -183,13 +183,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_pppe = evse_tester.get_pp_pe_voltage()
     if test_value(vol_pppe, 834):
         print(' * ... OK ({0} mV)'.format(vol_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 1500 Ohm')
     evse_tester.set_pp_pe_resistor(True, False, False, False)
@@ -200,13 +200,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_pppe = evse_tester.get_pp_pe_voltage()
     if test_value(vol_pppe, 2313):
         print(' * ... OK ({0} mV)'.format(vol_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 680 Ohm')
     evse_tester.set_pp_pe_resistor(False, True, False, False)
@@ -217,13 +217,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_pppe = evse_tester.get_pp_pe_voltage()
     if test_value(vol_pppe, 1695):
         print(' * ... OK ({0} mV)'.format(vol_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     print(' * 100 Ohm')
     evse_tester.set_pp_pe_resistor(False, False, False, True)
@@ -234,13 +234,13 @@ if __name__ == "__main__":
         print(' * ... OK ({0} Ohm)'.format(res_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(res_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
     vol_pppe = evse_tester.get_pp_pe_voltage()
     if test_value(vol_pppe, 441):
         print(' * ... OK ({0} mV)'.format(vol_pppe))
     else:
         print('-----------------> NICHT OK {0}'.format(vol_pppe))
-        sys.exit(1)
+        evse_tester.exit(1)
 
     evse_tester.set_pp_pe_resistor(False, False, True, False)
     time.sleep(0.5)
@@ -278,13 +278,13 @@ if __name__ == "__main__":
             print(' * ... OK ({0} Ohm)'.format(res_cppe))
         else:
             print('-----------------> NICHT OK {0}'.format(res_cppe))
-            sys.exit(1)
+            evse_tester.exit(1)
         vol_cppe = evse_tester.get_cp_pe_voltage()
         if test_value(vol_cppe, test_voltages[i]):
             print(' * ... OK ({0} mV)'.format(vol_cppe))
         else:
             print('-----------------> NICHT OK {0}'.format(vol_cppe))
-            sys.exit(1)
+            evse_tester.exit(1)
 
     print('Teste Stromzähler')
     values, detailed_values, state = evse_tester.get_energy_meter_data()
@@ -310,11 +310,11 @@ if __name__ == "__main__":
     else:
         print('Ausschaltzeit: {0}ms'.format(delay))
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
 
-    print('Teste Jumper-Einstellung')
+    print('Teste Schalter-Einstellung')
 
-    print('Schaltereinstellung auf "20A" stellen und dann Taster drücken')
+    print('Schaltereinstellung auf "20A" stellen und dann Taster drücken (rechts, mitte)')
     evse_tester.wait_for_button_gpio(True) # Button True = Pressed
     print('')
 
@@ -322,13 +322,13 @@ if __name__ == "__main__":
     time.sleep(0.5)
     hw_conf = evse_tester.evse.get_hardware_configuration()
     if hw_conf.jumper_configuration != 4:
-        print('Falsche Jumper-Einstellung: {0}'.format(hw_conf.jumper_configuration))
+        print('Falsche Schalter-Einstellung: {0}'.format(hw_conf.jumper_configuration))
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
-    print('Schaltereinstellung auf "Disabled" stellen und dann Taster drücken')
+    print('Schaltereinstellung auf "Disabled" stellen und dann Taster drücken (links, links)')
     evse_tester.wait_for_button_gpio(True) # Button True = Pressed
     print('')
 
@@ -336,9 +336,9 @@ if __name__ == "__main__":
     time.sleep(0.5)
     hw_conf = evse_tester.evse.get_hardware_configuration()
     if hw_conf.jumper_configuration != 8:
-        print('Falsche Jumper-Einstellung: {0}'.format(hw_conf.jumper_configuration))
+        print('Falsche Schalter-Einstellung: {0}'.format(hw_conf.jumper_configuration))
         print('-----------------> NICHT OK')
-        sys.exit(1)
+        evse_tester.exit(1)
     else:
         print('... OK')
 
@@ -347,3 +347,5 @@ if __name__ == "__main__":
 
     with open('full_test_log.csv', 'a+') as f:
         f.write(', '.join(data) + '\n')
+
+    evse_tester.exit(0)

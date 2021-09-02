@@ -24,6 +24,7 @@ from tinkerforge.bricklet_industrial_quad_relay_v2     import BrickletIndustrial
 from tinkerforge.bricklet_industrial_counter           import BrickletIndustrialCounter
 
 import time
+import sys
 
 log = print 
 
@@ -155,6 +156,13 @@ class EVSEV2Tester:
 
     def get_pp_pe_voltage(self):
         return self.idai.get_voltage(0)
+
+    def exit(self, value):
+        self.iqr1.set_value([False]*4)
+        self.iqr2.set_value([False]*4)
+        self.iqr3.set_value([False]*4)
+        self.idr.set_value(False, False)
+        sys.exit(value)
 
 if __name__ == "__main__":
     evse_tester = EVSEV2Tester()
