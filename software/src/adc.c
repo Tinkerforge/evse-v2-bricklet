@@ -312,7 +312,7 @@ void adc_check_result(const uint8_t i) {
 void adc_check_count(const uint8_t i) {
 	if(i <= 1) {
 		if(adc[i].result_count[1] >= 50) {
-			adc[i].result_mv[1]    = (adc[i].result[1]*600*3300/4095-990*1000)/adc[i].result_count[1];
+			adc[i].result_mv[1]    = (adc[i].result[1]*600*3300/4095-990*1000)/75;
 
 			adc[i].result[1]       = adc[i].result_sum[1]/adc[i].result_count[1];
 			adc[i].result_sum[1]   = 0;
@@ -322,7 +322,6 @@ void adc_check_count(const uint8_t i) {
 
 	if(adc[i].result_count[0] >= 50) {
 		adc[i].result[0] = adc[i].result_sum[0]/adc[i].result_count[0];
-		const uint32_t result_mv0_count = adc[i].result_count[0];
 
 		adc[i].result_sum[0] = 0;
 		adc[i].result_count[0] = 0;
@@ -351,7 +350,7 @@ void adc_check_count(const uint8_t i) {
 		} if(i == 3) { // +12V rail
 			adc[i].result_mv[0] = adc[i].result[0]*4*3300/4095;
 		} else {
-			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/result_mv0_count;
+			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/75;
 			if(i == 1) {
 				adc_result.resistance_counter++;
 
