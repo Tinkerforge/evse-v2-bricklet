@@ -139,15 +139,11 @@ bool sdm630_get_read_input(uint32_t *data) {
 		return false; // don't increment state
 	}
 
-	int8_t exception_code = 0;
-	
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
-		exception_code = MODBUS_EC_TIMEOUT;
+		// Nothing
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
 		// Check if the slave response is an exception.
-		exception_code = rs485.modbus_rtu.request.rx_frame[2];
-
 		if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
 			rs485.modbus_common_error_counters.illegal_function++;
 		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_ADDRESS) {
