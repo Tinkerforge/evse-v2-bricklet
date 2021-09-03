@@ -118,16 +118,19 @@ void evse_load_config(void) {
 	// This is either our first startup or something went wrong.
 	// We initialize the config data with sane default values.
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
-		evse.managed                = false;
-		sdm630.relative_energy.f    = 0.0f;
+		evse.managed                      = false;
+		sdm630.relative_energy.f          = 0.0f;
+		evse.shutdown_input_configuration = EVSE_V2_SHUTDOWN_INPUT_IGNORED;
 	} else {
-		evse.managed                = page[EVSE_CONFIG_MANAGED_POS];
-		sdm630.relative_energy.data = page[EVSE_CONFIG_REL_ENERGY_POS];
+		evse.managed                      = page[EVSE_CONFIG_MANAGED_POS];
+		sdm630.relative_energy.data       = page[EVSE_CONFIG_REL_ENERGY_POS];
+		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
 	logd("Load config:\n\r");
 	logd(" * managed %d\n\r", evse.managed);
 	logd(" * relener %d\n\r", sdm630.relative_energy.data);
+	logd(" * shutdown input %d\n\r", evse.shutdown_input_configuration);
 }
 
 void evse_save_config(void) {
@@ -135,6 +138,7 @@ void evse_save_config(void) {
 
 	page[EVSE_CONFIG_MAGIC_POS]          = EVSE_CONFIG_MAGIC;
 	page[EVSE_CONFIG_MANAGED_POS]        = evse.managed;
+	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS] = evse.shutdown_input_configuration;
 	if(sdm630.reset_energy_meter) {
 		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm630_register_fast.absolute_energy.data;
 		sdm630.relative_energy.data      = sdm630_register_fast.absolute_energy.data;
@@ -316,6 +320,22 @@ void evse_init_cp_pwm(void) {
 //	NVIC_EnableIRQ(30);
 }
 
+bool evse_is_shutdown(void) {
+	// TODO: Debounce?
+
+	if(evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) {
+		if(!XMC_GPIO_GetInput(EVSE_SHUTDOWN_PIN)) {
+			return true;
+		}
+	} else if(evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN) {
+		if(XMC_GPIO_GetInput(EVSE_SHUTDOWN_PIN)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void evse_init(void) {
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
@@ -338,7 +358,8 @@ void evse_init(void) {
 	XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN,     &pin_config_output_low);
 
 	XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
-	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);;
+	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
+	XMC_GPIO_Init(EVSE_SHUTDOWN_PIN,           &pin_config_input);
 
 	evse_init_cp_pwm();
 

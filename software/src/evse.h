@@ -42,8 +42,9 @@
 #define EVSE_CONFIG_MAGIC_POS           0
 #define EVSE_CONFIG_MANAGED_POS         1
 #define EVSE_CONFIG_REL_ENERGY_POS      2
+#define EVSE_CONFIG_SHUTDOWN_INPUT_POS  3
 
-#define EVSE_CONFIG_MAGIC               0x34567891
+#define EVSE_CONFIG_MAGIC               0x34567892
 
 #define EVSE_STORAGE_PAGES              16
 
@@ -73,6 +74,7 @@ typedef struct {
 
 extern EVSE evse;
 
+bool evse_is_shutdown(void);
 void evse_save_config(void);
 void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor);
 uint16_t evse_get_cp_duty_cycle(void);

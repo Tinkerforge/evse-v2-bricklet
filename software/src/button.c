@@ -46,7 +46,6 @@ void button_init(void) {
 	};
 
 	XMC_GPIO_Init(EVSE_BUTTON_PIN, &pin_config_input);
-	XMC_GPIO_Init(EVSE_ENABLE_PIN, &pin_config_input);
 
 	button.configuration = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
 	button.debounce_time = BUTTON_DEBOUNCE_STANDARD;

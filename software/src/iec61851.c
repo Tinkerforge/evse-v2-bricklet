@@ -201,6 +201,8 @@ void iec61851_tick(void) {
 		// We don't allow the jumper to be unconfigured
 		led_set_blinking(2);
 		iec61851_set_state(IEC61851_STATE_EF);
+	} else if(evse_is_shutdown()) {
+		iec61851_set_state(IEC61851_STATE_A);
 	} else if(button.was_pressed) {
 		if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
 			iec61851_set_state(IEC61851_STATE_A);

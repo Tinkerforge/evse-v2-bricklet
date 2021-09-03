@@ -25,6 +25,5 @@
 #include "xmc_gpio.h"
 
 #define EVSE_BUTTON_PIN  P0_12
-#define EVSE_ENABLE_PIN  P0_9
 
 #endif

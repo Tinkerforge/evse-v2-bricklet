@@ -81,9 +81,11 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 	response->iec61851_state           = iec61851.state;
 	response->contactor_state          = contactor_check.state;
 	response->contactor_error          = contactor_check.error;
-	if(evse.managed && !button.was_pressed && ((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C))) {
+
+	const bool is_shutdown = evse_is_shutdown();
+	if(!is_shutdown && evse.managed && !button.was_pressed && ((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C))) {
 		response->charge_release       = EVSE_V2_CHARGE_RELEASE_MANAGED;
-	} else if((button.state == BUTTON_STATE_PRESSED) || (iec61851.state >= IEC61851_STATE_D)) { // button is pressed or error state
+	} else if(is_shutdown || (button.state == BUTTON_STATE_PRESSED) || (iec61851.state >= IEC61851_STATE_D)) { // button is pressed or error state
 		response->charge_release       = EVSE_V2_CHARGE_RELEASE_DEACTIVATED;
 	} else if(!button.was_pressed && evse.charging_autostart) { // button was not pressed and autostart on
 		response->charge_release       = EVSE_V2_CHARGE_RELEASE_AUTOMATIC;
@@ -319,6 +321,8 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH) {
 		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 	}
+
+	evse_save_config(); // Save shutdown input config
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
