@@ -371,8 +371,6 @@ void adc_check_count(const uint8_t i) {
 }
 
 void adc_tick(void) {
-	uint8_t adc_num;
-
 	for(uint8_t i = 0; i < ADC_NUM; i++) {
 		adc_check_result(i);
 	}
