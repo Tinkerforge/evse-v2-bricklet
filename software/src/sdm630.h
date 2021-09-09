@@ -27,6 +27,15 @@
 
 #define SDM630_PHASE_NUM 3
 
+#define SDM630_HOLDING_REG_SYSTEM_TYPE 11 // 40011
+#define SDM630_HOLDING_REG_PASSWORD    25 // 40025
+
+#define SDM630_SYSTEM_TYPE_1P2W        1.0f
+#define SDM630_SYSTEM_TYPE_3P43        2.0f
+#define SDM630_SYSTEM_TYPE_3P4W        3.0f
+
+#define SDM630_PASSWORD                1000.0f
+
 typedef union {
 	float f;
 	uint32_t data;
@@ -103,6 +112,12 @@ typedef struct {
 
 	uint32_t timeout;
 	uint32_t first_tick;
+
+	SDM630RegisterType system_type_write;
+	SDM630RegisterType system_type_read;
+	bool new_system_type;
+
+	bool phases_connected[3];
 
 	SDM630RegisterType relative_energy;
 } SDM630;

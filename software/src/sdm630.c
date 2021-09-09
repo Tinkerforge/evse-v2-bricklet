@@ -55,7 +55,7 @@ static void modbus_store_tx_frame_data_shorts(const uint16_t *data, const uint16
 	uint16_t u16_network_order = 0;
 	uint8_t *_data = (uint8_t *)&u16_network_order;
 
-	for(uint16_t i = 0; i < length; i++) {
+	for(int16_t i = length-1; i >= 0; i--) {
 		u16_network_order = HTONS(data[i]);
 
 		ringbuffer_add(&rs485.ringbuffer_tx, _data[0]);
@@ -95,10 +95,35 @@ void sdm630_read_input_registers(uint8_t slave_address, uint16_t starting_addres
 	modbus_start_tx_from_buffer(&rs485);
 }
 
-void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, uint16_t payload) {
+void sdm630_read_holding_registers(uint8_t slave_address, uint16_t starting_address, uint16_t count) {
+	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 10);
+
+	uint8_t fc = MODBUS_FC_READ_HOLDING_REGISTERS;
+
+	// Fix endianness (LE->BE)
+	starting_address = HTONS(starting_address-1);
+	count = HTONS(count);
+
+	// Constructing the frame in the TX buffer.
+	modbus_store_tx_frame_data_bytes(&slave_address, 1); // Slave address.
+	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
+	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2);
+	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2);
+
+	// Calculate checksum and put it at the end of the TX buffer.
+	modbus_add_tx_frame_checksum();
+
+	// Start master request timeout timing.
+	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
+
+	// Start TX.
+	modbus_start_tx_from_buffer(&rs485);
+}
+
+void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, SDM630RegisterType *payload) {
 	uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
-	uint16_t count = HTONS(1);
-	uint8_t byte_count = 2;
+	uint16_t count = HTONS(2);
+	uint8_t byte_count = 4;
 
 	// Fix endianness (LE->BE).
 	starting_address = HTONS(starting_address-1);
@@ -109,10 +134,10 @@ void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, uin
 	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2); // Starting address.
 	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
 	modbus_store_tx_frame_data_bytes((uint8_t *)&byte_count, 1); // Byte count.
-	modbus_store_tx_frame_data_shorts(&payload, 1);
+	modbus_store_tx_frame_data_shorts((uint16_t*)&payload->data, 2);
 	modbus_add_tx_frame_checksum();
 
-	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 10);
+	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 13);
 	modbus_start_tx_from_buffer(&rs485);
 
 	// Start master request timeout timing.
@@ -165,7 +190,41 @@ bool sdm630_get_read_input(uint32_t *data) {
 	return true; // increment state
 }
 
-bool sdm630_write_register_response(int8_t *exception_code) {
+bool sdm630_get_holding_input(uint32_t *data) {
+	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
+		(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
+		(rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS) ||
+		!rs485.modbus_rtu.request.cb_invoke) {
+		return false; // don't increment state
+	}
+
+	// Check if the request has timed out.
+	if(rs485.modbus_rtu.request.master_request_timed_out) {
+		// Nothing
+	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
+		// Check if the slave response is an exception.
+		if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
+			rs485.modbus_common_error_counters.illegal_function++;
+		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_ADDRESS) {
+			rs485.modbus_common_error_counters.illegal_data_address++;
+		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_VALUE) {
+			rs485.modbus_common_error_counters.illegal_data_value++;
+		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_SLAVE_DEVICE_FAILURE) {
+			rs485.modbus_common_error_counters.slave_device_failure++;
+		}
+	} else {
+		// As soon as we were able to read our first package (including correct crc etc)
+		// we assume that a SDM630 is attached to the EVSE.
+		sdm630.available = true;
+
+		uint8_t *d = &rs485.modbus_rtu.request.rx_frame[3];
+		*data = (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | (d[3] << 0);
+	}
+
+	return true; // increment state
+}
+
+bool sdm630_write_register_response(void) {
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_WRITE_MULTIPLE_REGISTERS) ||
@@ -173,14 +232,11 @@ bool sdm630_write_register_response(int8_t *exception_code) {
 		return false; // don't increment state
 	}
 
-	*exception_code = 0;
-
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
-		*exception_code = MODBUS_EC_TIMEOUT;
+		// Nothing
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
 		// Check if the slave response is an exception.
-		*exception_code = rs485.modbus_rtu.request.rx_frame[2];
 
 		if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
 			rs485.modbus_common_error_counters.illegal_function++;
@@ -194,6 +250,28 @@ bool sdm630_write_register_response(int8_t *exception_code) {
 	}
 	
 	return true; // increment state
+}
+
+void sdm630_handle_new_system_type(void) {
+	// Update phases connected bool array (this is also used in communication.c)
+	sdm630.phases_connected[0] = sdm630_register.line_to_neutral_volts[0].f > 1.0f;
+	sdm630.phases_connected[1] = sdm630_register.line_to_neutral_volts[1].f > 1.0f;
+	sdm630.phases_connected[2] = sdm630_register.line_to_neutral_volts[2].f > 1.0f;
+
+	if(sdm630.system_type_read.f == SDM630_SYSTEM_TYPE_3P4W) {
+		// Change system type if 3-phase is configured, but 1-phase is connected
+		if(sdm630.phases_connected[0] && !sdm630.phases_connected[1] && !sdm630.phases_connected[2]) {
+			sdm630.new_system_type = true;
+		}
+	} else if(sdm630.system_type_read.f == SDM630_SYSTEM_TYPE_1P2W) {
+		// Change system type if 1-phase is configured, but 3-phase is connected
+		if(sdm630.phases_connected[0] && sdm630.phases_connected[1] && sdm630.phases_connected[2]) {
+			sdm630.new_system_type = true;
+		}
+	} else {
+		// Change system type if un-allowed system type is configured 
+		sdm630.new_system_type = true;
+	}
 }
 
 void sdm630_tick(void) {
@@ -261,9 +339,78 @@ void sdm630_tick(void) {
 			}
 			break;
 		}
-	}
 
-	if(sdm630.state >= 2) {
-		sdm630.state = 0;
+		case 2: { // request system type from holding register
+			if(sdm630.register_position != 0) {
+				sdm630.state = 0;
+				break;
+			}
+			sdm630_read_holding_registers(1, SDM630_HOLDING_REG_SYSTEM_TYPE, 2);
+			sdm630.state++;
+			break;
+		}
+
+		case 3: { // read system type from holding register
+			bool ret = sdm630_get_holding_input((uint32_t*)&sdm630.system_type_read);
+			if(ret) {
+				sdm630_handle_new_system_type();
+				modbus_clear_request(&rs485);
+				sdm630.state++;
+			}
+			break;
+		}
+
+		case 4: { // write password for phase change (if new phase configuration)
+			if(!sdm630.new_system_type) {
+				sdm630.state = 0;
+				break;
+			}
+
+			SDM630RegisterType password;
+			password.f = SDM630_PASSWORD;
+			modbus_clear_request(&rs485);
+			sdm630_write_register(1, SDM630_HOLDING_REG_PASSWORD, &password);
+			sdm630.state++;
+			break;
+		}
+
+		case 5: { // check write password response
+			bool ret = sdm630_write_register_response();
+			if(ret) {
+				modbus_clear_request(&rs485);
+				sdm630.state++;
+			}
+			break;
+		}
+
+		case 6: { // write new system type
+			SDM630RegisterType system_type;
+			if(sdm630.phases_connected[0] && !sdm630.phases_connected[1] && !sdm630.phases_connected[2]) {
+				system_type.f = SDM630_SYSTEM_TYPE_1P2W;
+			} else if(sdm630.phases_connected[0] && sdm630.phases_connected[1] && sdm630.phases_connected[2]) {
+				system_type.f = SDM630_SYSTEM_TYPE_3P4W;
+			} else {
+				sdm630.state = 0;
+				break;
+			}
+
+			modbus_clear_request(&rs485);
+			sdm630_write_register(1, SDM630_HOLDING_REG_SYSTEM_TYPE, &system_type);
+			sdm630.state++;
+			break;
+		}
+
+		case 7: { // check system type write response
+			bool ret = sdm630_write_register_response();
+			if(ret) {
+				modbus_clear_request(&rs485);
+				sdm630.state++;
+			}
+			break;
+		}
+
+		default: {
+			sdm630.state = 0;
+		}
 	}
 }

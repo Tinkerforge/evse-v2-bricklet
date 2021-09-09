@@ -3,3 +3,6 @@
 
 2021-09-08: 2.0.1 (f6ef06a)
 - Add support for shutdown input
+
+2021-09-09: 2.0.2 (TBD)
+- Add support for automatic 1-phase/3-phase switchover of energy meter

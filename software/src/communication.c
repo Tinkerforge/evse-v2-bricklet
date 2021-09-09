@@ -245,6 +245,9 @@ BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValu
 	response->phases_active[0] = ((sdm630_register_fast.current_per_phase[0].f > 0.01f) << 0) |
 	                             ((sdm630_register_fast.current_per_phase[1].f > 0.01f) << 1) |
 	                             ((sdm630_register_fast.current_per_phase[2].f > 0.01f) << 2);
+	response->phases_connected[0] = (sdm630.phases_connected[0] << 0) |
+	                                (sdm630.phases_connected[1] << 1) |
+	                                (sdm630.phases_connected[2] << 2);
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
