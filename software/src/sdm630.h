@@ -78,6 +78,7 @@ typedef struct {
 	SDM630RegisterType ln_volts_thd[SDM630_PHASE_NUM];
 	SDM630RegisterType current_thd[SDM630_PHASE_NUM];
 	SDM630RegisterType average_line_to_neutral_volts_thd;
+	SDM630RegisterType average_line_to_current_thd;
 	SDM630RegisterType current_demand[SDM630_PHASE_NUM];
 	SDM630RegisterType maximum_current_demand[SDM630_PHASE_NUM];
 	SDM630RegisterType line1_to_line2_volts_thd;
