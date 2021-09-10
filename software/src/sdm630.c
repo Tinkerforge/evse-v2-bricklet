@@ -52,14 +52,9 @@ static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t
 }
 
 static void modbus_store_tx_frame_data_shorts(const uint16_t *data, const uint16_t length) {
-	uint16_t u16_network_order = 0;
-	uint8_t *_data = (uint8_t *)&u16_network_order;
-
-	for(int16_t i = length-1; i >= 0; i--) {
-		u16_network_order = HTONS(data[i]);
-
-		ringbuffer_add(&rs485.ringbuffer_tx, _data[0]);
-		ringbuffer_add(&rs485.ringbuffer_tx, _data[1]);
+	for(uint16_t i = 0; i < length; i++) {
+		ringbuffer_add(&rs485.ringbuffer_tx, data[i] & 0xFF);
+		ringbuffer_add(&rs485.ringbuffer_tx, data[i] >> 8);
 	}
 }
 
@@ -134,7 +129,8 @@ void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, SDM
 	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2); // Starting address.
 	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
 	modbus_store_tx_frame_data_bytes((uint8_t *)&byte_count, 1); // Byte count.
-	modbus_store_tx_frame_data_shorts((uint16_t*)&payload->data, 2);
+	modbus_store_tx_frame_data_shorts(&payload->u16[1], 1);
+	modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
 	modbus_add_tx_frame_checksum();
 
 	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 13);

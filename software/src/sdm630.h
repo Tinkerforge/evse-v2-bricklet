@@ -39,6 +39,7 @@
 typedef union {
 	float f;
 	uint32_t data;
+	uint16_t u16[2];
 } SDM630RegisterType;
 
 typedef struct {
