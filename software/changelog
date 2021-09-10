@@ -7,5 +7,5 @@
 2021-09-09: 2.0.2 (f5e9535)
 - Add support for automatic 1-phase/3-phase switchover of energy meter
 
-2021-09-10: 2.0.3 (TBD)
+2021-09-10: 2.0.3 (ab49437)
 - Fix off-by-one in energy meter values
