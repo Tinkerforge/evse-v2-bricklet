@@ -107,6 +107,10 @@ void modbus_start_tx_from_buffer(RS485 *rs485) {
 }
 
 bool modbus_check_frame_checksum(RS485 *rs485) {
+	if(rs485->modbus_rtu.rx_rb_last_length < 2) {
+		return false;
+	}
+
 	uint16_t checksum = crc16_modbus(rs485->modbus_rtu.request.rx_frame,
 	                                 rs485->modbus_rtu.rx_rb_last_length - 2);
 
