@@ -134,10 +134,12 @@ void sdm630_write_register(uint8_t slave_address, uint16_t starting_address, SDM
 	modbus_add_tx_frame_checksum();
 
 	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 13);
-	modbus_start_tx_from_buffer(&rs485);
 
 	// Start master request timeout timing.
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
+
+	modbus_start_tx_from_buffer(&rs485);
+
 }
 
 void sdm630_init(void) {
