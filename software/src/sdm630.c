@@ -164,6 +164,7 @@ bool sdm630_get_read_input(uint32_t *data) {
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
+		sdm630.error_wait_time = system_timer_get_ms();
 		// Nothing
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
 		// Check if the slave response is an exception.
@@ -198,6 +199,7 @@ bool sdm630_get_holding_input(uint32_t *data) {
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
+		sdm630.error_wait_time = system_timer_get_ms();
 		// Nothing
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
 		// Check if the slave response is an exception.
@@ -232,6 +234,7 @@ bool sdm630_write_register_response(void) {
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
+		sdm630.error_wait_time = system_timer_get_ms();
 		// Nothing
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
 		// Check if the slave response is an exception.
@@ -275,6 +278,14 @@ void sdm630_handle_new_system_type(void) {
 void sdm630_tick(void) {
 	static uint8_t last_state = 255;
 	static bool read_fast = false;
+
+
+	if(sdm630.error_wait_time != 0) {
+		if(!system_timer_is_time_elapsed_ms(sdm630.error_wait_time, 500)) {
+			return;
+		}
+		sdm630.error_wait_time = 0;
+	}
 
 	if(sdm630.first_tick != 0) {
 		if(!system_timer_is_time_elapsed_ms(sdm630.first_tick, 2500)) {

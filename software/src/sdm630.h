@@ -114,6 +114,7 @@ typedef struct {
 
 	uint32_t timeout;
 	uint32_t first_tick;
+	uint32_t error_wait_time;
 
 	SDM630RegisterType system_type_write;
 	SDM630RegisterType system_type_read;
