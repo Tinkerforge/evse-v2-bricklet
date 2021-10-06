@@ -10,7 +10,7 @@
 2021-09-10: 2.0.3 (ab49437)
 - Fix off-by-one in energy meter values
 
-2021-10-XX: 2.0.4 (TBD):
+2021-10-06: 2.0.4 (cbd8171):
 - Fix (theoretical) buffer overflow in modbus checksum calculation
 - Add timeout in case of modbus errors
 - Fix bug in "stop charging by button"-configuration that can lead to unstoppable charge state
