@@ -14,3 +14,6 @@
 - Fix (theoretical) buffer overflow in modbus checksum calculation
 - Add timeout in case of modbus errors
 - Fix bug in "stop charging by button"-configuration that can lead to unstoppable charge state
+
+2021-XX-XX: 2.0.5 (TBD)
+- Add TimeSinceCPPWMChange parameter to low level state getter

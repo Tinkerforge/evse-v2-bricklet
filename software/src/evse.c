@@ -158,6 +158,7 @@ uint16_t evse_get_cp_duty_cycle(void) {
 void evse_set_cp_duty_cycle(const uint16_t duty_cycle) {
 	const uint16_t current_cp_duty_cycle = evse_get_cp_duty_cycle();
 	if(current_cp_duty_cycle != duty_cycle) {
+		evse.time_since_cp_pwm_change = system_timer_get_ms();
 
 		adc_enable_all(duty_cycle == 1000);
 		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 48000 - duty_cycle*48);
@@ -378,6 +379,7 @@ void evse_init(void) {
 	evse_init_lock_switch();
 
 	evse.startup_time = system_timer_get_ms();
+	evse.time_since_cp_pwm_change = system_timer_get_ms();
 }
 
 void evse_tick_debug(void) {

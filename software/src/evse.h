@@ -69,6 +69,8 @@ typedef struct {
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 
+	uint32_t time_since_cp_pwm_change;
+
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
 
