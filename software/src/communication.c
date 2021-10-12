@@ -178,7 +178,7 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 	                    (get_bit(port4, 5)  << 2) | // 18: DC X30
 	                    (get_bit(port4, 6)  << 3);  // 19: LED
 
-	response->time_since_cp_pwm_change = evse.time_since_cp_pwm_change;
+	response->time_since_cp_pwm_change = system_timer_get_ms() - evse.time_since_cp_pwm_change;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
