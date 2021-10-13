@@ -16,4 +16,5 @@
 - Fix bug in "stop charging by button"-configuration that can lead to unstoppable charge state
 
 2021-XX-XX: 2.0.5 (TBD)
-- Add TimeSinceCPPWMChange parameter to low level state getter
+- Add ChargeTime parameter to low level state getter
+- Fix modbus endianess mixup

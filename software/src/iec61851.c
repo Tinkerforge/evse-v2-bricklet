@@ -68,6 +68,11 @@ IEC61851 iec61851;
 
 void iec61851_set_state(IEC61851State state) {
 	if(state != iec61851.state) {
+		// If we change to state C and the charging timer was not started, we start it
+		if((state == IEC61851_STATE_C) && (evse.charging_time == 0)) {
+			evse.charging_time = system_timer_get_ms();
+		}
+
 		if((state == IEC61851_STATE_A ) || (state == IEC61851_STATE_B)) {
 			// Turn LED on with timer for standby if we have a state change to state A or B
 			led_set_on(false);
