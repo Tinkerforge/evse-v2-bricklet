@@ -53,8 +53,8 @@ static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t
 
 static void modbus_store_tx_frame_data_shorts(const uint16_t *data, const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
-		ringbuffer_add(&rs485.ringbuffer_tx, data[i] & 0xFF);
 		ringbuffer_add(&rs485.ringbuffer_tx, data[i] >> 8);
+		ringbuffer_add(&rs485.ringbuffer_tx, data[i] & 0xFF);
 	}
 }
 
