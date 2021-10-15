@@ -72,6 +72,9 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
 		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
 		case FID_GET_BUTTON_STATE: return get_button_state(message, response);
+		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
+		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
+		case FID_GET_ALL_DATA_3: return get_all_data_3(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -493,6 +496,70 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
+
+BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response) {
+	response->header.length = sizeof(GetAllData1_Response);
+
+	TFPMessageFull parts;
+
+	get_state(NULL, (GetState_Response*)&parts);
+	memcpy(&response->iec61851_state, parts.data, sizeof(GetState_Response) - sizeof(TFPMessageHeader));
+
+	get_hardware_configuration(NULL, (GetHardwareConfiguration_Response*)&parts);
+	memcpy(&response->jumper_configuration, parts.data, sizeof(GetHardwareConfiguration_Response) - sizeof(TFPMessageHeader));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response) {
+	response->header.length = sizeof(GetAllData2_Response);
+
+	TFPMessageFull parts;
+
+	get_low_level_state(NULL, (GetLowLevelState_Response*)&parts);
+	memcpy(&response->led_state, parts.data, sizeof(GetLowLevelState_Response) - sizeof(TFPMessageHeader));
+
+	get_max_charging_current(NULL, (GetMaxChargingCurrent_Response*)&parts);
+	memcpy(&response->max_current_configured, parts.data, sizeof(GetMaxChargingCurrent_Response) - sizeof(TFPMessageHeader));
+
+	get_charging_autostart(NULL, (GetChargingAutostart_Response*)&parts);
+	memcpy(&response->autostart, parts.data, sizeof(GetChargingAutostart_Response) - sizeof(TFPMessageHeader));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response) {
+	response->header.length = sizeof(GetAllData3_Response);
+
+	TFPMessageFull parts;
+
+	get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&parts);
+	memcpy(&response->power, parts.data, sizeof(GetEnergyMeterValues_Response) - sizeof(TFPMessageHeader));
+
+	get_energy_meter_state(NULL, (GetEnergyMeterState_Response*)&parts);
+	memcpy(&response->available, parts.data, sizeof(GetEnergyMeterState_Response) - sizeof(TFPMessageHeader));
+
+	get_dc_fault_current_state(NULL, (GetDCFaultCurrentState_Response*)&parts);
+	memcpy(&response->dc_fault_current_state, parts.data, sizeof(GetDCFaultCurrentState_Response) - sizeof(TFPMessageHeader));
+
+	get_gpio_configuration(NULL, (GetGPIOConfiguration_Response*)&parts);
+	memcpy(&response->shutdown_input_configuration, parts.data, sizeof(GetGPIOConfiguration_Response) - sizeof(TFPMessageHeader));
+
+	get_managed(NULL, (GetManaged_Response*)&parts);
+	memcpy(&response->managed, parts.data, sizeof(GetManaged_Response) - sizeof(TFPMessageHeader));
+
+	get_indicator_led(NULL, (GetIndicatorLED_Response*)&parts);
+	memcpy(&response->indication, parts.data, sizeof(GetIndicatorLED_Response) - sizeof(TFPMessageHeader));
+
+	get_button_configuration(NULL, (GetButtonConfiguration_Response*)&parts);
+	memcpy(&response->button_configuration, parts.data, sizeof(GetButtonConfiguration_Response) - sizeof(TFPMessageHeader));
+
+	get_button_state(NULL, (GetButtonState_Response*)&parts);
+	memcpy(&response->button_press_time, parts.data, sizeof(GetButtonState_Response) - sizeof(TFPMessageHeader));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 
 void communication_tick(void) {
 //	communication_callback_tick();

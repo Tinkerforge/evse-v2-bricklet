@@ -149,6 +149,9 @@ void communication_init(void);
 #define FID_SET_BUTTON_CONFIGURATION 25
 #define FID_GET_BUTTON_CONFIGURATION 26
 #define FID_GET_BUTTON_STATE 27
+#define FID_GET_ALL_DATA_1 28
+#define FID_GET_ALL_DATA_2 29
+#define FID_GET_ALL_DATA_3 30
 
 
 typedef struct {
@@ -384,6 +387,72 @@ typedef struct {
 	bool button_pressed;
 } __attribute__((__packed__)) GetButtonState_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetAllData1;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t iec61851_state;
+	uint8_t vehicle_state;
+	uint8_t contactor_state;
+	uint8_t contactor_error;
+	uint8_t charge_release;
+	uint16_t allowed_charging_current;
+	uint8_t error_state;
+	uint8_t lock_state;
+	uint32_t time_since_state_change;
+	uint32_t uptime;
+	uint8_t jumper_configuration;
+	bool has_lock_switch;
+} __attribute__((__packed__)) GetAllData1_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetAllData2;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t led_state;
+	uint16_t cp_pwm_duty_cycle;
+	uint16_t adc_values[7];
+	int16_t voltages[7];
+	uint32_t resistances[2];
+	uint8_t gpio[3];
+	uint32_t charging_time;
+	uint16_t max_current_configured;
+	uint16_t max_current_incoming_cable;
+	uint16_t max_current_outgoing_cable;
+	uint16_t max_current_managed;
+	bool autostart;
+} __attribute__((__packed__)) GetAllData2_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetAllData3;
+
+typedef struct {
+	TFPMessageHeader header;
+	float power;
+	float energy_relative;
+	float energy_absolute;
+	uint8_t phases_active[1];
+	uint8_t phases_connected[1];
+	bool available;
+	uint32_t error_count[6];
+	uint8_t dc_fault_current_state;
+	uint8_t shutdown_input_configuration;
+	uint8_t input_configuration;
+	uint8_t output_configuration;
+	bool managed;
+	int16_t indication;
+	uint16_t duration;
+	uint8_t button_configuration;
+	uint32_t button_press_time;
+	uint32_t button_release_time;
+	bool button_pressed;
+} __attribute__((__packed__)) GetAllData3_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -412,6 +481,10 @@ BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, G
 BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, SetIndicatorLED_Response *response);
 BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data);
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response);
+BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response);
+BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
+BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
+BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response);
 
 // Callbacks
 
