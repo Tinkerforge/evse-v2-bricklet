@@ -39,6 +39,9 @@ typedef struct {
     uint32_t debounce_time;
 
     uint8_t configuration;
+
+	uint32_t press_time;
+	uint32_t release_time;
 } Button;
 
 extern Button button;

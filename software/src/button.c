@@ -64,11 +64,13 @@ void button_tick(void) {
 		button.debounce_time    = BUTTON_DEBOUNCE_STANDARD;
 		if(!value) {
 			button.state = BUTTON_STATE_RELEASED;
+			button.release_time = system_timer_get_ms();
 
 			// We always see a button release as a state change that turns the LED on (until standby)
 			led_set_on(false);
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
+			button.press_time = system_timer_get_ms();
 
 			bool handled = false;
 			// If start charging through button pressed is enabled

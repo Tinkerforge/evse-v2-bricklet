@@ -71,6 +71,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_INDICATOR_LED: return set_indicator_led(message, response);
 		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
 		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
+		case FID_GET_BUTTON_STATE: return get_button_state(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -480,6 +481,15 @@ BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfigur
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response) {
 	response->header.length        = sizeof(GetButtonConfiguration_Response);
 	response->button_configuration = button.configuration;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response) {
+	response->header.length       = sizeof(GetButtonState_Response);
+	response->button_press_time   = button.press_time;
+	response->button_release_time = button.release_time;
+	response->button_pressed      = button.state == BUTTON_STATE_PRESSED;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
