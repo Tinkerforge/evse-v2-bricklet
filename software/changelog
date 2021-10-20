@@ -18,3 +18,5 @@
 2021-XX-XX: 2.0.5 (TBD)
 - Add ChargeTime parameter to low level state getter
 - Fix modbus endianess mixup
+- Add GetButtonState API
+- Add GetAllDataX API (for internal use in WARP Charger)
