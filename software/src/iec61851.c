@@ -253,6 +253,7 @@ void iec61851_tick(void) {
 			iec61851_set_state(IEC61851_STATE_B);
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
 			if(evse.managed && (evse.max_managed_current == 0)) {
+				evse.charging_time = 0;
 				iec61851_set_state(IEC61851_STATE_B);
 			} else {
 				iec61851_set_state(IEC61851_STATE_C);
