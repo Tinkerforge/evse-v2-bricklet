@@ -15,7 +15,7 @@
 - Add timeout in case of modbus errors
 - Fix bug in "stop charging by button"-configuration that can lead to unstoppable charge state
 
-2021-XX-XX: 2.0.5 (TBD)
+2021-10-27: 2.0.5 (fe6960e):
 - Add ChargeTime parameter to low level state getter
 - Fix modbus endianess mixup
 - Add GetButtonState API
