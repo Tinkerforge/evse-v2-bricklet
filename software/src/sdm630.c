@@ -255,9 +255,9 @@ bool sdm630_write_register_response(void) {
 
 void sdm630_handle_new_system_type(void) {
 	// Update phases connected bool array (this is also used in communication.c)
-	sdm630.phases_connected[0] = sdm630_register.line_to_neutral_volts[0].f > 1.0f;
-	sdm630.phases_connected[1] = sdm630_register.line_to_neutral_volts[1].f > 1.0f;
-	sdm630.phases_connected[2] = sdm630_register.line_to_neutral_volts[2].f > 1.0f;
+	sdm630.phases_connected[0] = sdm630_register.line_to_neutral_volts[0].f > 180.0f;
+	sdm630.phases_connected[1] = sdm630_register.line_to_neutral_volts[1].f > 180.0f;
+	sdm630.phases_connected[2] = sdm630_register.line_to_neutral_volts[2].f > 180.0f;
 
 	if(sdm630.system_type_read.f == SDM630_SYSTEM_TYPE_3P4W) {
 		// Change system type if 3-phase is configured, but 1-phase is connected
