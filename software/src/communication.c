@@ -72,6 +72,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
 		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
 		case FID_GET_BUTTON_STATE: return get_button_state(message, response);
+		case FID_SET_CONTROL_PILOT_CONFIGURATION: return set_control_pilot_configuration(message);
+		case FID_GET_CONTROL_PILOT_CONFIGURATION: return get_control_pilot_configuration(message, response);
 		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
 		case FID_GET_ALL_DATA_3: return get_all_data_3(message, response);
@@ -497,6 +499,27 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data) {
+	// TODO: Automatic mode not yet implemented. Currently Automatic = Connected
+	switch(data->control_pilot) {
+		case EVSE_V2_CONTROL_PILOT_DISCONNECTED: XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN); break;
+		case EVSE_V2_CONTROL_PILOT_CONNECTED:    XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);  break;
+		case EVSE_V2_CONTROL_PILOT_AUTOMATIC:    XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);  break;
+		default: return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	evse.control_pilot = data->control_pilot;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response) {
+	response->header.length = sizeof(GetControlPilotConfiguration_Response);
+	response->control_pilot = evse.control_pilot;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response) {
 	response->header.length = sizeof(GetAllData1_Response);
 
@@ -556,6 +579,9 @@ BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllDa
 
 	get_button_state(NULL, (GetButtonState_Response*)&parts);
 	memcpy(&response->button_press_time, parts.data, sizeof(GetButtonState_Response) - sizeof(TFPMessageHeader));
+
+	get_control_pilot_configuration(NULL, (GetControlPilotConfiguration_Response*)&parts);
+	memcpy(&response->control_pilot, parts.data, sizeof(GetControlPilotConfiguration_Response) - sizeof(TFPMessageHeader));
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

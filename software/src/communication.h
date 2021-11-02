@@ -103,6 +103,10 @@ void communication_init(void);
 #define EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING 2
 #define EVSE_V2_BUTTON_CONFIGURATION_START_AND_STOP_CHARGING 3
 
+#define EVSE_V2_CONTROL_PILOT_DISCONNECTED 0
+#define EVSE_V2_CONTROL_PILOT_CONNECTED 1
+#define EVSE_V2_CONTROL_PILOT_AUTOMATIC 2
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -149,9 +153,11 @@ void communication_init(void);
 #define FID_SET_BUTTON_CONFIGURATION 25
 #define FID_GET_BUTTON_CONFIGURATION 26
 #define FID_GET_BUTTON_STATE 27
-#define FID_GET_ALL_DATA_1 28
-#define FID_GET_ALL_DATA_2 29
-#define FID_GET_ALL_DATA_3 30
+#define FID_SET_CONTROL_PILOT_CONFIGURATION 28
+#define FID_GET_CONTROL_PILOT_CONFIGURATION 29
+#define FID_GET_ALL_DATA_1 30
+#define FID_GET_ALL_DATA_2 31
+#define FID_GET_ALL_DATA_3 32
 
 
 typedef struct {
@@ -389,6 +395,20 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint8_t control_pilot;
+} __attribute__((__packed__)) SetControlPilotConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetControlPilotConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t control_pilot;
+} __attribute__((__packed__)) GetControlPilotConfiguration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 } __attribute__((__packed__)) GetAllData1;
 
 typedef struct {
@@ -451,6 +471,7 @@ typedef struct {
 	uint32_t button_press_time;
 	uint32_t button_release_time;
 	bool button_pressed;
+	uint8_t control_pilot;
 } __attribute__((__packed__)) GetAllData3_Response;
 
 
@@ -482,6 +503,8 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data);
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response);
 BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response);
+BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data);
+BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response);
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
 BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response);

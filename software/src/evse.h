@@ -71,6 +71,8 @@ typedef struct {
 
 	uint32_t charging_time;
 
+	uint8_t control_pilot;
+
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
 

@@ -371,6 +371,7 @@ void evse_init(void) {
 	evse.charging_autostart = true;
 	evse.last_contactor_switch = system_timer_get_ms();
 	evse.output_configuration = EVSE_V2_OUTPUT_HIGH;
+	evse.control_pilot = EVSE_V2_CONTROL_PILOT_AUTOMATIC;
 
 	evse_load_config();
 	evse_init_jumper();
