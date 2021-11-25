@@ -113,7 +113,9 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 	} else { 
 		// For state A we may be not connected or connected with autostart disabled.
 		// We check this by looking at the CP/PE resistance. We expect at least 10000 ohm if a vehicle is not connected.
-		if(adc_result.cp_pe_resistance > 10000) {
+		// If we run into an error case on startup the resistance may stay at the initialization value of 0.
+		// In that case we assume that there is no vehicle connected either.
+		if((adc_result.cp_pe_resistance > 10000) || (adc_result.cp_pe_resistance == 0)) {
 			response->vehicle_state = EVSE_V2_VEHICLE_STATE_NOT_CONNECTED;
 		} else {
 			response->vehicle_state = EVSE_V2_VEHICLE_STATE_CONNECTED;

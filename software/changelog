@@ -24,3 +24,4 @@
 2021-XX-XX: 2.0.6 (TBD)
 - Add Control Pilot API
 - Improve active/connected phase detection
+- Improve vehicle connected detection in case of error on startup
