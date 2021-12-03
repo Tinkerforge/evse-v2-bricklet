@@ -21,7 +21,7 @@
 - Add GetButtonState API
 - Add GetAllDataX API (for internal use in WARP Charger)
 
-2021-XX-XX: 2.0.6 (TBD)
+2021-12-03: 2.0.6 (4cc06fc):
 - Add Control Pilot API
 - Improve active/connected phase detection
 - Improve vehicle connected detection in case of error on startup
