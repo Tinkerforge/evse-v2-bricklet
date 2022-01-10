@@ -26,5 +26,5 @@
 - Improve active/connected phase detection
 - Improve vehicle connected detection in case of error on startup
 
-2022-01-10: 2.0.7 (TBD):
+2022-01-10: 2.0.7 (7ee5808):
 - Increase active-phase-threshold to 300mA
