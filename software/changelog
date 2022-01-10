@@ -25,3 +25,6 @@
 - Add Control Pilot API
 - Improve active/connected phase detection
 - Improve vehicle connected detection in case of error on startup
+
+2022-01-10: 2.0.7 (TBD):
+- Increase active-phase-threshold to 300mA
