@@ -108,20 +108,6 @@ uint32_t iec61851_get_ma_from_pp_resistance(void) {
 	}
 }
 
-uint32_t iec61851_get_ma_from_jumper(void) {
-	switch(evse.config_jumper_current) {
-		case EVSE_CONFIG_JUMPER_CURRENT_6A:  return 6000;
-		case EVSE_CONFIG_JUMPER_CURRENT_10A: return 10000;
-		case EVSE_CONFIG_JUMPER_CURRENT_13A: return 13000;
-		case EVSE_CONFIG_JUMPER_CURRENT_16A: return 16000;
-		case EVSE_CONFIG_JUMPER_CURRENT_20A: return 20000;
-		case EVSE_CONFIG_JUMPER_CURRENT_25A: return 25000;
-		case EVSE_CONFIG_JUMPER_CURRENT_32A: return 32000;
-		case EVSE_CONFIG_JUMPER_SOFTWARE: return evse.config_jumper_current_software;
-		default: return 6000;
-	}
-}
-
 uint32_t iec61851_get_max_ma(void) {
 	return charging_slot_get_max_current();
 }

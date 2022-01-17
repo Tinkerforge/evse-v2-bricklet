@@ -27,19 +27,35 @@
 
 #include "button.h"
 #include "communication.h"
+#include "evse.h"
+#include "iec61851.h"
 
 ChargingSlot charging_slot;
+
+uint32_t charging_slot_get_ma_incoming_cable(void) {
+	switch(evse.config_jumper_current) {
+		case EVSE_CONFIG_JUMPER_CURRENT_6A:  return 6000;
+		case EVSE_CONFIG_JUMPER_CURRENT_10A: return 10000;
+		case EVSE_CONFIG_JUMPER_CURRENT_13A: return 13000;
+		case EVSE_CONFIG_JUMPER_CURRENT_16A: return 16000;
+		case EVSE_CONFIG_JUMPER_CURRENT_20A: return 20000;
+		case EVSE_CONFIG_JUMPER_CURRENT_25A: return 25000;
+		case EVSE_CONFIG_JUMPER_CURRENT_32A: return 32000;
+		case EVSE_CONFIG_JUMPER_SOFTWARE: return evse.config_jumper_current_software;
+		default: return 6000;
+	}
+}
 
 void charging_slot_init(void) {
     memset(&charging_slot, 0, sizeof(ChargingSlot));
 
     // Incoming cable
-    charging_slot.max_current[CHARGING_SLOT_INCOMING_CABLE]         = 32000; // TODO
+    charging_slot.max_current[CHARGING_SLOT_INCOMING_CABLE]         = charging_slot_get_ma_incoming_cable();
     charging_slot.active[CHARGING_SLOT_INCOMING_CABLE]              = true;
     charging_slot.clear_on_disconnect[CHARGING_SLOT_INCOMING_CABLE] = false;
 
     // Outgoing cable
-    charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE]         = 32000; // TODO
+    charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE]         = iec61851_get_ma_from_pp_resistance();
     charging_slot.active[CHARGING_SLOT_OUTGOING_CABLE]              = true;
     charging_slot.clear_on_disconnect[CHARGING_SLOT_OUTGOING_CABLE] = false;
 
@@ -60,6 +76,10 @@ void charging_slot_init(void) {
 
 
     // TODO: Read defaults
+}
+
+void charging_slot_tick(void) {
+    charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE] = iec61851_get_ma_from_pp_resistance();
 }
 
 uint16_t charging_slot_get_max_current(void) {

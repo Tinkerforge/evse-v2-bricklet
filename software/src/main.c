@@ -70,5 +70,6 @@ int main(void) {
 		dc_fault_tick();
 		rs485_tick();
 		sdm630_tick();
+		charging_slot_tick();
 	}
 }

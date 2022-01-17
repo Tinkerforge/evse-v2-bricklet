@@ -46,7 +46,6 @@ void iec61851_init(void);
 void iec61851_tick(void);
 
 uint32_t iec61851_get_ma_from_pp_resistance(void);
-uint32_t iec61851_get_ma_from_jumper(void);
 uint32_t iec61851_get_max_ma(void);
 uint16_t iec61851_get_duty_cycle_for_ma(uint32_t ma);
 

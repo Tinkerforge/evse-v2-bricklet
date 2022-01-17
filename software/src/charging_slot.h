@@ -42,6 +42,7 @@ typedef struct {
 extern ChargingSlot charging_slot;
 
 void charging_slot_init(void);
+void charging_slot_tick(void);
 uint16_t charging_slot_get_max_current(void);
 void charging_slot_start_charging_by_button(void);
 void charging_slot_stop_charging_by_button(void);

@@ -52,10 +52,9 @@ typedef struct {
     uint32_t startup_time;
 
 	uint8_t config_jumper_current;
-	bool has_lock_switch;
-
 	uint16_t config_jumper_current_software;
 
+	bool has_lock_switch;
 	bool calibration_error;
 
 	uint32_t last_contactor_switch;
