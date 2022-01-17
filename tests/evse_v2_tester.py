@@ -142,14 +142,18 @@ class EVSEV2Tester:
 
         log("Done")
 
+    def set_max_charging_current(self, current):
+        self.evse.set_charging_slot(5, current, True, False)
+
     def shutdown_input_enable(self, enable):
         self.iqr3.set_selected_value(0, enable)
     
     def get_energy_meter_data(self):
         a = self.evse.get_energy_meter_values()
         b = self.evse.get_energy_meter_detailed_values()
-        c = self.evse.get_energy_meter_state()
-        return (a, b, c)
+        c = self.evse.get_hardware_configuration()
+        d = self.evse.get_energy_meter_error()
+        return (a, b, c, d)
     
     def get_cp_pe_voltage(self):
         return self.idai.get_voltage(1)

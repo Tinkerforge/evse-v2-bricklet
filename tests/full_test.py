@@ -270,7 +270,7 @@ if __name__ == "__main__":
     test_voltages = [-10302, -9698, -9095, -8476, -7871, -7272, -6648, -6047, -5445, -4822, -4224, -3617, -3000, -2396]
     for i, a in enumerate(range(6, 33, 2)):
         print('Test CP/PE {0}A'.format(a))
-        evse_tester.evse.set_max_charging_current(a*1000)
+        evse_tester.set_max_charging_current(a*1000)
         time.sleep(0.5)
         res_cppe = evse_tester.evse.get_low_level_state().resistances[0]
         data.append(str(res_cppe))
@@ -287,11 +287,12 @@ if __name__ == "__main__":
             evse_tester.exit(1)
 
     print('Teste Stromzähler')
-    values, detailed_values, state = evse_tester.get_energy_meter_data()
-    if (not state.available) or (values.energy_absolute < 1):
-        print('-----------------> NICHT OK: {0}, {1}'.format(str(state), str(values)))
+    values, detailed_values, hw, error = evse_tester.get_energy_meter_data()
+    if (not hw.energy_meter_type > 0) or (values.energy_absolute < 1):
+        print('-----------------> NICHT OK: {0}, {1}, {2}'.format(str(hw), str(error), str(values)))
+        evse_tester.exit(1)
     else:
-        print('... OK: {0}, {1}'.format(state.available, values.energy_absolute))
+        print('... OK: {0}, {1}'.format(hw.energy_meter_type, values.energy_absolute))
 
 
     print('Ausschaltzeit messen')
