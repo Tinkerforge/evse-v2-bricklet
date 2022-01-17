@@ -211,6 +211,7 @@ BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, G
 }
 
 BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots *data, GetAllChargingSlots_Response *response) {
+	response->header.length = sizeof(GetAllChargingSlots_Response);
 	for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
 		response->max_current[i]                    = charging_slot.max_current[i];
 		response->active_and_clear_on_disconnect[i] = (charging_slot.active[i] << 0) | (charging_slot.clear_on_disconnect[i] << 1);
