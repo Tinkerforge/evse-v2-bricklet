@@ -189,7 +189,11 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 
 BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data) {
 	// The first two slots are read-only
-	if((data->slot <= 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if((data->max_current > 0) && ((data->max_current < 6000) || (data->max_current > 32000))) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -224,15 +228,36 @@ BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots
 }
 
 BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChargingSlotPowerOnDefault *data) {
-	// TODO
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if((data->max_current > 0) && ((data->max_current < 6000) || (data->max_current > 32000))) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	const uint8_t slot = data->slot - 2;
+
+	charging_slot.max_current_default[slot]         = data->max_current;
+	charging_slot.active_default[slot]              = data->active;
+	charging_slot.clear_on_disconnect_default[slot] = data->clear_on_disconnect;
+
+	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse get_charging_slot_power_on_default(const GetChargingSlotPowerOnDefault *data, GetChargingSlotPowerOnDefault_Response *response) {
-	response->header.length = sizeof(GetChargingSlotPowerOnDefault_Response);
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
 
-	// TODO
+	const uint8_t slot = data->slot - 2;
+
+	response->header.length       = sizeof(GetChargingSlotPowerOnDefault_Response);
+	response->max_current         = charging_slot.max_current_default[slot];
+	response->active              = charging_slot.active_default[slot];
+	response->clear_on_disconnect = charging_slot.clear_on_disconnect_default[slot];
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
