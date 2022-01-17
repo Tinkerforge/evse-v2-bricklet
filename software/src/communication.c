@@ -111,11 +111,14 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 }
 
 BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConfiguration *data, GetHardwareConfiguration_Response *response) {
-	response->header.length        = sizeof(GetHardwareConfiguration_Response);
-	response->jumper_configuration = evse.config_jumper_current;
-	response->has_lock_switch      = evse.has_lock_switch;
-	response->evse_version         = 20;
-	response->energy_meter_type    = 0; // TODO
+	response->header.length         = sizeof(GetHardwareConfiguration_Response);
+	response->jumper_configuration  = evse.config_jumper_current;
+	response->has_lock_switch       = evse.has_lock_switch;
+	response->evse_version          = 20;
+	response->energy_meter_type     = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
+	if(sdm630.available) {
+		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
