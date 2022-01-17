@@ -118,17 +118,17 @@ void evse_load_config(void) {
 	// This is either our first startup or something went wrong.
 	// We initialize the config data with sane default values.
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
-		evse.managed                      = false;
+		//evse.managed                      = false;
 		sdm630.relative_energy.f          = 0.0f;
 		evse.shutdown_input_configuration = EVSE_V2_SHUTDOWN_INPUT_IGNORED;
 	} else {
-		evse.managed                      = page[EVSE_CONFIG_MANAGED_POS];
+		//evse.managed                      = page[EVSE_CONFIG_MANAGED_POS];
 		sdm630.relative_energy.data       = page[EVSE_CONFIG_REL_ENERGY_POS];
 		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
 	logd("Load config:\n\r");
-	logd(" * managed %d\n\r", evse.managed);
+	//logd(" * managed %d\n\r", evse.managed);
 	logd(" * relener %d\n\r", sdm630.relative_energy.data);
 	logd(" * shutdown input %d\n\r", evse.shutdown_input_configuration);
 }
@@ -137,7 +137,7 @@ void evse_save_config(void) {
 	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
 
 	page[EVSE_CONFIG_MAGIC_POS]          = EVSE_CONFIG_MAGIC;
-	page[EVSE_CONFIG_MANAGED_POS]        = evse.managed;
+//	page[EVSE_CONFIG_MANAGED_POS]        = evse.managed;
 	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS] = evse.shutdown_input_configuration;
 	if(sdm630.reset_energy_meter) {
 		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm630_register_fast.absolute_energy.data;
@@ -366,9 +366,6 @@ void evse_init(void) {
 //	ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
 
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
-	evse.max_current_configured = 32000; // default user defined current ist 32A
-	evse.max_managed_current = 32000;
-	evse.charging_autostart = true;
 	evse.last_contactor_switch = system_timer_get_ms();
 	evse.output_configuration = EVSE_V2_OUTPUT_HIGH;
 	evse.control_pilot = EVSE_V2_CONTROL_PILOT_AUTOMATIC;
@@ -404,11 +401,6 @@ void evse_tick(void) {
 	if(evse.startup_time != 0 && !system_timer_is_time_elapsed_ms(evse.startup_time, 1000)) {
 		// Wait for 1s so everything can start/boot properly
 		return;
-	}
-
-	// If the charging timer is running and the car is disconnected, stop the charging timer
-	if((evse.charging_time != 0) && (adc_result.cp_pe_resistance > 10000)) {
-		evse.charging_time = 0;
 	}
 
 	// Turn LED on (LED flicker off after startup/calibration)

@@ -56,14 +56,9 @@ typedef struct {
 
 	uint16_t config_jumper_current_software;
 
-	uint16_t max_current_configured;
 	bool calibration_error;
-	bool charging_autostart;
 
 	uint32_t last_contactor_switch;
-
-	bool managed;
-	uint16_t max_managed_current;
 
 	uint8_t shutdown_input_configuration;
 	uint8_t input_configuration;

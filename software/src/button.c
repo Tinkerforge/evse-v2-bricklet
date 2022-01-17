@@ -29,6 +29,7 @@
 #include "evse.h"
 #include "led.h"
 #include "communication.h"
+#include "charging_slot.h"
 
 #include <string.h>
 
@@ -77,8 +78,8 @@ void button_tick(void) {
 			if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
 				// If button was pressed (i.e. we currently don't start a charge automatically)
 				if(button.was_pressed) {
-					// Simulate start-charging API call
-					start_charging(NULL);
+					// Simulate start-charging press in web interface
+					charging_slot_start_charging_by_button();
 					// If the API call did reset the button pressed state we ignore any other
 					// button configuration after this
 					if(!button.was_pressed) {
@@ -96,6 +97,8 @@ void button_tick(void) {
 			if(!handled && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING)) {
 				if(!button.was_pressed) {
 					button.was_pressed = true;
+					// Disallow charging bybutton charging slot
+					charging_slot_stop_charging_by_button();
 
 					// In the case that we stop the charging through a button press,
 					// we increase the button debounce to 2 seconds if the button is configured to also start charging,
@@ -107,22 +110,14 @@ void button_tick(void) {
 			}
 		}
 	}
-
-	if(button.was_pressed) {
-		if(evse.managed) {
-			evse.max_managed_current = 0;
-		}
-	}
 }
 
 bool button_reset(void) {
 	if((button.state != BUTTON_STATE_PRESSED) && button.was_pressed) {
-		// If autostart is disabled, the button can only be "unpressed" through the API
-		// by calling "StartCharging()"
-		if(evse.charging_autostart) {
-			button.was_pressed = false;
-			return true;
-		}
+		// Make sure button charging slots allowes charging again
+		charging_slot_start_charging_by_button();
+		button.was_pressed = false;
+		return true;
 	}
 
 	return false;

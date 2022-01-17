@@ -40,6 +40,7 @@
 #include "sdm630.h"
 #include "rs485.h"
 #include "dc_fault.h"
+#include "charging_slot.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -48,23 +49,18 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_STATE: return get_state(message, response);
 		case FID_GET_HARDWARE_CONFIGURATION: return get_hardware_configuration(message, response);
 		case FID_GET_LOW_LEVEL_STATE: return get_low_level_state(message, response);
-		case FID_SET_MAX_CHARGING_CURRENT: return set_max_charging_current(message);
-		case FID_GET_MAX_CHARGING_CURRENT: return get_max_charging_current(message, response);
-		case FID_START_CHARGING: return start_charging(message);
-		case FID_STOP_CHARGING: return stop_charging(message);
-		case FID_SET_CHARGING_AUTOSTART: return set_charging_autostart(message);
-		case FID_GET_CHARGING_AUTOSTART: return get_charging_autostart(message, response);
+		case FID_SET_CHARGING_SLOT: return set_charging_slot(message);
+		case FID_GET_CHARGING_SLOT: return get_charging_slot(message, response);
+		case FID_GET_ALL_CHARGING_SLOTS: return get_all_charging_slots(message, response);
+		case FID_SET_CHARGING_SLOT_POWER_ON_DEFAULT: return set_charging_slot_power_on_default(message);
+		case FID_GET_CHARGING_SLOT_POWER_ON_DEFAULT: return get_charging_slot_power_on_default(message, response);
 		case FID_GET_ENERGY_METER_VALUES: return get_energy_meter_values(message, response);
 		case FID_GET_ENERGY_METER_DETAILED_VALUES_LOW_LEVEL: return get_energy_meter_detailed_values_low_level(message, response);
-		case FID_GET_ENERGY_METER_STATE: return get_energy_meter_state(message, response);
+		case FID_GET_ENERGY_METER_ERROR: return get_energy_meter_error(message, response);
 		case FID_RESET_ENERGY_METER: return reset_energy_meter(message);
-		case FID_GET_DC_FAULT_CURRENT_STATE: return get_dc_fault_current_state(message, response);
 		case FID_RESET_DC_FAULT_CURRENT: return reset_dc_fault_current(message);
 		case FID_SET_GPIO_CONFIGURATION: return set_gpio_configuration(message);
 		case FID_GET_GPIO_CONFIGURATION: return get_gpio_configuration(message, response);
-		case FID_GET_MANAGED: return get_managed(message, response);
-		case FID_SET_MANAGED: return set_managed(message);
-		case FID_SET_MANAGED_CURRENT: return set_managed_current(message);
 		case FID_GET_DATA_STORAGE: return get_data_storage(message, response);
 		case FID_SET_DATA_STORAGE: return set_data_storage(message);
 		case FID_GET_INDICATOR_LED: return get_indicator_led(message, response);
@@ -87,22 +83,9 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 	response->iec61851_state           = iec61851.state;
 	response->contactor_state          = contactor_check.state;
 	response->contactor_error          = contactor_check.error;
-
-	const bool is_shutdown = evse_is_shutdown();
-	if(!is_shutdown && evse.managed && !button.was_pressed && ((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C))) {
-		response->charge_release       = EVSE_V2_CHARGE_RELEASE_MANAGED;
-	} else if(is_shutdown || (button.state == BUTTON_STATE_PRESSED) || (iec61851.state >= IEC61851_STATE_D)) { // button is pressed or error state
-		response->charge_release       = EVSE_V2_CHARGE_RELEASE_DEACTIVATED;
-	} else if(!button.was_pressed && evse.charging_autostart) { // button was not pressed and autostart on
-		response->charge_release       = EVSE_V2_CHARGE_RELEASE_AUTOMATIC;
-	} else { // button was pressed or autostart off
-		response->charge_release       = EVSE_V2_CHARGE_RELEASE_MANUAL;
-	}
 	response->allowed_charging_current = iec61851_get_max_ma();
 	response->error_state              = led.state == LED_STATE_BLINKING ? led.blink_num : 0;
 	response->lock_state               = lock.state;
-	response->uptime                   = system_timer_get_ms();
-	response->time_since_state_change  = response->uptime - iec61851.last_state_change;
 
 	if((iec61851.state == IEC61851_STATE_D) || (iec61851.state == IEC61851_STATE_EF)) {
 		response->vehicle_state = EVSE_V2_VEHICLE_STATE_ERROR;
@@ -122,6 +105,8 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 		}
 	}
 
+	response->dc_fault_current_state   = dc_fault.state;
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
@@ -129,6 +114,8 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	response->header.length        = sizeof(GetHardwareConfiguration_Response);
 	response->jumper_configuration = evse.config_jumper_current;
 	response->has_lock_switch      = evse.has_lock_switch;
+	response->evse_version         = 20;
+	response->energy_meter_type    = 0; // TODO
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -138,25 +125,27 @@ bool get_bit(const uint32_t value, uint8_t const bit_position) {
 }
 
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response) {
-	response->header.length          = sizeof(GetLowLevelState_Response);
-	response->led_state              = led.state;
-	response->cp_pwm_duty_cycle      = evse_get_cp_duty_cycle();
-	response->adc_values[0]          = adc[0].result[0];
-	response->adc_values[1]          = adc[1].result[0];
-	response->adc_values[2]          = adc[0].result[1];
-	response->adc_values[3]          = adc[1].result[1];
-	response->adc_values[4]          = adc[2].result[0];
-	response->adc_values[5]          = adc[3].result[0];
-	response->adc_values[6]          = adc[4].result[0];
-	response->voltages[0]            = adc[0].result_mv[0];
-	response->voltages[1]            = adc[1].result_mv[0];
-	response->voltages[2]            = adc[0].result_mv[1];
-	response->voltages[3]            = adc[1].result_mv[1];
-	response->voltages[4]            = adc[2].result_mv[0];
-	response->voltages[5]            = adc[3].result_mv[0];
-	response->voltages[6]            = adc[4].result_mv[0];
-	response->resistances[0]         = adc_result.cp_pe_resistance;
-	response->resistances[1]         = adc_result.pp_pe_resistance;
+	response->header.length           = sizeof(GetLowLevelState_Response);
+	response->led_state               = led.state;
+	response->cp_pwm_duty_cycle       = evse_get_cp_duty_cycle();
+	response->adc_values[0]           = adc[0].result[0];
+	response->adc_values[1]           = adc[1].result[0];
+	response->adc_values[2]           = adc[0].result[1];
+	response->adc_values[3]           = adc[1].result[1];
+	response->adc_values[4]           = adc[2].result[0];
+	response->adc_values[5]           = adc[3].result[0];
+	response->adc_values[6]           = adc[4].result[0];
+	response->voltages[0]             = adc[0].result_mv[0];
+	response->voltages[1]             = adc[1].result_mv[0];
+	response->voltages[2]             = adc[0].result_mv[1];
+	response->voltages[3]             = adc[1].result_mv[1];
+	response->voltages[4]             = adc[2].result_mv[0];
+	response->voltages[5]             = adc[3].result_mv[0];
+	response->voltages[6]             = adc[4].result_mv[0];
+	response->resistances[0]          = adc_result.cp_pe_resistance;
+	response->resistances[1]          = adc_result.pp_pe_resistance;
+	response->uptime                  = system_timer_get_ms();
+	response->time_since_state_change = response->uptime - iec61851.last_state_change;
 
 	const uint32_t port0 = XMC_GPIO_PORT0->IN;
 	const uint32_t port1 = XMC_GPIO_PORT1->IN;
@@ -195,58 +184,51 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_max_charging_current(const SetMaxChargingCurrent *data) {
-	// Use a minimum of 6A and a maximum of 32A.
-	evse.max_current_configured = BETWEEN(6000, data->max_current, 32000);
+BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data) {
+	// The first two slots are read-only
+	if((data->slot <= 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	charging_slot.max_current[data->slot]         = data->max_current;
+	charging_slot.active[data->slot]              = data->active;
+	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_max_charging_current(const GetMaxChargingCurrent *data, GetMaxChargingCurrent_Response *response) {
-	response->header.length              = sizeof(GetMaxChargingCurrent_Response);
-	response->max_current_configured     = evse.max_current_configured;
-	response->max_current_outgoing_cable = iec61851_get_ma_from_pp_resistance();
-	response->max_current_incoming_cable = iec61851_get_ma_from_jumper();
-	response->max_current_managed        = evse.max_managed_current;
+BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, GetChargingSlot_Response *response) {
+	if(data->slot >= CHARGING_SLOT_NUM) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	response->header.length       = sizeof(GetChargingSlot_Response);
+	response->max_current         = charging_slot.max_current[data->slot];
+	response->active              = charging_slot.active[data->slot];
+	response->clear_on_disconnect = charging_slot.clear_on_disconnect[data->slot];
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse start_charging(const StartCharging *data) {
-	// Starting a new charge is the same as "releasing" a button press
-
-	// If autostart is disabled we only accept a start chargin request if a car is currently connected
-	if(((iec61851.state == IEC61851_STATE_A) && !evse.charging_autostart && (adc_result.cp_pe_resistance < 10000)) || 
-	   evse.charging_autostart) {
-		button.was_pressed = false;
+BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots *data, GetAllChargingSlots_Response *response) {
+	for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
+		response->max_current[i]                    = charging_slot.max_current[i];
+		response->active_and_clear_on_disconnect[i] = (charging_slot.active[i] << 0) | (charging_slot.clear_on_disconnect[i] << 1);
 	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse stop_charging(const StopCharging *data) {
-	// Stopping the charging is the same as pressing the button
-	button.was_pressed = true;
+BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChargingSlotPowerOnDefault *data) {
+	// TODO
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse set_charging_autostart(const SetChargingAutostart *data) {
-	evse.charging_autostart = data->autostart;
+BootloaderHandleMessageResponse get_charging_slot_power_on_default(const GetChargingSlotPowerOnDefault *data, GetChargingSlotPowerOnDefault_Response *response) {
+	response->header.length = sizeof(GetChargingSlotPowerOnDefault_Response);
 
-	// If autostart is disabled and there is not currently a car charging
-	// we set "was_pressed" to make sure that the user needs to call start_charging before
-	// the car starts charging.
-	if(!evse.charging_autostart && (iec61851.state != IEC61851_STATE_C)) {
-		button.was_pressed = true;
-	}
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
-}
-
-BootloaderHandleMessageResponse get_charging_autostart(const GetChargingAutostart *data, GetChargingAutostart_Response *response) {
-	response->header.length = sizeof(GetChargingAutostart_Response);
-	response->autostart     = evse.charging_autostart;
+	// TODO
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -291,9 +273,8 @@ BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_energy_meter_state(const GetEnergyMeterState *data, GetEnergyMeterState_Response *response) {
-	response->header.length  = sizeof(GetEnergyMeterState_Response);
-	response->available      = sdm630.available;
+BootloaderHandleMessageResponse get_energy_meter_error(const GetEnergyMeterError *data, GetEnergyMeterError_Response *response) {
+	response->header.length  = sizeof(GetEnergyMeterError_Response);
 	response->error_count[0] = rs485.modbus_common_error_counters.timeout;
 	response->error_count[1] = 0; // Global timeout. Currently global timeout triggers watchdog and EVSE will restart, so this will always be 0.
 	response->error_count[2] = rs485.modbus_common_error_counters.illegal_function;
@@ -309,13 +290,6 @@ BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data)
 	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
-}
-
-BootloaderHandleMessageResponse get_dc_fault_current_state(const GetDCFaultCurrentState *data, GetDCFaultCurrentState_Response *response) {
-	response->header.length          = sizeof(GetDCFaultCurrentState_Response);
-	response->dc_fault_current_state = dc_fault.state;
-
-	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data) {
@@ -351,42 +325,6 @@ BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguratio
 	response->output_configuration         = evse.output_configuration;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-}
-
-BootloaderHandleMessageResponse get_managed(const GetManaged *data, GetManaged_Response *response) {
-	response->header.length = sizeof(GetManaged_Response);
-	response->managed       = evse.managed;
-
-	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-}
-
-BootloaderHandleMessageResponse set_managed(const SetManaged *data) {
-	if(data->managed && data->password != 0x00363702) {
-		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-	}
-
-	if(!data->managed && data->password != 0x036370FF) {
-		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-	}
-
-	if(evse.managed != data->managed) {
-		evse.max_managed_current = 0;
-	}
-
-	evse.managed = data->managed;
-	if(!evse.managed) {
-		evse.max_managed_current = 32000;
-	}
-
-	evse_save_config();
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
-}
-
-BootloaderHandleMessageResponse set_managed_current(const SetManagedCurrent *data) {
-	evse.max_managed_current = data->current;
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, GetDataStorage_Response *response) {
@@ -524,7 +462,7 @@ BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControl
 
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response) {
 	response->header.length = sizeof(GetAllData1_Response);
-
+#if 0
 	TFPMessageFull parts;
 
 	get_state(NULL, (GetState_Response*)&parts);
@@ -532,13 +470,13 @@ BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllDa
 
 	get_hardware_configuration(NULL, (GetHardwareConfiguration_Response*)&parts);
 	memcpy(&response->jumper_configuration, parts.data, sizeof(GetHardwareConfiguration_Response) - sizeof(TFPMessageHeader));
-
+#endif
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response) {
 	response->header.length = sizeof(GetAllData2_Response);
-
+#if 0
 	TFPMessageFull parts;
 
 	get_low_level_state(NULL, (GetLowLevelState_Response*)&parts);
@@ -549,13 +487,13 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 
 	get_charging_autostart(NULL, (GetChargingAutostart_Response*)&parts);
 	memcpy(&response->autostart, parts.data, sizeof(GetChargingAutostart_Response) - sizeof(TFPMessageHeader));
-
+#endif
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response) {
 	response->header.length = sizeof(GetAllData3_Response);
-
+#if 0
 	TFPMessageFull parts;
 
 	get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&parts);
@@ -584,7 +522,7 @@ BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllDa
 
 	get_control_pilot_configuration(NULL, (GetControlPilotConfiguration_Response*)&parts);
 	memcpy(&response->control_pilot, parts.data, sizeof(GetControlPilotConfiguration_Response) - sizeof(TFPMessageHeader));
-
+#endif
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 

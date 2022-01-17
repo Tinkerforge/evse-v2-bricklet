@@ -39,13 +39,15 @@
 #include "dc_fault.h"
 #include "rs485.h"
 #include "sdm630.h"
+#include "charging_slot.h"
 
 int main(void) {
 	logging_init();
-	logd("Start EVSE Bricklet\n\r");
+	logd("Start EVSE Bricklet 2.0\n\r");
 
 	communication_init();
 	evse_init();
+	charging_slot_init();
 	iec61851_init();
 	lock_init();
 	contactor_check_init();

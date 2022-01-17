@@ -41,6 +41,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/modbus.c"
 	"${PROJECT_SOURCE_DIR}/src/timer.c"
 	"${PROJECT_SOURCE_DIR}/src/sdm630.c"
+	"${PROJECT_SOURCE_DIR}/src/charging_slot.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/uartbb/uartbb.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/system_timer/system_timer.c"

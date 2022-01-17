@@ -37,6 +37,7 @@
 #include "button.h"
 #include "dc_fault.h"
 #include "communication.h"
+#include "charging_slot.h"
 
 // Resistance between CP/PE
 // inf  Ohm -> no car present
@@ -79,18 +80,12 @@ void iec61851_set_state(IEC61851State state) {
 		}
 
 		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
-			if(!evse.charging_autostart) {
-				// If we change from state C to either A or B and autostart is disabled,
-				// we set the buttom pressed flag.
-				// This means that the user needs to call "StartCharging()" through the API
-				// before the car starts to charge again.
-				button.was_pressed = true;
-			}
+			// If state changed from to A we invalidate the managed current
+			// we have to handle the clear on dusconnect slots
+			charging_slot_handle_disconnect();
 
-			// If state changed from C to A or B and the EVSE is managed externally, we invalidate the managed current
-			if(evse.managed) {
-				evse.max_managed_current = 0;
-			}
+			// If the charging timer is running and the car is disconnected, stop the charging timer
+			evse.charging_time = 0;
 		}
 
 		iec61851.state             = state;
@@ -128,12 +123,7 @@ uint32_t iec61851_get_ma_from_jumper(void) {
 }
 
 uint32_t iec61851_get_max_ma(void) {
-	uint32_t max_conf_pp_jumper = MIN(evse.max_current_configured, MIN(iec61851_get_ma_from_pp_resistance(), iec61851_get_ma_from_jumper()));
-	if(evse.managed) {
-		return MIN(max_conf_pp_jumper, evse.max_managed_current);
-	}
-
-	return max_conf_pp_jumper;
+	return charging_slot_get_max_current();
 }
 
 // Duty cycle in pro mille (1/10 %)
@@ -252,7 +242,7 @@ void iec61851_tick(void) {
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {
 			iec61851_set_state(IEC61851_STATE_B);
 		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
-			if(evse.managed && (evse.max_managed_current == 0)) {
+			if(charging_slot_get_max_current() == 0) {
 				evse.charging_time = 0;
 				iec61851_set_state(IEC61851_STATE_B);
 			} else {
