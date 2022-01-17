@@ -30,6 +30,7 @@
 #include "led.h"
 #include "communication.h"
 #include "charging_slot.h"
+#include "iec61851.h"
 
 #include <string.h>
 
@@ -79,7 +80,9 @@ void button_tick(void) {
 				// If button was pressed (i.e. we currently don't start a charge automatically)
 				if(button.was_pressed) {
 					// Simulate start-charging press in web interface
-					charging_slot_start_charging_by_button();
+					if(iec61851.state == IEC61851_STATE_B) {
+						charging_slot_start_charging_by_button();
+					}
 					// If the API call did reset the button pressed state we ignore any other
 					// button configuration after this
 					if(!button.was_pressed) {
