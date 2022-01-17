@@ -26,6 +26,7 @@
 #include <stdbool.h>
 
 #define CHARGING_SLOT_NUM 20
+#define CHARGING_SLOT_DEFAULT_NUM (CHARGING_SLOT_NUM - 2)
 
 #define CHARGING_SLOT_INCOMING_CABLE 0
 #define CHARGING_SLOT_OUTGOING_CABLE 1
@@ -34,6 +35,10 @@
 #define CHARGING_SLOT_BUTTON         4
 
 typedef struct {
+    uint16_t max_current_default[CHARGING_SLOT_DEFAULT_NUM];
+    bool active_default[CHARGING_SLOT_DEFAULT_NUM];
+    bool clear_on_disconnect_default[CHARGING_SLOT_DEFAULT_NUM];
+
     uint16_t max_current[CHARGING_SLOT_NUM];
     bool active[CHARGING_SLOT_NUM];
     bool clear_on_disconnect[CHARGING_SLOT_NUM];

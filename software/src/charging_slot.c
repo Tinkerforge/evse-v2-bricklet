@@ -47,8 +47,6 @@ uint32_t charging_slot_get_ma_incoming_cable(void) {
 }
 
 void charging_slot_init(void) {
-    memset(&charging_slot, 0, sizeof(ChargingSlot));
-
     // Incoming cable
     charging_slot.max_current[CHARGING_SLOT_INCOMING_CABLE]         = charging_slot_get_ma_incoming_cable();
     charging_slot.active[CHARGING_SLOT_INCOMING_CABLE]              = true;
@@ -59,23 +57,11 @@ void charging_slot_init(void) {
     charging_slot.active[CHARGING_SLOT_OUTGOING_CABLE]              = true;
     charging_slot.clear_on_disconnect[CHARGING_SLOT_OUTGOING_CABLE] = false;
 
-    // Input 0 (shutdown input)
-    charging_slot.max_current[CHARGING_SLOT_INPUT0]                 = 0;
-    charging_slot.active[CHARGING_SLOT_INPUT0]                      = false;
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0]         = false;
-
-    // Input 1 (gp input)
-    charging_slot.max_current[CHARGING_SLOT_INPUT1]                 = 0;
-    charging_slot.active[CHARGING_SLOT_INPUT1]                      = false;
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1]         = false;
-
-    // Button -> default is autostart enabled
-    charging_slot.max_current[CHARGING_SLOT_BUTTON]                 = 32000;
-    charging_slot.active[CHARGING_SLOT_BUTTON]                      = true;
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_BUTTON]         = false;
-
-
-    // TODO: Read defaults
+    for(uint8_t i = 0; i < CHARGING_SLOT_DEFAULT_NUM; i++) {
+        charging_slot.max_current[i+2]         = charging_slot.max_current_default[i];
+        charging_slot.active[i+2]              = charging_slot.active_default[i];
+        charging_slot.clear_on_disconnect[i+2] = charging_slot.clear_on_disconnect_default[i];
+    }
 }
 
 void charging_slot_tick(void) {
