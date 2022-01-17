@@ -99,16 +99,12 @@ uint16_t charging_slot_get_max_current(void) {
 }
 
 void charging_slot_handle_disconnect(void) {
+    charging_slot_start_charging_by_button();
+    
     for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
         if(charging_slot.clear_on_disconnect[i]) {
             charging_slot.max_current[i] = 0;
         }
-    }
-
-    // If the charging was stopped because of a button press,
-    // we set the button-slot back on disconnect
-    if(button.was_pressed && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING)) {
-        charging_slot_start_charging_by_button();
     }
 }
 
