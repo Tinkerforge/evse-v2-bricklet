@@ -113,6 +113,14 @@ void button_tick(void) {
 			}
 		}
 	}
+
+	if(button.was_pressed) {
+		// As long as we are in "was_pressed"-state and the button is
+		// still pressed (or key is turned to off) the LED stays off
+		if(button.state == BUTTON_STATE_PRESSED) {
+			led_set_off();
+		}
+	}
 }
 
 bool button_reset(void) {
