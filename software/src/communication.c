@@ -217,7 +217,7 @@ BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots
 		response->active_and_clear_on_disconnect[i] = (charging_slot.active[i] << 0) | (charging_slot.clear_on_disconnect[i] << 1);
 	}
 
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChargingSlotPowerOnDefault *data) {
