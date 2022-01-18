@@ -52,13 +52,13 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_CHARGING_SLOT: return set_charging_slot(message);
 		case FID_GET_CHARGING_SLOT: return get_charging_slot(message, response);
 		case FID_GET_ALL_CHARGING_SLOTS: return get_all_charging_slots(message, response);
-		case FID_SET_CHARGING_SLOT_POWER_ON_DEFAULT: return set_charging_slot_power_on_default(message);
-		case FID_GET_CHARGING_SLOT_POWER_ON_DEFAULT: return get_charging_slot_power_on_default(message, response);
+		case FID_SET_CHARGING_SLOT_DEFAULT: return set_charging_slot_default(message);
+		case FID_GET_CHARGING_SLOT_DEFAULT: return get_charging_slot_default(message, response);
 		case FID_GET_ENERGY_METER_VALUES: return get_energy_meter_values(message, response);
-		case FID_GET_ENERGY_METER_DETAILED_VALUES_LOW_LEVEL: return get_energy_meter_detailed_values_low_level(message, response);
-		case FID_GET_ENERGY_METER_ERROR: return get_energy_meter_error(message, response);
-		case FID_RESET_ENERGY_METER: return reset_energy_meter(message);
-		case FID_RESET_DC_FAULT_CURRENT: return reset_dc_fault_current(message);
+		case FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL: return get_all_energy_meter_values_low_level(message, response);
+		case FID_GET_ENERGY_METER_ERRORS: return get_energy_meter_errors(message, response);
+		case FID_RESET_ENERGY_METER_RELATIVE_ENERGY: return reset_energy_meter_relative_energy(message);
+		case FID_RESET_DC_FAULT_CURRENT_STATE: return reset_dc_fault_current_state(message);
 		case FID_SET_GPIO_CONFIGURATION: return set_gpio_configuration(message);
 		case FID_GET_GPIO_CONFIGURATION: return get_gpio_configuration(message, response);
 		case FID_GET_DATA_STORAGE: return get_data_storage(message, response);
@@ -88,21 +88,17 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 	response->lock_state               = lock.state;
 
 	if((iec61851.state == IEC61851_STATE_D) || (iec61851.state == IEC61851_STATE_EF)) {
-		response->vehicle_state = EVSE_V2_VEHICLE_STATE_ERROR;
+		response->charger_state = EVSE_V2_CHARGER_STATE_ERROR;
 	} else if(iec61851.state == IEC61851_STATE_C) {
-		response->vehicle_state = EVSE_V2_VEHICLE_STATE_CHARGING;
+		response->charger_state = EVSE_V2_CHARGER_STATE_CHARGING;
 	} else if(iec61851.state == IEC61851_STATE_B) {
-		response->vehicle_state = EVSE_V2_VEHICLE_STATE_CONNECTED;
-	} else { 
-		// For state A we may be not connected or connected with autostart disabled.
-		// We check this by looking at the CP/PE resistance. We expect at least 10000 ohm if a vehicle is not connected.
-		// If we run into an error case on startup the resistance may stay at the initialization value of 0.
-		// In that case we assume that there is no vehicle connected either.
-		if((adc_result.cp_pe_resistance > 10000) || (adc_result.cp_pe_resistance == 0)) {
-			response->vehicle_state = EVSE_V2_VEHICLE_STATE_NOT_CONNECTED;
+		if(charging_slot_get_max_current() == 0) {
+			response->charger_state = EVSE_V2_CHARGER_STATE_WAITING_FOR_CHARGE_RELEASE;
 		} else {
-			response->vehicle_state = EVSE_V2_VEHICLE_STATE_CONNECTED;
+			response->charger_state = EVSE_V2_CHARGER_STATE_READY_TO_CHARGE;
 		}
+	} else { 
+		response->charger_state = EVSE_V2_CHARGER_STATE_NOT_CONNECTED;
 	}
 
 	response->dc_fault_current_state   = dc_fault.state;
@@ -227,7 +223,7 @@ BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChargingSlotPowerOnDefault *data) {
+BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotDefault *data) {
 	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
@@ -247,14 +243,14 @@ BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChar
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_charging_slot_power_on_default(const GetChargingSlotPowerOnDefault *data, GetChargingSlotPowerOnDefault_Response *response) {
+BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotDefault *data, GetChargingSlotDefault_Response *response) {
 	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	const uint8_t slot = data->slot - 2;
 
-	response->header.length       = sizeof(GetChargingSlotPowerOnDefault_Response);
+	response->header.length       = sizeof(GetChargingSlotDefault_Response);
 	response->max_current         = charging_slot.max_current_default[slot];
 	response->active              = charging_slot.active_default[slot];
 	response->clear_on_disconnect = charging_slot.clear_on_disconnect_default[slot];
@@ -277,11 +273,10 @@ BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValu
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-
-BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const GetEnergyMeterDetailedValuesLowLevel *data, GetEnergyMeterDetailedValuesLowLevel_Response *response) {
+BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetAllEnergyMeterValuesLowLevel *data, GetAllEnergyMeterValuesLowLevel_Response *response) {
 	static uint32_t packet_payload_index = 0;
 
-	response->header.length = sizeof(GetEnergyMeterDetailedValuesLowLevel_Response);
+	response->header.length = sizeof(GetAllEnergyMeterValuesLowLevel_Response);
 
 	const uint8_t packet_length = 60;
 	const uint16_t max_end = 84*sizeof(float);
@@ -302,8 +297,8 @@ BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_energy_meter_error(const GetEnergyMeterError *data, GetEnergyMeterError_Response *response) {
-	response->header.length  = sizeof(GetEnergyMeterError_Response);
+BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErrors *data, GetEnergyMeterErrors_Response *response) {
+	response->header.length  = sizeof(GetEnergyMeterErrors_Response);
 	response->error_count[0] = rs485.modbus_common_error_counters.timeout;
 	response->error_count[1] = 0; // Global timeout. Currently global timeout triggers watchdog and EVSE will restart, so this will always be 0.
 	response->error_count[2] = rs485.modbus_common_error_counters.illegal_function;
@@ -314,14 +309,14 @@ BootloaderHandleMessageResponse get_energy_meter_error(const GetEnergyMeterError
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data) {
+BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEnergyMeterRelativeEnergy *data) {
 	sdm630.reset_energy_meter = true;
 	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data) {
+BootloaderHandleMessageResponse reset_dc_fault_current_state(const ResetDCFaultCurrentState *data) {
 	if(data->password == 0xDC42FA23) {
 		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
 		led_set_on(false);

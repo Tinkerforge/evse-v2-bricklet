@@ -47,10 +47,11 @@ void communication_init(void);
 #define EVSE_V2_LED_STATE_FLICKER 3
 #define EVSE_V2_LED_STATE_BREATHING 4
 
-#define EVSE_V2_VEHICLE_STATE_NOT_CONNECTED 0
-#define EVSE_V2_VEHICLE_STATE_CONNECTED 1
-#define EVSE_V2_VEHICLE_STATE_CHARGING 2
-#define EVSE_V2_VEHICLE_STATE_ERROR 3
+#define EVSE_V2_CHARGER_STATE_NOT_CONNECTED 0
+#define EVSE_V2_CHARGER_STATE_WAITING_FOR_CHARGE_RELEASE 1
+#define EVSE_V2_CHARGER_STATE_READY_TO_CHARGE 2
+#define EVSE_V2_CHARGER_STATE_CHARGING 3
+#define EVSE_V2_CHARGER_STATE_ERROR 4
 
 #define EVSE_V2_CONTACTOR_STATE_AC1_NLIVE_AC2_NLIVE 0
 #define EVSE_V2_CONTACTOR_STATE_AC1_LIVE_AC2_NLIVE 1
@@ -132,13 +133,13 @@ void communication_init(void);
 #define FID_SET_CHARGING_SLOT 4
 #define FID_GET_CHARGING_SLOT 5
 #define FID_GET_ALL_CHARGING_SLOTS 6
-#define FID_SET_CHARGING_SLOT_POWER_ON_DEFAULT 7
-#define FID_GET_CHARGING_SLOT_POWER_ON_DEFAULT 8
+#define FID_SET_CHARGING_SLOT_DEFAULT 7
+#define FID_GET_CHARGING_SLOT_DEFAULT 8
 #define FID_GET_ENERGY_METER_VALUES 9
-#define FID_GET_ENERGY_METER_DETAILED_VALUES_LOW_LEVEL 10
-#define FID_GET_ENERGY_METER_ERROR 11
-#define FID_RESET_ENERGY_METER 12
-#define FID_RESET_DC_FAULT_CURRENT 13
+#define FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL 10
+#define FID_GET_ENERGY_METER_ERRORS 11
+#define FID_RESET_ENERGY_METER_RELATIVE_ENERGY 12
+#define FID_RESET_DC_FAULT_CURRENT_STATE 13
 #define FID_SET_GPIO_CONFIGURATION 14
 #define FID_GET_GPIO_CONFIGURATION 15
 #define FID_GET_DATA_STORAGE 16
@@ -162,7 +163,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t iec61851_state;
-	uint8_t vehicle_state;
+	uint8_t charger_state;
 	uint8_t contactor_state;
 	uint8_t contactor_error;
 	uint16_t allowed_charging_current;
@@ -236,19 +237,19 @@ typedef struct {
 	uint16_t max_current;
 	bool active;
 	bool clear_on_disconnect;
-} __attribute__((__packed__)) SetChargingSlotPowerOnDefault;
+} __attribute__((__packed__)) SetChargingSlotDefault;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slot;
-} __attribute__((__packed__)) GetChargingSlotPowerOnDefault;
+} __attribute__((__packed__)) GetChargingSlotDefault;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint16_t max_current;
 	bool active;
 	bool clear_on_disconnect;
-} __attribute__((__packed__)) GetChargingSlotPowerOnDefault_Response;
+} __attribute__((__packed__)) GetChargingSlotDefault_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -265,31 +266,31 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetEnergyMeterDetailedValuesLowLevel;
+} __attribute__((__packed__)) GetAllEnergyMeterValuesLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint16_t values_chunk_offset;
 	float values_chunk_data[15];
-} __attribute__((__packed__)) GetEnergyMeterDetailedValuesLowLevel_Response;
+} __attribute__((__packed__)) GetAllEnergyMeterValuesLowLevel_Response;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetEnergyMeterError;
+} __attribute__((__packed__)) GetEnergyMeterErrors;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint32_t error_count[6];
-} __attribute__((__packed__)) GetEnergyMeterError_Response;
+} __attribute__((__packed__)) GetEnergyMeterErrors_Response;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) ResetEnergyMeter;
+} __attribute__((__packed__)) ResetEnergyMeterRelativeEnergy;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint32_t password;
-} __attribute__((__packed__)) ResetDCFaultCurrent;
+} __attribute__((__packed__)) ResetDCFaultCurrentState;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -392,7 +393,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t iec61851_state;
-	uint8_t vehicle_state;
+	uint8_t charger_state;
 	uint8_t contactor_state;
 	uint8_t contactor_error;
 	uint16_t allowed_charging_current;
@@ -459,13 +460,13 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data);
 BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, GetChargingSlot_Response *response);
 BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots *data, GetAllChargingSlots_Response *response);
-BootloaderHandleMessageResponse set_charging_slot_power_on_default(const SetChargingSlotPowerOnDefault *data);
-BootloaderHandleMessageResponse get_charging_slot_power_on_default(const GetChargingSlotPowerOnDefault *data, GetChargingSlotPowerOnDefault_Response *response);
+BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotDefault *data);
+BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotDefault *data, GetChargingSlotDefault_Response *response);
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response);
-BootloaderHandleMessageResponse get_energy_meter_detailed_values_low_level(const GetEnergyMeterDetailedValuesLowLevel *data, GetEnergyMeterDetailedValuesLowLevel_Response *response);
-BootloaderHandleMessageResponse get_energy_meter_error(const GetEnergyMeterError *data, GetEnergyMeterError_Response *response);
-BootloaderHandleMessageResponse reset_energy_meter(const ResetEnergyMeter *data);
-BootloaderHandleMessageResponse reset_dc_fault_current(const ResetDCFaultCurrent *data);
+BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetAllEnergyMeterValuesLowLevel *data, GetAllEnergyMeterValuesLowLevel_Response *response);
+BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErrors *data, GetEnergyMeterErrors_Response *response);
+BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEnergyMeterRelativeEnergy *data);
+BootloaderHandleMessageResponse reset_dc_fault_current_state(const ResetDCFaultCurrentState *data);
 BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguration *data);
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response);
 BootloaderHandleMessageResponse get_data_storage(const GetDataStorage *data, GetDataStorage_Response *response);
