@@ -72,7 +72,6 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_CONTROL_PILOT_CONFIGURATION: return get_control_pilot_configuration(message, response);
 		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
-		case FID_GET_ALL_DATA_3: return get_all_data_3(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -486,7 +485,6 @@ BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControl
 
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response) {
 	response->header.length = sizeof(GetAllData1_Response);
-#if 0
 	TFPMessageFull parts;
 
 	get_state(NULL, (GetState_Response*)&parts);
@@ -494,46 +492,22 @@ BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllDa
 
 	get_hardware_configuration(NULL, (GetHardwareConfiguration_Response*)&parts);
 	memcpy(&response->jumper_configuration, parts.data, sizeof(GetHardwareConfiguration_Response) - sizeof(TFPMessageHeader));
-#endif
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response) {
 	response->header.length = sizeof(GetAllData2_Response);
-#if 0
-	TFPMessageFull parts;
-
-	get_low_level_state(NULL, (GetLowLevelState_Response*)&parts);
-	memcpy(&response->led_state, parts.data, sizeof(GetLowLevelState_Response) - sizeof(TFPMessageHeader));
-
-	get_max_charging_current(NULL, (GetMaxChargingCurrent_Response*)&parts);
-	memcpy(&response->max_current_configured, parts.data, sizeof(GetMaxChargingCurrent_Response) - sizeof(TFPMessageHeader));
-
-	get_charging_autostart(NULL, (GetChargingAutostart_Response*)&parts);
-	memcpy(&response->autostart, parts.data, sizeof(GetChargingAutostart_Response) - sizeof(TFPMessageHeader));
-#endif
-	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-}
-
-BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response) {
-	response->header.length = sizeof(GetAllData3_Response);
-#if 0
 	TFPMessageFull parts;
 
 	get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&parts);
 	memcpy(&response->power, parts.data, sizeof(GetEnergyMeterValues_Response) - sizeof(TFPMessageHeader));
 
-	get_energy_meter_state(NULL, (GetEnergyMeterState_Response*)&parts);
-	memcpy(&response->available, parts.data, sizeof(GetEnergyMeterState_Response) - sizeof(TFPMessageHeader));
-
-	get_dc_fault_current_state(NULL, (GetDCFaultCurrentState_Response*)&parts);
-	memcpy(&response->dc_fault_current_state, parts.data, sizeof(GetDCFaultCurrentState_Response) - sizeof(TFPMessageHeader));
+	get_energy_meter_errors(NULL, (GetEnergyMeterErrors_Response*)&parts);
+	memcpy(&response->error_count[0], parts.data, sizeof(GetEnergyMeterErrors_Response) - sizeof(TFPMessageHeader));
 
 	get_gpio_configuration(NULL, (GetGPIOConfiguration_Response*)&parts);
 	memcpy(&response->shutdown_input_configuration, parts.data, sizeof(GetGPIOConfiguration_Response) - sizeof(TFPMessageHeader));
-
-	get_managed(NULL, (GetManaged_Response*)&parts);
-	memcpy(&response->managed, parts.data, sizeof(GetManaged_Response) - sizeof(TFPMessageHeader));
 
 	get_indicator_led(NULL, (GetIndicatorLED_Response*)&parts);
 	memcpy(&response->indication, parts.data, sizeof(GetIndicatorLED_Response) - sizeof(TFPMessageHeader));
@@ -546,7 +520,7 @@ BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllDa
 
 	get_control_pilot_configuration(NULL, (GetControlPilotConfiguration_Response*)&parts);
 	memcpy(&response->control_pilot, parts.data, sizeof(GetControlPilotConfiguration_Response) - sizeof(TFPMessageHeader));
-#endif
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 

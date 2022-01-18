@@ -153,7 +153,6 @@ void communication_init(void);
 #define FID_GET_CONTROL_PILOT_CONFIGURATION 24
 #define FID_GET_ALL_DATA_1 25
 #define FID_GET_ALL_DATA_2 26
-#define FID_GET_ALL_DATA_3 27
 
 
 typedef struct {
@@ -399,10 +398,11 @@ typedef struct {
 	uint16_t allowed_charging_current;
 	uint8_t error_state;
 	uint8_t lock_state;
-	uint32_t time_since_state_change;
-	uint32_t uptime;
+	uint8_t dc_fault_current_state;
 	uint8_t jumper_configuration;
 	bool has_lock_switch;
+	uint8_t evse_version;
+	uint8_t energy_meter_type;
 } __attribute__((__packed__)) GetAllData1_Response;
 
 typedef struct {
@@ -411,38 +411,15 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t led_state;
-	uint16_t cp_pwm_duty_cycle;
-	uint16_t adc_values[7];
-	int16_t voltages[7];
-	uint32_t resistances[2];
-	uint8_t gpio[3];
-	uint32_t charging_time;
-	uint16_t max_current_configured;
-	uint16_t max_current_incoming_cable;
-	uint16_t max_current_outgoing_cable;
-	uint16_t max_current_managed;
-	bool autostart;
-} __attribute__((__packed__)) GetAllData2_Response;
-
-typedef struct {
-	TFPMessageHeader header;
-} __attribute__((__packed__)) GetAllData3;
-
-typedef struct {
-	TFPMessageHeader header;
 	float power;
 	float energy_relative;
 	float energy_absolute;
 	uint8_t phases_active[1];
 	uint8_t phases_connected[1];
-	bool available;
 	uint32_t error_count[6];
-	uint8_t dc_fault_current_state;
 	uint8_t shutdown_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
-	bool managed;
 	int16_t indication;
 	uint16_t duration;
 	uint8_t button_configuration;
@@ -450,7 +427,7 @@ typedef struct {
 	uint32_t button_release_time;
 	bool button_pressed;
 	uint8_t control_pilot;
-} __attribute__((__packed__)) GetAllData3_Response;
+} __attribute__((__packed__)) GetAllData2_Response;
 
 
 // Function prototypes
@@ -480,7 +457,6 @@ BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControl
 BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response);
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
-BootloaderHandleMessageResponse get_all_data_3(const GetAllData3 *data, GetAllData3_Response *response);
 
 // Callbacks
 
