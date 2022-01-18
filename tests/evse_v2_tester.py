@@ -150,9 +150,9 @@ class EVSEV2Tester:
     
     def get_energy_meter_data(self):
         a = self.evse.get_energy_meter_values()
-        b = self.evse.get_energy_meter_detailed_values()
+        b = self.evse.get_all_energy_meter_values()
         c = self.evse.get_hardware_configuration()
-        d = self.evse.get_energy_meter_error()
+        d = self.evse.get_energy_meter_errors()
         return (a, b, c, d)
     
     def get_cp_pe_voltage(self):
