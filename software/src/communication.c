@@ -50,6 +50,9 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_HARDWARE_CONFIGURATION: return get_hardware_configuration(message, response);
 		case FID_GET_LOW_LEVEL_STATE: return get_low_level_state(message, response);
 		case FID_SET_CHARGING_SLOT: return set_charging_slot(message);
+		case FID_SET_CHARGING_SLOT_MAX_CURRENT: return set_charging_slot_max_current(message);
+		case FID_SET_CHARGING_SLOT_ACTIVE: return set_charging_slot_active(message);
+		case FID_SET_CHARGING_SLOT_CLEAR_ON_DISCONNECT: return set_charging_slot_clear_on_disconnect(message);
 		case FID_GET_CHARGING_SLOT: return get_charging_slot(message, response);
 		case FID_GET_ALL_CHARGING_SLOTS: return get_all_charging_slots(message, response);
 		case FID_SET_CHARGING_SLOT_DEFAULT: return set_charging_slot_default(message);
