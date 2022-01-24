@@ -131,28 +131,31 @@ void communication_init(void);
 #define FID_GET_HARDWARE_CONFIGURATION 2
 #define FID_GET_LOW_LEVEL_STATE 3
 #define FID_SET_CHARGING_SLOT 4
-#define FID_GET_CHARGING_SLOT 5
-#define FID_GET_ALL_CHARGING_SLOTS 6
-#define FID_SET_CHARGING_SLOT_DEFAULT 7
-#define FID_GET_CHARGING_SLOT_DEFAULT 8
-#define FID_GET_ENERGY_METER_VALUES 9
-#define FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL 10
-#define FID_GET_ENERGY_METER_ERRORS 11
-#define FID_RESET_ENERGY_METER_RELATIVE_ENERGY 12
-#define FID_RESET_DC_FAULT_CURRENT_STATE 13
-#define FID_SET_GPIO_CONFIGURATION 14
-#define FID_GET_GPIO_CONFIGURATION 15
-#define FID_GET_DATA_STORAGE 16
-#define FID_SET_DATA_STORAGE 17
-#define FID_GET_INDICATOR_LED 18
-#define FID_SET_INDICATOR_LED 19
-#define FID_SET_BUTTON_CONFIGURATION 20
-#define FID_GET_BUTTON_CONFIGURATION 21
-#define FID_GET_BUTTON_STATE 22
-#define FID_SET_CONTROL_PILOT_CONFIGURATION 23
-#define FID_GET_CONTROL_PILOT_CONFIGURATION 24
-#define FID_GET_ALL_DATA_1 25
-#define FID_GET_ALL_DATA_2 26
+#define FID_SET_CHARGING_SLOT_MAX_CURRENT 5
+#define FID_SET_CHARGING_SLOT_ACTIVE 6
+#define FID_SET_CHARGING_SLOT_CLEAR_ON_DISCONNECT 7
+#define FID_GET_CHARGING_SLOT 8
+#define FID_GET_ALL_CHARGING_SLOTS 9
+#define FID_SET_CHARGING_SLOT_DEFAULT 10
+#define FID_GET_CHARGING_SLOT_DEFAULT 11
+#define FID_GET_ENERGY_METER_VALUES 12
+#define FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL 13
+#define FID_GET_ENERGY_METER_ERRORS 14
+#define FID_RESET_ENERGY_METER_RELATIVE_ENERGY 15
+#define FID_RESET_DC_FAULT_CURRENT_STATE 16
+#define FID_SET_GPIO_CONFIGURATION 17
+#define FID_GET_GPIO_CONFIGURATION 18
+#define FID_GET_DATA_STORAGE 19
+#define FID_SET_DATA_STORAGE 20
+#define FID_GET_INDICATOR_LED 21
+#define FID_SET_INDICATOR_LED 22
+#define FID_SET_BUTTON_CONFIGURATION 23
+#define FID_GET_BUTTON_CONFIGURATION 24
+#define FID_GET_BUTTON_STATE 25
+#define FID_SET_CONTROL_PILOT_CONFIGURATION 26
+#define FID_GET_CONTROL_PILOT_CONFIGURATION 27
+#define FID_GET_ALL_DATA_1 28
+#define FID_GET_ALL_DATA_2 29
 
 
 typedef struct {
@@ -207,6 +210,24 @@ typedef struct {
 	bool active;
 	bool clear_on_disconnect;
 } __attribute__((__packed__)) SetChargingSlot;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slot;
+	uint16_t max_current;
+} __attribute__((__packed__)) SetChargingSlotMaxCurrent;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slot;
+	bool active;
+} __attribute__((__packed__)) SetChargingSlotActive;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slot;
+	bool clear_on_disconnect;
+} __attribute__((__packed__)) SetChargingSlotClearOnDisconnect;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -435,6 +456,9 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConfiguration *data, GetHardwareConfiguration_Response *response);
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response);
 BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data);
+BootloaderHandleMessageResponse set_charging_slot_max_current(const SetChargingSlotMaxCurrent *data);
+BootloaderHandleMessageResponse set_charging_slot_active(const SetChargingSlotActive *data);
+BootloaderHandleMessageResponse set_charging_slot_clear_on_disconnect(const SetChargingSlotClearOnDisconnect *data);
 BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, GetChargingSlot_Response *response);
 BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots *data, GetAllChargingSlots_Response *response);
 BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotDefault *data);

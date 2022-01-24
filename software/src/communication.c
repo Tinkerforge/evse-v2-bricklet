@@ -199,6 +199,43 @@ BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data) {
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
+BootloaderHandleMessageResponse set_charging_slot_max_current(const SetChargingSlotMaxCurrent *data) {
+	// The first two slots are read-only
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if((data->max_current > 0) && ((data->max_current < 6000) || (data->max_current > 32000))) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	charging_slot.max_current[data->slot] = data->max_current;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse set_charging_slot_active(const SetChargingSlotActive *data) {
+	// The first two slots are read-only
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	charging_slot.active[data->slot] = data->active;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse set_charging_slot_clear_on_disconnect(const SetChargingSlotClearOnDisconnect *data) {
+	// The first two slots are read-only
+	if((data->slot < 2) || (data->slot >= CHARGING_SLOT_NUM)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
 BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, GetChargingSlot_Response *response) {
 	if(data->slot >= CHARGING_SLOT_NUM) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
