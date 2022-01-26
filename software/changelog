@@ -29,5 +29,5 @@
 2022-01-10: 2.0.7 (7ee5808):
 - Increase active-phase-threshold to 300mA
 
-2022-xx-xx: 2.1.0 (TBD):
+2022-01-26: 2.1.0 (7fbda68):
 - Add support for charging slots and corresponding API
