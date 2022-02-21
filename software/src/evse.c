@@ -143,9 +143,15 @@ void evse_load_config(void) {
 			charging_slot.active_default[i]              = false;
 			charging_slot.clear_on_disconnect_default[i] = false;
 		}
+
+		// Those are default indices, _not_ slot indices.
 		charging_slot.max_current_default[2]         = 32000;
 		charging_slot.active_default[2]              = true;
 		charging_slot.clear_on_disconnect_default[2] = false;
+
+		charging_slot.max_current_default[5]         = 0;
+		charging_slot.active_default[5]              = evse.legacy_managed;
+		charging_slot.clear_on_disconnect_default[5] = evse.legacy_managed;
 	}
 
 	logd("Load config:\n\r");

@@ -424,6 +424,12 @@ typedef struct {
 	bool has_lock_switch;
 	uint8_t evse_version;
 	uint8_t energy_meter_type;
+	float power;
+	float energy_relative;
+	float energy_absolute;
+	uint8_t phases_active[1];
+	uint8_t phases_connected[1];
+	uint32_t error_count[6];
 } __attribute__((__packed__)) GetAllData1_Response;
 
 typedef struct {
@@ -432,12 +438,6 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	float power;
-	float energy_relative;
-	float energy_absolute;
-	uint8_t phases_active[1];
-	uint8_t phases_connected[1];
-	uint32_t error_count[6];
 	uint8_t shutdown_input_configuration;
 	uint8_t input_configuration;
 	uint8_t output_configuration;

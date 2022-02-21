@@ -533,18 +533,18 @@ BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllDa
 	get_hardware_configuration(NULL, (GetHardwareConfiguration_Response*)&parts);
 	memcpy(&response->jumper_configuration, parts.data, sizeof(GetHardwareConfiguration_Response) - sizeof(TFPMessageHeader));
 
+	get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&parts);
+	memcpy(&response->power, parts.data, sizeof(GetEnergyMeterValues_Response) - sizeof(TFPMessageHeader));
+
+	get_energy_meter_errors(NULL, (GetEnergyMeterErrors_Response*)&parts);
+	memcpy(&response->error_count[0], parts.data, sizeof(GetEnergyMeterErrors_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response) {
 	response->header.length = sizeof(GetAllData2_Response);
 	TFPMessageFull parts;
-
-	get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&parts);
-	memcpy(&response->power, parts.data, sizeof(GetEnergyMeterValues_Response) - sizeof(TFPMessageHeader));
-
-	get_energy_meter_errors(NULL, (GetEnergyMeterErrors_Response*)&parts);
-	memcpy(&response->error_count[0], parts.data, sizeof(GetEnergyMeterErrors_Response) - sizeof(TFPMessageHeader));
 
 	get_gpio_configuration(NULL, (GetGPIOConfiguration_Response*)&parts);
 	memcpy(&response->shutdown_input_configuration, parts.data, sizeof(GetGPIOConfiguration_Response) - sizeof(TFPMessageHeader));
