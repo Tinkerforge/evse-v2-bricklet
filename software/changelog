@@ -36,5 +36,5 @@
 - Improve all data API segmentation
 - Assume that the managed mode is configured in slot 7 and apply the legacy configuration to it
 
-2022-03-28: 2.1.2 (TBD):
+2022-03-28: 2.1.2 (4570a92):
 - Use slots for shutdown input
