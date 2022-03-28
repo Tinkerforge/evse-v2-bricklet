@@ -182,8 +182,6 @@ void iec61851_tick(void) {
 		// We don't allow the jumper to be unconfigured
 		led_set_blinking(2);
 		iec61851_set_state(IEC61851_STATE_EF);
-	} else if(evse_is_shutdown()) {
-		iec61851_set_state(IEC61851_STATE_A);
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
 	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000))) {
 		// Wait for ADC CP/PE measurements to be valid

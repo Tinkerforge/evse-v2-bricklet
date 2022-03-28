@@ -32,6 +32,9 @@
 2022-01-26: 2.1.0 (7fbda68):
 - Add support for charging slots and corresponding API
 
-2022-XX-XX: 2.1.1 (TBD):
+2022-02-22: 2.1.1 (0f880d2):
 - Improve all data API segmentation
 - Assume that the managed mode is configured in slot 7 and apply the legacy configuration to it
+
+2022-03-28: 2.1.2 (TBD):
+- Use slots for shutdown input

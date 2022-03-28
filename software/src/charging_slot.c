@@ -66,6 +66,22 @@ void charging_slot_init(void) {
 
 void charging_slot_tick(void) {
     charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE] = iec61851_get_ma_from_pp_resistance();
+
+    if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) ||
+       (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN)) {
+        charging_slot.active[CHARGING_SLOT_INPUT0] = true;
+        if(evse_is_shutdown()) {
+            charging_slot.max_current[CHARGING_SLOT_INPUT0]         = 0;
+            charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
+        } else {
+            charging_slot.max_current[CHARGING_SLOT_INPUT0]         = 32000;
+            charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
+        }
+    } else {
+        charging_slot.active[CHARGING_SLOT_INPUT0]              = false;
+        charging_slot.max_current[CHARGING_SLOT_INPUT0]         = 32000;
+        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
+    }
 }
 
 uint16_t charging_slot_get_max_current(void) {
