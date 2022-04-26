@@ -38,7 +38,7 @@
 #include "adc.h"
 #include "dc_fault.h"
 #include "rs485.h"
-#include "sdm630.h"
+#include "sdm.h"
 #include "charging_slot.h"
 
 int main(void) {
@@ -56,7 +56,7 @@ int main(void) {
 	adc_init();
 	dc_fault_init();
 	rs485_init();
-	sdm630_init();
+	sdm_init();
 
 	while(true) {
 		bootloader_tick();
@@ -69,7 +69,7 @@ int main(void) {
 		evse_tick();
 		dc_fault_tick();
 		rs485_tick();
-		sdm630_tick();
+		sdm_tick();
 		charging_slot_tick();
 	}
 }
