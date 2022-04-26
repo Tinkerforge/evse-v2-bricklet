@@ -187,6 +187,12 @@ void evse_save_config(void) {
 	bootloader_write_eeprom_page(EVSE_CONFIG_PAGE, page);
 }
 
+void evse_factory_reset(void) {
+	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)] = {0};
+	bootloader_write_eeprom_page(EVSE_CONFIG_PAGE, page);
+
+	NVIC_SystemReset();
+}
 
 uint16_t evse_get_cp_duty_cycle(void) {
 	return (48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48;
@@ -413,6 +419,7 @@ void evse_init(void) {
 
 	evse.startup_time = system_timer_get_ms();
 	evse.charging_time = 0;
+	evse.factory_reset_time = 0;
 }
 
 void evse_tick_debug(void) {
@@ -438,6 +445,12 @@ void evse_tick(void) {
 	if(evse.startup_time != 0 && !system_timer_is_time_elapsed_ms(evse.startup_time, 1000)) {
 		// Wait for 1s so everything can start/boot properly
 		return;
+	}
+
+	if(evse.factory_reset_time != 0) {
+		if(system_timer_is_time_elapsed_ms(evse.factory_reset_time, 500)) {
+			evse_factory_reset();
+		}
 	}
 
 	// Turn LED on (LED flicker off after startup/calibration)

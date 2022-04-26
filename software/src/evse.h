@@ -66,6 +66,8 @@ typedef struct {
 	bool calibration_error;
 	bool legacy_managed;
 
+	uint32_t factory_reset_time;
+
 	uint32_t last_contactor_switch;
 
 	uint8_t shutdown_input_configuration;

@@ -75,6 +75,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_CONTROL_PILOT_CONFIGURATION: return get_control_pilot_configuration(message, response);
 		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
+		case FID_FACTORY_RESET: return factory_reset(message);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -564,6 +565,14 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse factory_reset(const FactoryReset *data) {
+	if(data->password == 0x2342FACD) {
+		evse.factory_reset_time = system_timer_get_ms();
+		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+}
 
 void communication_tick(void) {
 //	communication_callback_tick();

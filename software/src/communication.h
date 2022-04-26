@@ -156,6 +156,7 @@ void communication_init(void);
 #define FID_GET_CONTROL_PILOT_CONFIGURATION 27
 #define FID_GET_ALL_DATA_1 28
 #define FID_GET_ALL_DATA_2 29
+#define FID_FACTORY_RESET 30
 
 
 typedef struct {
@@ -450,6 +451,11 @@ typedef struct {
 	uint8_t control_pilot;
 } __attribute__((__packed__)) GetAllData2_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint32_t password;
+} __attribute__((__packed__)) FactoryReset;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -481,6 +487,7 @@ BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControl
 BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response);
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
+BootloaderHandleMessageResponse factory_reset(const FactoryReset *data);
 
 // Callbacks
 
