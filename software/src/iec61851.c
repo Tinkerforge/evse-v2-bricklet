@@ -137,14 +137,6 @@ uint16_t iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 void iec61851_state_a(void) {
 	// Apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
-
-	if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
-		// If the button was released while in a different state,
-		// we see the state change back to A as an event that turns the LED back on (until standby)
-		if(button_reset()) {
-			led_set_on(false);
-		}
-	}
 }
 
 void iec61851_state_b(void) {

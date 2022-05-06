@@ -501,7 +501,7 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 	response->header.length       = sizeof(GetButtonState_Response);
 	response->button_press_time   = button.press_time;
 	response->button_release_time = button.release_time;
-	response->button_pressed      = button.state == BUTTON_STATE_PRESSED;
+	response->button_pressed      = (button.state == BUTTON_STATE_PRESSED) || (button.state == BUTTON_STATE_PRESSED_DEBOUNCE);
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

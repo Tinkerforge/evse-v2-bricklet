@@ -54,11 +54,20 @@ void button_init(void) {
 }
 
 void button_tick(void) {
-	const bool value = XMC_GPIO_GetInput(EVSE_BUTTON_PIN); // | XMC_GPIO_GetInput(EVSE_ENABLE_PIN);
+	const bool value = XMC_GPIO_GetInput(EVSE_BUTTON_PIN);
 
 	if(value != button.last_value) {
 		button.last_value = value;
 		button.last_change_time = system_timer_get_ms();
+
+		// DEBOUNCE button state will be overwritten after debounce time
+		if(!value) {
+			button.state = BUTTON_STATE_RELEASED_DEBOUNCE;
+			// We always see a button release as a state change that turns the LED on (until standby)
+			led_set_on(false);
+		} else {
+			button.state = BUTTON_STATE_PRESSED_DEBOUNCE;
+		}
 	}
 
 	if(button.last_change_time != 0 && system_timer_is_time_elapsed_ms(button.last_change_time, button.debounce_time)) {
@@ -67,39 +76,25 @@ void button_tick(void) {
 		if(!value) {
 			button.state = BUTTON_STATE_RELEASED;
 			button.release_time = system_timer_get_ms();
-
-			// We always see a button release as a state change that turns the LED on (until standby)
-			led_set_on(false);
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
 			button.press_time = system_timer_get_ms();
 
-			bool handled = false;
-			// If start charging through button pressed is enabled
-			if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
-				// If button was pressed (i.e. we currently don't start a charge automatically)
-				if(button.was_pressed) {
+			if(iec61851.state == IEC61851_STATE_B) {
+				// If start charging through button pressed is enabled
+				if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
 					// Simulate start-charging press in web interface
-					if(iec61851.state == IEC61851_STATE_B) {
-						charging_slot_start_charging_by_button();
-					}
-					// If the API call did reset the button pressed state we ignore any other
-					// button configuration after this
-					if(!button.was_pressed) {
-						handled = true;
-
-						// In the case that we start the charging through a button press,
-						// we increase the button debounce to 2 seconds if the button is configured to also stop charging,
-						// to make sure to never start the charge and stop it again immediately.
-						if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
-							button.debounce_time = BUTTON_DEBOUNCE_LONG;
-						}
+					charging_slot_start_charging_by_button();
+				
+					// In the case that we start the charging through a button press,
+					// we increase the button debounce to 2 seconds if the button is configured to also stop charging,
+					// to make sure to never start the charge and stop it again immediately.
+					if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
+						button.debounce_time = BUTTON_DEBOUNCE_LONG;
 					}
 				}
-			}
-			if(!handled && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING)) {
-				if(!button.was_pressed) {
-					button.was_pressed = true;
+			} else if(iec61851.state == IEC61851_STATE_C) {
+				if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
 					// Disallow charging bybutton charging slot
 					charging_slot_stop_charging_by_button();
 
@@ -114,22 +109,8 @@ void button_tick(void) {
 		}
 	}
 
-	if(button.was_pressed) {
-		// As long as we are in "was_pressed"-state and the button is
-		// still pressed (or key is turned to off) the LED stays off
-		if(button.state == BUTTON_STATE_PRESSED) {
-			led_set_off();
-		}
+	// As long as the button is pressed the LED stays off
+	if(button.state == BUTTON_STATE_PRESSED) {
+		led_set_off();
 	}
-}
-
-bool button_reset(void) {
-	if((button.state != BUTTON_STATE_PRESSED) && button.was_pressed) {
-		// Make sure button charging slots allowes charging again
-		charging_slot_start_charging_by_button();
-		button.was_pressed = false;
-		return true;
-	}
-
-	return false;
 }
