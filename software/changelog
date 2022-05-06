@@ -43,5 +43,5 @@
 - Add FactoryReset-function
 - Add support for SDM72V2
 
-2022-05-06: 2.1.4 (TBD):
+2022-05-06: 2.1.4 (bdeb88e):
 - Improve button start/stop logic
