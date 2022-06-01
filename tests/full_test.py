@@ -3,8 +3,50 @@
 
 import time
 import sys
+import subprocess
+import os
 
 from evse_v2_tester import EVSEV2Tester
+
+
+TEST_LOG_FILENAME = "full_test_log.csv"
+TEST_LOG_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'wallbox', 'evse_v2_test_report'))
+
+def test_log_pull():
+    try:
+        inp = ['git', 'pull']
+        out = subprocess.check_output(inp , stderr=subprocess.STDOUT, encoding='utf-8', cwd=TEST_LOG_DIRECTORY)
+        print('   -> {}'.format(' '.join(inp)))
+        print('      {}'.format(out))
+    except subprocess.CalledProcessError as e:
+        print('Error: git pull failed:\n' + e.output.strip())
+    except Exception as e:
+        print('Error: git pull failed:\n' + str(e))
+
+def test_log_commit_and_push(uid):
+    commit_message = 'Add test report for EVSE Bricklet 2.0 with UID ' + uid
+    test_log_pull()
+
+    try:
+        inp = ['git', 'commit', TEST_LOG_FILENAME, '-m', commit_message]
+        out = subprocess.check_output(inp, stderr=subprocess.STDOUT, encoding='utf-8', cwd=TEST_LOG_DIRECTORY)
+        print('   -> {}'.format(' '.join(inp)))
+        print('      {}'.format(out))
+    except subprocess.CalledProcessError as e:
+        print('Error: git commit failed:\n' + e.output.strip())
+    except Exception as e:
+        print('Error: git commit failed:\n' + str(e))
+
+    try:
+        inp = ['git', 'push']
+        out = subprocess.check_output(inp, stderr=subprocess.STDOUT, encoding='utf-8', cwd=TEST_LOG_DIRECTORY)
+        print('   -> {}'.format(' '.join(inp)))
+        print('      {}'.format(out))
+    except subprocess.CalledProcessError as e:
+        print('Error: git push failed:\n' + e.output.strip())
+    except Exception as e:
+        print('Error: git push failed:\n' + str(e))
+
 
 def no_log(s):
     pass
@@ -21,6 +63,7 @@ def test_value(value, expected, margin_percent=0.1, margin_absolute=20):
     return (value*(1-margin_percent) - margin_absolute) < expected < (value*(1+margin_percent) + margin_absolute)
 
 if __name__ == "__main__":
+    test_log_pull()
     print('Schaltereinstellung auf 32A stellen (mitte, rechts)')
     input("Enter drücken...")
     print('')
@@ -346,7 +389,9 @@ if __name__ == "__main__":
     print('')
     print('Fertig. Alles OK')
 
-    with open('full_test_log.csv', 'a+') as f:
+    with open(os.path.join(TEST_LOG_DIRECTORY, TEST_LOG_FILENAME), 'a+') as f:
         f.write(', '.join(data) + '\n')
+
+    test_log_commit_and_push(ident.uid)
 
     evse_tester.exit(0)
