@@ -199,7 +199,10 @@ BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	charging_slot.max_current[data->slot]         = data->max_current;
+	// If button is pressed we don't allow to change the max current in the button slot
+	if((data->slot != CHARGING_SLOT_BUTTON) || (button.state != BUTTON_STATE_PRESSED)) {
+		charging_slot.max_current[data->slot]     = data->max_current;
+	}
 	charging_slot.active[data->slot]              = data->active;
 	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
 
@@ -216,7 +219,10 @@ BootloaderHandleMessageResponse set_charging_slot_max_current(const SetChargingS
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	charging_slot.max_current[data->slot] = data->max_current;
+	// If button is pressed we don't allow to change the max current in the button slot
+	if((data->slot != CHARGING_SLOT_BUTTON) || (button.state != BUTTON_STATE_PRESSED)) {
+		charging_slot.max_current[data->slot] = data->max_current;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
