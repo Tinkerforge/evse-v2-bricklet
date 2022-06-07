@@ -46,6 +46,6 @@
 2022-05-06: 2.1.4 (bdeb88e):
 - Improve button start/stop logic
 
-2022-06-07: 2.1.5 (TBD)
+2022-06-07: 2.1.5 (43252c9):
 - Make sure to never start charging when button is pressed
 - During energy meter detection use SDM630 as default
