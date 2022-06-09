@@ -481,17 +481,15 @@ void sdm_tick(void) {
 		}
 
 		case 100: { // check meter type
-			uint16_t meter_code = 0;
+			uint16_t meter_code = 0xFFFF;
 			bool ret = sdm_get_holding_input_16bit(&meter_code);
 			if(ret) {
 				switch(meter_code) {
 					case 0x0084: sdm.meter_type = SDM_METER_TYPE_UNKNOWN; break;  // 0x0084 is SDM72V1 (not supported)
 					case 0x0089: sdm.meter_type = SDM_METER_TYPE_SDM72V2; break;  // Compare datasheet page 16 meter code
+					case 0x0000: // Some early versions of the SDM630 return 0x0000 instead of 0x0070 for the meter type register.
 					case 0x0070: sdm.meter_type = SDM_METER_TYPE_SDM630;  break;
-
-					// Some early versions of the SDM630 don't have the meter type register.
-					// Because of this we default to SDM630.
-					default:     sdm.meter_type = SDM_METER_TYPE_SDM630;  break;
+					default:     sdm.meter_type = SDM_METER_TYPE_UNKNOWN; break;
 				}
 
 				modbus_clear_request(&rs485);

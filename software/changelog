@@ -49,3 +49,6 @@
 2022-06-07: 2.1.5 (43252c9):
 - Make sure to never start charging when button is pressed
 - During energy meter detection use SDM630 as default
+
+2022-06-09: 2.1.6 (TBD):
+- Fix bug with meter type detection for WARP2 Charger Smart (bug was introduced in 2.1.5)
