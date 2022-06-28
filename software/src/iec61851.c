@@ -113,7 +113,7 @@ uint32_t iec61851_get_max_ma(void) {
 }
 
 // Duty cycle in pro mille (1/10 %)
-uint16_t iec61851_get_duty_cycle_for_ma(uint32_t ma) {
+float iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 	// Special case for managed mode.
 	// In managed mode we support a temporary stop of charging without disconnecting the vehicle.
 	if(ma == 0) {
@@ -123,15 +123,15 @@ uint16_t iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 		return 1000;
 	}
 
-	uint32_t duty_cycle;
+	float duty_cycle;
 	if(ma <= 51000) {
-		duty_cycle = ma/60; // For 6A-51A: xA = %duty*0.6
+		duty_cycle = ma/60.0; // For 6A-51A: xA = %duty*0.6
 	} else {
-		duty_cycle = ma/250 + 640; // For 51A-80A: xA= (%duty - 64)*2.5
+		duty_cycle = ma/250.0 + 640; // For 51A-80A: xA= (%duty - 64)*2.5
 	}
 
 	// The standard defines 8% as minimum and 100% as maximum
-	return BETWEEN(80, duty_cycle, 1000); 
+	return BETWEEN(80.0, duty_cycle, 1000.0);
 }
 
 void iec61851_state_a(void) {

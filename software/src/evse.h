@@ -85,9 +85,9 @@ extern EVSE evse;
 
 bool evse_is_shutdown(void);
 void evse_save_config(void);
-void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor);
+void evse_set_output(const float cp_duty_cycle, const bool contactor);
 uint16_t evse_get_cp_duty_cycle(void);
-void evse_set_cp_duty_cycle(const uint16_t duty_cycle);
+void evse_set_cp_duty_cycle(const float duty_cycle);
 void evse_init(void);
 void evse_tick(void);
 

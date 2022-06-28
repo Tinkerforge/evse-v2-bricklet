@@ -54,7 +54,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ev
 }
 
 
-void evse_set_output(const uint16_t cp_duty_cycle, const bool contactor) {
+void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 	static int16_t last_resistance_counter = -2;
 	evse_set_cp_duty_cycle(cp_duty_cycle);
 
@@ -195,14 +195,16 @@ void evse_factory_reset(void) {
 }
 
 uint16_t evse_get_cp_duty_cycle(void) {
-	return (48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48;
+	return (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
 }
 
-void evse_set_cp_duty_cycle(const uint16_t duty_cycle) {
-	const uint16_t current_cp_duty_cycle = evse_get_cp_duty_cycle();
-	if(current_cp_duty_cycle != duty_cycle) {
-		adc_enable_all(duty_cycle == 1000);
-		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, 48000 - duty_cycle*48);
+void evse_set_cp_duty_cycle(const float duty_cycle) {
+	const uint16_t current_cp_duty_cycle = ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER);
+	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - duty_cycle*48 + 0.5);
+
+	if(current_cp_duty_cycle != new_cp_duty_cycle) {
+		adc_enable_all(duty_cycle > 999.99);
+		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, new_cp_duty_cycle);
 	}
 }
 
