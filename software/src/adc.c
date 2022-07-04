@@ -260,6 +260,10 @@ void adc_init_adc(void) {
 void adc_init(void) {
 	adc_init_adc();
 	adc->timeout = system_timer_get_ms();
+
+	memset(&adc_result, 0, sizeof(ADCResult));
+	adc_result.cp_pe_resistance = 0xFFFFFFFF;
+	adc_result.pp_pe_resistance = 0xFFFFFFFF;
 }
 
 void adc_ignore_results(const uint8_t count) {

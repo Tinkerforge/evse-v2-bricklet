@@ -55,4 +55,6 @@
 
 2022-XX-XX: 2.1.7 (TBD):
 - Improve resolution of duty cycle calculation.
-  We now have a max current resolution of 1.25mA
+	We now have a max current resolution of 1.25mA
+- Make sure cp/pe and pp/pe resistances are properly initialized
+	We don't want to be in error state for the fist 1ms after boot
