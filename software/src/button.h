@@ -43,6 +43,10 @@ typedef struct {
 
 	uint32_t press_time;
 	uint32_t release_time;
+
+	uint32_t boot_press_time;
+	uint32_t boot_press_start;
+	bool boot_done;
 } Button;
 
 extern Button button;

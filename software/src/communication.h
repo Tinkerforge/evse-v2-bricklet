@@ -157,6 +157,7 @@ void communication_init(void);
 #define FID_GET_ALL_DATA_1 28
 #define FID_GET_ALL_DATA_2 29
 #define FID_FACTORY_RESET 30
+#define FID_GET_BUTTON_PRESS_BOOT_TIME 31
 
 
 typedef struct {
@@ -456,6 +457,16 @@ typedef struct {
 	uint32_t password;
 } __attribute__((__packed__)) FactoryReset;
 
+typedef struct {
+	TFPMessageHeader header;
+	bool reset;
+} __attribute__((__packed__)) GetButtonPressBootTime;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint32_t button_press_boot_time;
+} __attribute__((__packed__)) GetButtonPressBootTime_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -488,6 +499,7 @@ BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControl
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
 BootloaderHandleMessageResponse factory_reset(const FactoryReset *data);
+BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressBootTime *data, GetButtonPressBootTime_Response *response);
 
 // Callbacks
 

@@ -76,6 +76,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
 		case FID_FACTORY_RESET: return factory_reset(message);
+		case FID_GET_BUTTON_PRESS_BOOT_TIME: return get_button_press_boot_time(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -582,6 +583,13 @@ BootloaderHandleMessageResponse factory_reset(const FactoryReset *data) {
 
 	return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 }
+
+BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressBootTime *data, GetButtonPressBootTime_Response *response) {
+	response->header.length = sizeof(GetButtonPressBootTime_Response);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 
 void communication_tick(void) {
 //	communication_callback_tick();

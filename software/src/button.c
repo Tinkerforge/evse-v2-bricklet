@@ -51,10 +51,25 @@ void button_init(void) {
 
 	button.configuration = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
 	button.debounce_time = BUTTON_DEBOUNCE_STANDARD;
+
+	button.boot_press_start = system_timer_get_ms();
 }
 
 void button_tick(void) {
 	const bool value = XMC_GPIO_GetInput(EVSE_BUTTON_PIN);
+
+	// Implement boot press time for recovery mode
+	if(!button.boot_done) {
+		if(!value) {
+			button.boot_press_time = system_timer_get_ms() - button.boot_press_start;
+
+			// Only accept boot press times > 2s
+			if(button.boot_press_time < 2000) {
+				button.boot_press_time = 0;
+			}
+			button.boot_done = true;
+		}
+	}
 
 	if(value != button.last_value) {
 		button.last_value = value;
