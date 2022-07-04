@@ -58,3 +58,4 @@
 	We now have a max current resolution of 1.25mA
 - Make sure cp/pe and pp/pe resistances are properly initialized
 	We don't want to be in error state for the fist 1ms after boot
+- Add minimum time of 30s between error state E/F and next activation of contactor

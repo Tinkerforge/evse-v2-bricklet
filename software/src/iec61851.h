@@ -34,10 +34,11 @@ typedef enum {
 
 
 typedef struct {
-    IEC61851State state;
-    uint32_t last_state_change;
+	IEC61851State state;
+	uint32_t last_state_change;
 
-    uint8_t diode_error_counter;
+	uint8_t diode_error_counter;
+	uint32_t last_error_time;
 } IEC61851;
 
 extern IEC61851 iec61851;
