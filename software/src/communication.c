@@ -592,6 +592,11 @@ BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressB
 		response->button_press_boot_time = 0xFFFFFFFF;
 	}
 
+	if(data->reset) {
+		button.boot_done       = true;
+		button.boot_press_time = 0;
+	}
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
