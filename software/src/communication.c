@@ -586,6 +586,11 @@ BootloaderHandleMessageResponse factory_reset(const FactoryReset *data) {
 
 BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressBootTime *data, GetButtonPressBootTime_Response *response) {
 	response->header.length = sizeof(GetButtonPressBootTime_Response);
+	if(button.boot_done) {
+		response->button_press_boot_time = button.boot_press_time;
+	} else {
+		response->button_press_boot_time = 0xFFFFFFFF;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
