@@ -358,6 +358,7 @@ void evse_init_cp_pwm(void) {
 	XMC_CCU4_SLICE_EnableEvent(CCU40_CC42, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP);
 	XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC42, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
 
+	evse_set_cp_duty_cycle(1000.0);
 	// Interrupt for testing
 //	NVIC_SetPriority(30, 1);
 //	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU40_SR2_IRQ30);

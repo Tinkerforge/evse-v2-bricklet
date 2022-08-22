@@ -61,3 +61,4 @@
 - Add minimum time of 30s between error state E/F and next activation of contactor
 - Add API that shows button-pressed duration during boot (for recovery purposes)
 - Improve PWM initialization
+- FIX bug in PP/PE voltage calculation
