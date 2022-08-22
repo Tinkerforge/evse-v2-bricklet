@@ -60,3 +60,4 @@
 	We don't want to be in error state for the fist 1ms after boot
 - Add minimum time of 30s between error state E/F and next activation of contactor
 - Add API that shows button-pressed duration during boot (for recovery purposes)
+- Improve PWM initialization

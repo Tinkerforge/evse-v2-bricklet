@@ -351,7 +351,7 @@ void adc_check_count(const uint8_t i) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
 			}
-		} if(i == 3) { // +12V rail
+		} else if(i == 3) { // +12V rail
 			adc[i].result_mv[0] = adc[i].result[0]*4*3300/4095;
 		} else {
 			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/75;
