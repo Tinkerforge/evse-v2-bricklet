@@ -401,11 +401,17 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	bool control_pilot_connected;
+} __attribute__((__packed__)) SetControlPilotConfiguration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 } __attribute__((__packed__)) GetControlPilotConfiguration;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t control_pilot;
+	bool control_pilot_connected;
 } __attribute__((__packed__)) GetControlPilotConfiguration_Response;
 
 typedef struct {
@@ -450,6 +456,7 @@ typedef struct {
 	uint32_t button_release_time;
 	bool button_pressed;
 	uint8_t control_pilot;
+	bool control_pilot_connected;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -494,7 +501,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data);
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response);
 BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response);
-BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data);
+BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data, SetControlPilotConfiguration_Response *response);
 BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response);
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);

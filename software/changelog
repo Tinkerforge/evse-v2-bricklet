@@ -62,3 +62,6 @@
 - Add API that shows button-pressed duration during boot (for recovery purposes)
 - Improve PWM initialization
 - FIX bug in PP/PE voltage calculation
+- Add proper implementation for CP connect/disconnect through API
+	disconnect is only possible in IEC61851 state A or B
+	IEC61851 state stays unaltered during disconnect phase

@@ -381,6 +381,10 @@ bool evse_is_shutdown(void) {
 	return false;
 }
 
+bool evse_is_cp_connected(void) {
+	return !XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
+}
+
 void evse_init(void) {
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,

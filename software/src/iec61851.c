@@ -188,7 +188,8 @@ void iec61851_tick(void) {
 		led_set_blinking(2);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
-	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000))) {
+	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000)) &&
+	          (evse_is_cp_connected())) {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
 			return;
@@ -218,23 +219,26 @@ void iec61851_tick(void) {
 			}
 		}
 
-		if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
-			iec61851_set_state(IEC61851_STATE_A);
-		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {
-			iec61851_set_state(IEC61851_STATE_B);
-		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
-			if(charging_slot_get_max_current() == 0) {
-				evse.charging_time = 0;
+		// If the CP contact is disconnected we stay in the current IEC state, independend of the measured resistance
+		if(evse_is_cp_connected()) {
+			if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
+				iec61851_set_state(IEC61851_STATE_A);
+			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {
 				iec61851_set_state(IEC61851_STATE_B);
+			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
+				if(charging_slot_get_max_current() == 0) {
+					evse.charging_time = 0;
+					iec61851_set_state(IEC61851_STATE_B);
+				} else {
+					iec61851_set_state(IEC61851_STATE_C);
+				}
+			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_D) {
+				led_set_blinking(5);
+				iec61851_set_state(IEC61851_STATE_D);
 			} else {
-				iec61851_set_state(IEC61851_STATE_C);
+				led_set_blinking(5);
+				iec61851_set_state(IEC61851_STATE_EF);
 			}
-		} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_D) {
-			led_set_blinking(5);
-			iec61851_set_state(IEC61851_STATE_D);
-		} else {
-			led_set_blinking(5);
-			iec61851_set_state(IEC61851_STATE_EF);
 		}
 	}
 

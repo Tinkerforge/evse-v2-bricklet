@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "iec61851.h"
+
 #define EVSE_CP_PWM_PERIOD    48000 // 1kHz
 #define EVSE_MOTOR_PWM_PERIOD 4800  // 10kHz
 
@@ -77,12 +79,14 @@ typedef struct {
 	uint32_t charging_time;
 
 	uint8_t control_pilot;
+	IEC61851State state_during_cp_disconnect;
 
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
 
 extern EVSE evse;
 
+bool evse_is_cp_connected(void);
 bool evse_is_shutdown(void);
 void evse_save_config(void);
 void evse_set_output(const float cp_duty_cycle, const bool contactor);
