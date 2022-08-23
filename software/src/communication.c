@@ -524,8 +524,8 @@ BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControl
 				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 
 				evse.control_pilot = data->control_pilot;
-				break;
 			}
+			break;
 		}
 
 		case EVSE_V2_CONTROL_PILOT_AUTOMATIC: // TODO: Automatic mode not yet implemented. Currently Automatic = Connected
