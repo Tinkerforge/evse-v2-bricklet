@@ -514,6 +514,8 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 }
 
 BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data, SetControlPilotConfiguration_Response *response) {
+	response->header.length = sizeof(SetControlPilotConfiguration_Response);
+
 	switch(data->control_pilot) {
 		case EVSE_V2_CONTROL_PILOT_DISCONNECTED: {
 			// Only allow cp disconnect in state A or B.
@@ -542,7 +544,7 @@ BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControl
 
 	response->control_pilot_connected = evse_is_cp_connected();
 
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response) {
