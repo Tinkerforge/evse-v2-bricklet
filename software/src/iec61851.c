@@ -187,9 +187,15 @@ void iec61851_tick(void) {
 		// We don't allow the jumper to be unconfigured
 		led_set_blinking(2);
 		iec61851_set_state(IEC61851_STATE_EF);
+	// For diode error check if
+	// * We are in state B or C
+	// * We see a negative voltage above -10V or a difference of >2V between with and without resistor
+	// * The CP contact is connected
+	// * We currently apply a PWM (i.e. max ma is not 0)
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
 	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000)) &&
-	          (evse_is_cp_connected())) {
+	          (evse_is_cp_connected()) &&
+	          (iec61851_get_max_ma() != 0)) {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
 			return;
