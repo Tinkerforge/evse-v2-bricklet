@@ -208,7 +208,6 @@ void iec61851_tick(void) {
 		} else {
 			iec61851.diode_error_counter++;
 		}
-
 	} else {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
@@ -226,7 +225,9 @@ void iec61851_tick(void) {
 		}
 
 		// If the CP contact is disconnected we stay in the current IEC state, independend of the measured resistance
-		if(evse_is_cp_connected()) {
+		// After CP contact was disconnected and is connected again, we wait for 500ms to make sure that ADC measurement is working again.
+		if(evse_is_cp_connected() && ((iec61851.wait_after_cp_disconnect == 0) || system_timer_is_time_elapsed_ms(iec61851.wait_after_cp_disconnect, 500))) {
+			iec61851.wait_after_cp_disconnect = 0;
 			if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
 				iec61851_set_state(IEC61851_STATE_A);
 			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {

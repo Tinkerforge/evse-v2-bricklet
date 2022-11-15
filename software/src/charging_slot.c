@@ -42,7 +42,7 @@ uint32_t charging_slot_get_ma_incoming_cable(void) {
 		case EVSE_CONFIG_JUMPER_CURRENT_25A: return 25000;
 		case EVSE_CONFIG_JUMPER_CURRENT_32A: return 32000;
 		case EVSE_CONFIG_JUMPER_SOFTWARE: return evse.config_jumper_current_software;
-		default: return 6000;
+		default: return 0;
 	}
 }
 

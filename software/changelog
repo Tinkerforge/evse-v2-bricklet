@@ -65,3 +65,6 @@
 - Add proper implementation for CP connect/disconnect through API
 	disconnect is only possible in IEC61851 state A or B
 	IEC61851 state stays unaltered during disconnect phase
+
+2022-XX-XX: 2.1.8 (TBD):
+- Make sure that control pilot disconnect does not zero user slot on accident

@@ -530,7 +530,8 @@ BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControl
 
 		case EVSE_V2_CONTROL_PILOT_AUTOMATIC: // TODO: Automatic mode not yet implemented. Currently Automatic = Connected
 		case EVSE_V2_CONTROL_PILOT_CONNECTED: {
-			adc_ignore_results(4);
+			iec61851.wait_after_cp_disconnect = system_timer_get_ms();
+			adc_ignore_results(2);
 			XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 
 			evse.control_pilot = data->control_pilot;

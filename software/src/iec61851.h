@@ -39,6 +39,8 @@ typedef struct {
 
 	uint8_t diode_error_counter;
 	uint32_t last_error_time;
+
+	uint32_t wait_after_cp_disconnect;
 } IEC61851;
 
 extern IEC61851 iec61851;
