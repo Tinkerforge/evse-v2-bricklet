@@ -443,6 +443,7 @@ void evse_init(void) {
 	evse.startup_time = system_timer_get_ms();
 	evse.charging_time = 0;
 	evse.factory_reset_time = 0;
+	evse.communication_watchdog_time = 0;
 }
 
 void evse_tick_debug(void) {
