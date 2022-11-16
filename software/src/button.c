@@ -40,6 +40,9 @@
 Button button;
 
 void button_init(void) {
+	// Save button configuration (it is persistent and set before button_init is called)
+	uint8_t button_conf_tmp = button.configuration;
+
 	memset(&button, 0, sizeof(Button));
 
 	const XMC_GPIO_CONFIG_t pin_config_input = {
@@ -49,7 +52,7 @@ void button_init(void) {
 
 	XMC_GPIO_Init(EVSE_BUTTON_PIN, &pin_config_input);
 
-	button.configuration = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
+	button.configuration = button_conf_tmp;
 	button.debounce_time = BUTTON_DEBOUNCE_STANDARD;
 
 	button.boot_press_start = system_timer_get_ms();

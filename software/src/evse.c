@@ -37,6 +37,7 @@
 #include "sdm.h"
 #include "communication.h"
 #include "charging_slot.h"
+#include "button.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -128,6 +129,16 @@ void evse_load_config(void) {
 		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
+	if(page[EVSE_CONFIG_MAGIC2_POS] != EVSE_CONFIG_MAGIC2) {
+		evse.input_configuration          = 0;
+		evse.output_configuration         = EVSE_V2_OUTPUT_HIGH;
+		button.configuration              = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
+	} else {
+		evse.input_configuration          = page[EVSE_CONFIG_INPUT_POS];
+		evse.output_configuration         = page[EVSE_CONFIG_OUTPUT_POS];
+		button.configuration              = page[EVSE_CONFIG_BUTTON_POS];
+	}
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	if(slot_default->magic == EVSE_CONFIG_SLOT_MAGIC) {
@@ -175,6 +186,11 @@ void evse_save_config(void) {
 		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm.relative_energy.data;
 	}
 	sdm.reset_energy_meter = false;
+
+	page[EVSE_CONFIG_MAGIC2_POS]         = EVSE_CONFIG_MAGIC2;
+	page[EVSE_CONFIG_INPUT_POS]          = evse.input_configuration;
+	page[EVSE_CONFIG_OUTPUT_POS]         = evse.output_configuration;
+	page[EVSE_CONFIG_BUTTON_POS]         = button.configuration;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

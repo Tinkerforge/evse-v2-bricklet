@@ -387,7 +387,7 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 	}
 
-	evse_save_config(); // Save shutdown input config
+	evse_save_config(); // Save shutdown input, input and output config
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -493,6 +493,8 @@ BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfigur
 	}
 
 	button.configuration = data->button_configuration;
+
+	evse_save_config(); // Save button config
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }

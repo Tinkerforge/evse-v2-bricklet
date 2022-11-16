@@ -45,6 +45,10 @@
 #define EVSE_CONFIG_MANAGED_POS         1
 #define EVSE_CONFIG_REL_ENERGY_POS      2
 #define EVSE_CONFIG_SHUTDOWN_INPUT_POS  3
+#define EVSE_CONFIG_MAGIC2_POS          4
+#define EVSE_CONFIG_INPUT_POS           5
+#define EVSE_CONFIG_OUTPUT_POS          6
+#define EVSE_CONFIG_BUTTON_POS          7
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {
@@ -54,6 +58,7 @@ typedef struct {
 } __attribute__((__packed__)) EVSEChargingSlotDefault;
 
 #define EVSE_CONFIG_MAGIC               0x34567892
+#define EVSE_CONFIG_MAGIC2              0x45678923
 #define EVSE_CONFIG_SLOT_MAGIC          0x62870616
 
 #define EVSE_STORAGE_PAGES              16
@@ -80,6 +85,8 @@ typedef struct {
 
 	uint8_t control_pilot;
 	IEC61851State state_during_cp_disconnect;
+
+	uint32_t communication_watchdog_time;
 
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
