@@ -499,7 +499,10 @@ void evse_tick(void) {
 
 	// Restart EVSE after 5 minutes without any communication with a Brick
 	if((evse.communication_watchdog_time != 0) && system_timer_is_time_elapsed_ms(evse.communication_watchdog_time, 1000*60*5)) {
-		NVIC_SystemReset();
+		// Only restart EVSE if brick-communication-watchdog triggers if no car is connected
+		if(iec61851.state == IEC61851_STATE_A) {
+			NVIC_SystemReset();
+		}
 	}
 
 //	evse_tick_debug();
