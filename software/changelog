@@ -69,3 +69,4 @@
 2022-XX-XX: 2.1.8 (TBD):
 - Make sure that control pilot disconnect does not zero user slot on accident
 - Make input, output and button configuration persistent
+- Add additional master communication watchdog

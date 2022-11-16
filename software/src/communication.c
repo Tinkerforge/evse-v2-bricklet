@@ -45,6 +45,9 @@
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
 BootloaderHandleMessageResponse handle_message(const void *message, void *response) {
+	// Restart communication watchdog timer.
+	evse.communication_watchdog_time = system_timer_get_ms();
+
 	switch(tfp_get_fid_from_message(message)) {
 		case FID_GET_STATE: return get_state(message, response);
 		case FID_GET_HARDWARE_CONFIGURATION: return get_hardware_configuration(message, response);
