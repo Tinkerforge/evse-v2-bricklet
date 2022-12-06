@@ -94,7 +94,7 @@ void iec61851_set_state(IEC61851State state) {
 
 		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
 			// If state changed from to A we invalidate the managed current
-			// we have to handle the clear on dusconnect slots
+			// we have to handle the clear on disconnect slots
 			charging_slot_handle_disconnect();
 
 			// If the charging timer is running and the car is disconnected, stop the charging timer
