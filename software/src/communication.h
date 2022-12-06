@@ -158,6 +158,8 @@ void communication_init(void);
 #define FID_GET_ALL_DATA_2 29
 #define FID_FACTORY_RESET 30
 #define FID_GET_BUTTON_PRESS_BOOT_TIME 31
+#define FID_SET_BOOST_MODUS 32
+#define FID_GET_BOOST_MODUS 33
 
 
 typedef struct {
@@ -457,6 +459,7 @@ typedef struct {
 	bool button_pressed;
 	uint8_t control_pilot;
 	bool control_pilot_connected;
+	bool boost_modus_enabled;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -473,6 +476,20 @@ typedef struct {
 	TFPMessageHeader header;
 	uint32_t button_press_boot_time;
 } __attribute__((__packed__)) GetButtonPressBootTime_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool boost_modus_enabled;
+} __attribute__((__packed__)) SetBoostModus;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetBoostModus;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool boost_modus_enabled;
+} __attribute__((__packed__)) GetBoostModus_Response;
 
 
 // Function prototypes
@@ -507,6 +524,8 @@ BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllDa
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
 BootloaderHandleMessageResponse factory_reset(const FactoryReset *data);
 BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressBootTime *data, GetButtonPressBootTime_Response *response);
+BootloaderHandleMessageResponse set_boost_modus(const SetBoostModus *data);
+BootloaderHandleMessageResponse get_boost_modus(const GetBoostModus *data, GetBoostModus_Response *response);
 
 // Callbacks
 

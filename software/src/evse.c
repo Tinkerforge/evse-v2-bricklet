@@ -170,6 +170,12 @@ void evse_load_config(void) {
 		button.configuration              = page[EVSE_CONFIG_BUTTON_POS];
 	}
 
+	if(page[EVSE_CONFIG_MAGIC3_POS] != EVSE_CONFIG_MAGIC3) {
+		evse.boost_modus_enabled          = false;
+	} else {
+		evse.boost_modus_enabled          = page[EVSE_CONFIG_BOOST_POS];
+	}
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	if(slot_default->magic == EVSE_CONFIG_SLOT_MAGIC) {
@@ -223,6 +229,9 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_OUTPUT_POS]         = evse.output_configuration;
 	page[EVSE_CONFIG_BUTTON_POS]         = button.configuration;
 
+	page[EVSE_CONFIG_MAGIC3_POS]         = EVSE_CONFIG_MAGIC3;
+	page[EVSE_CONFIG_BOOST_POS]          = evse.boost_modus_enabled;
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	for(uint8_t i = 0; i < 18; i++) {
@@ -242,12 +251,24 @@ void evse_factory_reset(void) {
 }
 
 uint16_t evse_get_cp_duty_cycle(void) {
-	return (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
+	uint16_t duty_cycle = (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
+	if((duty_cycle >= 4) && (duty_cycle != 1000) && evse.boost_modus_enabled) {
+		return duty_cycle - 4;
+	}
+
+	return duty_cycle;
 }
 
 void evse_set_cp_duty_cycle(const float duty_cycle) {
+	// According to IEC 61841-1 table A2 the duty cycle is allowed to be off by up to 5us.
+	// If boost mode is enabled we add 4us to the duty cycle. This means that we are still within the standard.
+	uint16_t adc_boost = 0;
+	if((duty_cycle != 0) && (duty_cycle != 1000) && evse.boost_modus_enabled) {
+		adc_boost = 4;
+	}
+
 	const uint16_t current_cp_duty_cycle = ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER);
-	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - duty_cycle*48 + 0.5);
+	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5);
 
 	if(current_cp_duty_cycle != new_cp_duty_cycle) {
 		adc_enable_all(duty_cycle > 999.99);
@@ -476,6 +497,7 @@ void evse_init(void) {
 	evse.factory_reset_time = 0;
 	evse.communication_watchdog_time = 0;
 	evse.contactor_turn_off_time = 0;
+	evse.boost_modus_enabled = false;
 }
 
 void evse_tick_debug(void) {

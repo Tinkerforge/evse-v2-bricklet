@@ -49,6 +49,8 @@
 #define EVSE_CONFIG_INPUT_POS           5
 #define EVSE_CONFIG_OUTPUT_POS          6
 #define EVSE_CONFIG_BUTTON_POS          7
+#define EVSE_CONFIG_MAGIC3_POS          8
+#define EVSE_CONFIG_BOOST_POS           9
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {
@@ -59,6 +61,7 @@ typedef struct {
 
 #define EVSE_CONFIG_MAGIC               0x34567892
 #define EVSE_CONFIG_MAGIC2              0x45678923
+#define EVSE_CONFIG_MAGIC3              0x56789234
 #define EVSE_CONFIG_SLOT_MAGIC          0x62870616
 
 #define EVSE_STORAGE_PAGES              16
@@ -87,6 +90,10 @@ typedef struct {
 	IEC61851State state_during_cp_disconnect;
 
 	uint32_t communication_watchdog_time;
+
+	uint32_t contactor_turn_off_time;
+
+	bool boost_modus_enabled;
 
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;
