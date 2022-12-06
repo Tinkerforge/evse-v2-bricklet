@@ -39,32 +39,6 @@
 #include "communication.h"
 #include "charging_slot.h"
 
-// Resistance between CP/PE
-// inf  Ohm -> no car present
-// 2700 Ohm -> car present
-//  880 Ohm -> car charging
-//  240 Ohm -> car charging with ventilation
-// ==>
-// > 10000 -> State A
-// >  1790 -> State B
-// >  560 -> State C
-// >  150 -> State D
-// <  150 -> State E/F
-#define IEC61851_CP_RESISTANCE_STATE_A 10000
-#define IEC61851_CP_RESISTANCE_STATE_B  1790
-#define IEC61851_CP_RESISTANCE_STATE_C   300
-#define IEC61851_CP_RESISTANCE_STATE_D   150
-
-// Resistance between PP/PE
-// 1000..2200 Ohm => 13A
-// 330..1000 Ohm  => 20A
-// 150..330 Ohm   => 32A
-// 75..150 Ohm    => 63A
-#define IEC61851_PP_RESISTANCE_13A 1000
-#define IEC61851_PP_RESISTANCE_20A  330
-#define IEC61851_PP_RESISTANCE_32A  150
-
-
 IEC61851 iec61851;
 
 void iec61851_set_state(IEC61851State state) {

@@ -70,3 +70,6 @@
 - Make sure that control pilot disconnect does not zero user slot on accident
 - Make input, output and button configuration persistent
 - Add additional master communication watchdog
+
+202X-XX-XX: 2.1.9 (TBD):
+- Make sure contactor is not turned off under load, even if stop of charging is triggered by wallbox

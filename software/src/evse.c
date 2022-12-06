@@ -38,6 +38,7 @@
 #include "communication.h"
 #include "charging_slot.h"
 #include "button.h"
+#include "iec61851.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -72,6 +73,36 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 #endif
 
 	if(((bool)!XMC_GPIO_GetInput(EVSE_RELAY_PIN)) != contactor) {
+		if(((cp_duty_cycle == 0) || (cp_duty_cycle == 1000)) && (!contactor)) {
+			// If the duty cycle is set to either 0% or 100% PWM and the contactor is supposed to be turned off,
+			// it is possible that the WARP Charger wants to turn off the charging session while the car
+			// still wants to charge. In this case we wait until the car actually stops charging and
+			// changes the resistance back to 2700 ohm before we turn the contactor off.
+			// This assures that the contactor is not switched under load.
+			//
+			// NOTE: In case of an emergency (for example a dc fault detection) the contactor is of course switched off
+			//       immediately and directly in the fault detection code without any regard to charging-state,
+			//       PWM value, resistance or similar.
+			//       This function is only called in non-emergency cases.
+
+			if(adc_result.cp_pe_resistance <= IEC61851_CP_RESISTANCE_STATE_B) {
+				if(evse.contactor_turn_off_time == 0) {
+					evse.contactor_turn_off_time = system_timer_get_ms();
+					return;
+				} else if(system_timer_is_time_elapsed_ms(evse.contactor_turn_off_time, 3*1000)) {
+					// The car has to respond within 3 seconds (see IEC 61851-1 standard table A.6 sequence 10.1),
+					// thus after 3 seconds we turn the contactor off, even if the car has not yet responded yet.
+					// In this case there may be some kind of communication error between wallbox and car and it
+					// is better to turn the contactor off, even if still under load.
+					evse.contactor_turn_off_time = 0;
+				} else {
+					return;
+				}
+			} else {
+				evse.contactor_turn_off_time = 0;
+			}
+		}
+
 		if(contactor) {
 			// If we are asked to turn the contactor on, we want to see at least two adc measurements in a row
 			// that supports this conclusion.
@@ -444,6 +475,7 @@ void evse_init(void) {
 	evse.charging_time = 0;
 	evse.factory_reset_time = 0;
 	evse.communication_watchdog_time = 0;
+	evse.contactor_turn_off_time = 0;
 }
 
 void evse_tick_debug(void) {
