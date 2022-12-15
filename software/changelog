@@ -74,3 +74,5 @@
 202X-XX-XX: 2.1.9 (TBD):
 - Make sure contactor is not turned off under load, even if stop of charging is triggered by wallbox
 - Add API for get/set boost modus
+- Split control pilot API into set/get_control_pilot_disconnect and set/get_ev_wakeup
+- Implement ev wakup (disconnect CP if EV does not wakeup by itself) according to IEC61851

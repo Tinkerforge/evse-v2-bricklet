@@ -172,8 +172,10 @@ void evse_load_config(void) {
 
 	if(page[EVSE_CONFIG_MAGIC3_POS] != EVSE_CONFIG_MAGIC3) {
 		evse.boost_modus_enabled          = false;
+		evse.ev_wakeup_enabled            = true;
 	} else {
 		evse.boost_modus_enabled          = page[EVSE_CONFIG_BOOST_POS];
+		evse.ev_wakeup_enabled            = page[EVSE_CONFIG_EV_WAKUEP_POS];
 	}
 
 	// Handle charging slot defaults
@@ -231,6 +233,7 @@ void evse_save_config(void) {
 
 	page[EVSE_CONFIG_MAGIC3_POS]         = EVSE_CONFIG_MAGIC3;
 	page[EVSE_CONFIG_BOOST_POS]          = evse.boost_modus_enabled;
+	page[EVSE_CONFIG_EV_WAKUEP_POS]      = evse.ev_wakeup_enabled;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
@@ -486,7 +489,8 @@ void evse_init(void) {
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.last_contactor_switch = system_timer_get_ms();
 	evse.output_configuration = EVSE_V2_OUTPUT_HIGH;
-	evse.control_pilot = EVSE_V2_CONTROL_PILOT_AUTOMATIC;
+	evse.control_pilot_disconnect = false;
+	evse.ev_wakeup_enabled = true;
 
 	evse_load_config();
 	evse_init_jumper();

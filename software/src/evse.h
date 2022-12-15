@@ -51,6 +51,7 @@
 #define EVSE_CONFIG_BUTTON_POS          7
 #define EVSE_CONFIG_MAGIC3_POS          8
 #define EVSE_CONFIG_BOOST_POS           9
+#define EVSE_CONFIG_EV_WAKUEP_POS       10
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {
@@ -86,7 +87,9 @@ typedef struct {
 
 	uint32_t charging_time;
 
-	uint8_t control_pilot;
+	bool ev_wakeup_enabled;
+	bool control_pilot_disconnect;
+
 	IEC61851State state_during_cp_disconnect;
 
 	uint32_t communication_watchdog_time;

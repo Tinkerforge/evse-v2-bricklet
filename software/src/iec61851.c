@@ -121,15 +121,58 @@ float iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 	return BETWEEN(80.0, duty_cycle, 1000.0);
 }
 
+void iec61851_reset_ev_wakeup(void) {
+	iec61851.state_b1b2_transition_done            = false;
+	iec61851.state_b1b2_transition_time            = 0;
+	iec61851.state_b1b2_transition_disconnect_time = 0;
+}
+
+void iec61851_handle_ev_wakeup(uint32_t ma) {
+	// EV wakeup handling according to IEC61851-1 Annex A.5.3
+	if(evse.ev_wakeup_enabled && !evse.control_pilot_disconnect) {
+		if(ma == 0) {
+			iec61851.state_b1b2_transition_done = false;
+		}
+
+		if((ma != 0) && (iec61851.state_b1b2_transition_time == 0) && (!iec61851.state_b1b2_transition_done)) {
+			// Start the B1/B2 transtion timer when we are in state B and we start to apply a PWM
+			iec61851.state_b1b2_transition_time = system_timer_get_ms();
+		}
+
+		// Wait for 30 seconds for the EV to change resistance and IEC61851 state change to C
+		// If this does not happen and ev wakeup is enabled we disconnect CP.
+		if((iec61851.state_b1b2_transition_time != 0) && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000)) {
+			evse.state_during_cp_disconnect = iec61851.state;
+			XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+			iec61851.state_b1b2_transition_disconnect_time = system_timer_get_ms();
+		}
+
+		// Now wait for 4 seconds for the EV to wake up
+		if((iec61851.state_b1b2_transition_time != 0) && (iec61851.state_b1b2_transition_disconnect_time != 0) && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_disconnect_time, 4*1000)) {
+			iec61851.state_b1b2_transition_done            = true;
+			iec61851.state_b1b2_transition_time            = 0;
+			iec61851.state_b1b2_transition_disconnect_time = 0;
+
+			iec61851.wait_after_cp_disconnect              = system_timer_get_ms();
+			adc_ignore_results(2);
+			XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+		}
+	}
+}
+
 void iec61851_state_a(void) {
 	// Apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
+
+	iec61851_reset_ev_wakeup();
 }
 
 void iec61851_state_b(void) {
 	// Apply 1kHz square wave to CP with appropriate duty cycle, disable contactor
 	uint32_t ma = iec61851_get_max_ma();
 	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
+
+	iec61851_handle_ev_wakeup(ma);
 }
 
 void iec61851_state_c(void) {

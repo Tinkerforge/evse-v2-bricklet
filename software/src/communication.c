@@ -74,8 +74,10 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
 		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
 		case FID_GET_BUTTON_STATE: return get_button_state(message, response);
-		case FID_SET_CONTROL_PILOT_CONFIGURATION: return set_control_pilot_configuration(message, response);
-		case FID_GET_CONTROL_PILOT_CONFIGURATION: return get_control_pilot_configuration(message, response);
+		case FID_SET_EV_WAKEUP: return set_ev_wakeup(message);
+		case FID_GET_EV_WAKUEP: return get_ev_wakuep(message, response);
+		case FID_SET_CONTROL_PILOT_DISCONNECT: return set_control_pilot_disconnect(message, response);
+		case FID_GET_CONTROL_PILOT_DISCONNECT: return get_control_pilot_disconnect(message, response);
 		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
 		case FID_FACTORY_RESET: return factory_reset(message);
@@ -520,45 +522,50 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data, SetControlPilotConfiguration_Response *response) {
-	response->header.length = sizeof(SetControlPilotConfiguration_Response);
+BootloaderHandleMessageResponse set_ev_wakeup(const SetEVWakeup *data) {
+	evse.ev_wakeup_enabled = data->ev_wakeup_enabled;
+	evse_save_config();
 
-	switch(data->control_pilot) {
-		case EVSE_V2_CONTROL_PILOT_DISCONNECTED: {
-			// Only allow cp disconnect in state A or B.
-			if((iec61851.state == IEC61851_STATE_A) || (iec61851.state == IEC61851_STATE_B)) {
-				evse.state_during_cp_disconnect = iec61851.state;
-				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+	// If ev wakeup is enabled we adhere to IEC 61851 Annex A.5.3
+	// Information on difficulties encountered with some legacy EVs
+	// for wake-up after a long period of inactivity.
 
-				evse.control_pilot = data->control_pilot;
-			}
-			break;
-		}
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
 
-		case EVSE_V2_CONTROL_PILOT_AUTOMATIC: // TODO: Automatic mode not yet implemented. Currently Automatic = Connected
-		case EVSE_V2_CONTROL_PILOT_CONNECTED: {
-			iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-			adc_ignore_results(2);
-			XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
-
-			evse.control_pilot = data->control_pilot;
-			break;
-		}
-
-		default: {
-			return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-		}
-	}
-
-	response->control_pilot_connected = evse_is_cp_connected();
+BootloaderHandleMessageResponse get_ev_wakuep(const GetEVWakuep *data, GetEVWakuep_Response *response) {
+	response->header.length = sizeof(GetEVWakuep_Response);
+	response->ev_wakeup_enabled = evse.ev_wakeup_enabled;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response) {
-	response->header.length           = sizeof(GetControlPilotConfiguration_Response);
-	response->control_pilot           = evse.control_pilot;
-	response->control_pilot_connected = evse_is_cp_connected();
+BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPilotDisconnect *data, SetControlPilotDisconnect_Response *response) {
+	if(data->control_pilot_disconnect) {
+		// Only allow cp disconnect in state A or B.
+		if((iec61851.state == IEC61851_STATE_A) || (iec61851.state == IEC61851_STATE_B)) {
+			evse.state_during_cp_disconnect = iec61851.state;
+			XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+
+			evse.control_pilot_disconnect = data->control_pilot_disconnect;
+		}
+	} else {
+		iec61851.wait_after_cp_disconnect = system_timer_get_ms();
+		adc_ignore_results(2);
+		XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+
+		evse.control_pilot_disconnect = data->control_pilot_disconnect;
+	}
+
+	response->header.length               = sizeof(SetControlPilotDisconnect_Response);
+	response->is_control_pilot_disconnect = evse.control_pilot_disconnect;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_control_pilot_disconnect(const GetControlPilotDisconnect *data, GetControlPilotDisconnect_Response *response) {
+	response->header.length = sizeof(GetControlPilotDisconnect_Response);
+	response->control_pilot_disconnect = evse.control_pilot_disconnect;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -598,8 +605,11 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_button_state(NULL, (GetButtonState_Response*)&parts);
 	memcpy(&response->button_press_time, parts.data, sizeof(GetButtonState_Response) - sizeof(TFPMessageHeader));
 
-	get_control_pilot_configuration(NULL, (GetControlPilotConfiguration_Response*)&parts);
-	memcpy(&response->control_pilot, parts.data, sizeof(GetControlPilotConfiguration_Response) - sizeof(TFPMessageHeader));
+	get_ev_wakuep(NULL, (GetEVWakuep_Response*)&parts);
+	memcpy(&response->ev_wakeup_enabled, parts.data, sizeof(GetEVWakuep_Response) - sizeof(TFPMessageHeader));
+
+	get_control_pilot_disconnect(NULL, (GetControlPilotDisconnect_Response*)&parts);
+	memcpy(&response->control_pilot_disconnected, parts.data, sizeof(GetControlPilotDisconnect_Response) - sizeof(TFPMessageHeader));
 
 	get_boost_modus(NULL, (GetBoostModus_Response*)&parts);
 	memcpy(&response->boost_modus_enabled, parts.data, sizeof(GetBoostModus_Response) - sizeof(TFPMessageHeader));

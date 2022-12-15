@@ -23,6 +23,7 @@
 #define IEC61851_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Resistance between CP/PE
 // inf  Ohm -> no car present
@@ -66,6 +67,10 @@ typedef struct {
 	uint32_t last_error_time;
 
 	uint32_t wait_after_cp_disconnect;
+
+	uint32_t state_b1b2_transition_time;
+	uint32_t state_b1b2_transition_disconnect_time;
+	bool state_b1b2_transition_done;
 } IEC61851;
 
 extern IEC61851 iec61851;

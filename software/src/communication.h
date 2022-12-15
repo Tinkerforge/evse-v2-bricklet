@@ -152,14 +152,16 @@ void communication_init(void);
 #define FID_SET_BUTTON_CONFIGURATION 23
 #define FID_GET_BUTTON_CONFIGURATION 24
 #define FID_GET_BUTTON_STATE 25
-#define FID_SET_CONTROL_PILOT_CONFIGURATION 26
-#define FID_GET_CONTROL_PILOT_CONFIGURATION 27
-#define FID_GET_ALL_DATA_1 28
-#define FID_GET_ALL_DATA_2 29
-#define FID_FACTORY_RESET 30
-#define FID_GET_BUTTON_PRESS_BOOT_TIME 31
-#define FID_SET_BOOST_MODUS 32
-#define FID_GET_BOOST_MODUS 33
+#define FID_SET_EV_WAKEUP 26
+#define FID_GET_EV_WAKUEP 27
+#define FID_SET_CONTROL_PILOT_DISCONNECT 28
+#define FID_GET_CONTROL_PILOT_DISCONNECT 29
+#define FID_GET_ALL_DATA_1 30
+#define FID_GET_ALL_DATA_2 31
+#define FID_FACTORY_RESET 32
+#define FID_GET_BUTTON_PRESS_BOOT_TIME 33
+#define FID_SET_BOOST_MODUS 34
+#define FID_GET_BOOST_MODUS 35
 
 
 typedef struct {
@@ -398,23 +400,36 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t control_pilot;
-} __attribute__((__packed__)) SetControlPilotConfiguration;
+	bool ev_wakeup_enabled;
+} __attribute__((__packed__)) SetEVWakeup;
 
 typedef struct {
 	TFPMessageHeader header;
-	bool control_pilot_connected;
-} __attribute__((__packed__)) SetControlPilotConfiguration_Response;
+} __attribute__((__packed__)) GetEVWakuep;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetControlPilotConfiguration;
+	bool ev_wakeup_enabled;
+} __attribute__((__packed__)) GetEVWakuep_Response;
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t control_pilot;
-	bool control_pilot_connected;
-} __attribute__((__packed__)) GetControlPilotConfiguration_Response;
+	bool control_pilot_disconnect;
+} __attribute__((__packed__)) SetControlPilotDisconnect;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool is_control_pilot_disconnect;
+} __attribute__((__packed__)) SetControlPilotDisconnect_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetControlPilotDisconnect;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool control_pilot_disconnect;
+} __attribute__((__packed__)) GetControlPilotDisconnect_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -457,8 +472,8 @@ typedef struct {
 	uint32_t button_press_time;
 	uint32_t button_release_time;
 	bool button_pressed;
-	uint8_t control_pilot;
-	bool control_pilot_connected;
+	bool ev_wakeup_enabled;
+	bool control_pilot_disconnected;
 	bool boost_modus_enabled;
 } __attribute__((__packed__)) GetAllData2_Response;
 
@@ -518,8 +533,10 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data);
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response);
 BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response);
-BootloaderHandleMessageResponse set_control_pilot_configuration(const SetControlPilotConfiguration *data, SetControlPilotConfiguration_Response *response);
-BootloaderHandleMessageResponse get_control_pilot_configuration(const GetControlPilotConfiguration *data, GetControlPilotConfiguration_Response *response);
+BootloaderHandleMessageResponse set_ev_wakeup(const SetEVWakeup *data);
+BootloaderHandleMessageResponse get_ev_wakuep(const GetEVWakuep *data, GetEVWakuep_Response *response);
+BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPilotDisconnect *data, SetControlPilotDisconnect_Response *response);
+BootloaderHandleMessageResponse get_control_pilot_disconnect(const GetControlPilotDisconnect *data, GetControlPilotDisconnect_Response *response);
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response);
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response);
 BootloaderHandleMessageResponse factory_reset(const FactoryReset *data);
