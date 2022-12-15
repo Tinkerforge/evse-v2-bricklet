@@ -96,7 +96,7 @@ typedef struct {
 
 	uint32_t contactor_turn_off_time;
 
-	bool boost_modus_enabled;
+	bool boost_mode_enabled;
 
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 } EVSE;

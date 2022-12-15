@@ -82,8 +82,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
 		case FID_FACTORY_RESET: return factory_reset(message);
 		case FID_GET_BUTTON_PRESS_BOOT_TIME: return get_button_press_boot_time(message, response);
-		case FID_SET_BOOST_MODUS: return set_boost_modus(message);
-		case FID_GET_BOOST_MODUS: return get_boost_modus(message, response);
+		case FID_SET_BOOST_MODE: return set_boost_mode(message);
+		case FID_GET_BOOST_MODE: return get_boost_mode(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -611,8 +611,8 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_control_pilot_disconnect(NULL, (GetControlPilotDisconnect_Response*)&parts);
 	memcpy(&response->control_pilot_disconnected, parts.data, sizeof(GetControlPilotDisconnect_Response) - sizeof(TFPMessageHeader));
 
-	get_boost_modus(NULL, (GetBoostModus_Response*)&parts);
-	memcpy(&response->boost_modus_enabled, parts.data, sizeof(GetBoostModus_Response) - sizeof(TFPMessageHeader));
+	get_boost_mode(NULL, (GetBoostMode_Response*)&parts);
+	memcpy(&response->boost_mode_enabled, parts.data, sizeof(GetBoostMode_Response) - sizeof(TFPMessageHeader));
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -642,16 +642,16 @@ BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressB
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_boost_modus(const SetBoostModus *data) {
-	evse.boost_modus_enabled = data->boost_modus_enabled;
+BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data) {
+	evse.boost_mode_enabled = data->boost_mode_enabled;
 	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_boost_modus(const GetBoostModus *data, GetBoostModus_Response *response) {
-	response->header.length       = sizeof(GetBoostModus_Response);
-	response->boost_modus_enabled = evse.boost_modus_enabled;
+BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response) {
+	response->header.length       = sizeof(GetBoostMode_Response);
+	response->boost_mode_enabled = evse.boost_mode_enabled;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
