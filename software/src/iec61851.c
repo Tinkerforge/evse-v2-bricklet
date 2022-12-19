@@ -121,6 +121,12 @@ float iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 	return BETWEEN(80.0, duty_cycle, 1000.0);
 }
 
+void iec61851_done_ev_wakeup(void) {
+	iec61851.state_b1b2_transition_done            = true;
+	iec61851.state_b1b2_transition_time            = 0;
+	iec61851.state_b1b2_transition_disconnect_time = 0;
+}
+
 void iec61851_reset_ev_wakeup(void) {
 	iec61851.state_b1b2_transition_done            = false;
 	iec61851.state_b1b2_transition_time            = 0;
@@ -128,6 +134,7 @@ void iec61851_reset_ev_wakeup(void) {
 }
 
 void iec61851_handle_ev_wakeup(uint32_t ma) {
+
 	// EV wakeup handling according to IEC61851-1 Annex A.5.3
 	if(evse.ev_wakeup_enabled && !evse.control_pilot_disconnect) {
 		if(ma == 0) {
@@ -141,7 +148,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for 30 seconds for the EV to change resistance and IEC61851 state change to C
 		// If this does not happen and ev wakeup is enabled we disconnect CP.
-		if((iec61851.state_b1b2_transition_time != 0) && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000)) {
+		if((iec61851.state_b1b2_transition_time != 0) && (iec61851.state_b1b2_transition_disconnect_time == 0) && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000)) {
 			evse.state_during_cp_disconnect = iec61851.state;
 			XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 			iec61851.state_b1b2_transition_disconnect_time = system_timer_get_ms();
@@ -149,9 +156,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Now wait for 4 seconds for the EV to wake up
 		if((iec61851.state_b1b2_transition_time != 0) && (iec61851.state_b1b2_transition_disconnect_time != 0) && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_disconnect_time, 4*1000)) {
-			iec61851.state_b1b2_transition_done            = true;
-			iec61851.state_b1b2_transition_time            = 0;
-			iec61851.state_b1b2_transition_disconnect_time = 0;
+			iec61851_done_ev_wakeup();
 
 			iec61851.wait_after_cp_disconnect              = system_timer_get_ms();
 			adc_ignore_results(2);
@@ -164,6 +169,8 @@ void iec61851_state_a(void) {
 	// Apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
 
+	// If EV wakeup function is enabled, we reset the wakeup state machine in state A
+	// (when no EV is connected)
 	iec61851_reset_ev_wakeup();
 }
 
@@ -172,6 +179,8 @@ void iec61851_state_b(void) {
 	uint32_t ma = iec61851_get_max_ma();
 	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
 
+	// If EV wakeup function is enabled, we handle the actual wakeup state machine in state B
+	// (when EV is connected but not charging)
 	iec61851_handle_ev_wakeup(ma);
 }
 
@@ -180,17 +189,27 @@ void iec61851_state_c(void) {
 	uint32_t ma = iec61851_get_max_ma();
 	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
 	led_set_breathing();
+
+	// If EV wakeup function is enabled and we reach state C (or error states below)
+	// we mark the wakeup as done, since we don't want to wake up an EV that has
+	// already charged (or had an error).
+	// The flag will be set back when we reach state A again (no EV connected)
+	iec61851_done_ev_wakeup();
 }
 
 void iec61851_state_d(void) {
 	// State D is not supported
 	// Apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
+
+	iec61851_done_ev_wakeup();
 }
 
 void iec61851_state_ef(void) {
 	// In case of error apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
+
+	iec61851_done_ev_wakeup();
 }
 
 void iec61851_tick(void) {
