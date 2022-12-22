@@ -71,7 +71,7 @@
 - Make input, output and button configuration persistent
 - Add additional master communication watchdog
 
-202X-XX-XX: 2.1.9 (TBD):
+2022-12-22: 2.1.9 (2907d39):
 - Make sure contactor is not turned off under load, even if stop of charging is triggered by wallbox
 - Add API for get/set boost modus
 - Split control pilot API into set/get_control_pilot_disconnect and set/get_ev_wakeup
