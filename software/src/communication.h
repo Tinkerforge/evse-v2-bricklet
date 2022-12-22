@@ -473,7 +473,7 @@ typedef struct {
 	uint32_t button_release_time;
 	bool button_pressed;
 	bool ev_wakeup_enabled;
-	bool control_pilot_disconnected;
+	bool control_pilot_disconnect;
 	bool boost_mode_enabled;
 } __attribute__((__packed__)) GetAllData2_Response;
 

@@ -90,8 +90,6 @@ typedef struct {
 	bool ev_wakeup_enabled;
 	bool control_pilot_disconnect;
 
-	IEC61851State state_during_cp_disconnect;
-
 	uint32_t communication_watchdog_time;
 
 	uint32_t contactor_turn_off_time;

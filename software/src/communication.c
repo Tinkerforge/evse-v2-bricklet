@@ -208,8 +208,8 @@ BootloaderHandleMessageResponse set_charging_slot(const SetChargingSlot *data) {
 	}
 
 	// If button is pressed we don't allow to change the max current in the button slot
-	if((data->slot != CHARGING_SLOT_BUTTON) || (button.state != BUTTON_STATE_PRESSED)) {
-		charging_slot.max_current[data->slot]     = data->max_current;
+	if(!((data->slot == CHARGING_SLOT_BUTTON) && (button.state == BUTTON_STATE_PRESSED) && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING))) {
+		charging_slot.max_current[data->slot] = data->max_current;
 	}
 	charging_slot.active[data->slot]              = data->active;
 	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
@@ -228,7 +228,7 @@ BootloaderHandleMessageResponse set_charging_slot_max_current(const SetChargingS
 	}
 
 	// If button is pressed we don't allow to change the max current in the button slot
-	if((data->slot != CHARGING_SLOT_BUTTON) || (button.state != BUTTON_STATE_PRESSED)) {
+	if(!((data->slot == CHARGING_SLOT_BUTTON) && (button.state == BUTTON_STATE_PRESSED) && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING))) {
 		charging_slot.max_current[data->slot] = data->max_current;
 	}
 
@@ -523,12 +523,11 @@ BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, Get
 }
 
 BootloaderHandleMessageResponse set_ev_wakeup(const SetEVWakeup *data) {
-	evse.ev_wakeup_enabled = data->ev_wakeup_enabled;
-	evse_save_config();
-
 	// If ev wakeup is enabled we adhere to IEC 61851 Annex A.5.3
 	// Information on difficulties encountered with some legacy EVs
 	// for wake-up after a long period of inactivity.
+	evse.ev_wakeup_enabled = data->ev_wakeup_enabled;
+	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -544,10 +543,12 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 	if(data->control_pilot_disconnect) {
 		// Only allow cp disconnect in state A or B.
 		if((iec61851.state == IEC61851_STATE_A) || (iec61851.state == IEC61851_STATE_B)) {
-			evse.state_during_cp_disconnect = iec61851.state;
 			XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 
 			evse.control_pilot_disconnect = data->control_pilot_disconnect;
+
+			// Don't do EV wakeup if CP disconnect is controlled externally
+			iec61851_reset_ev_wakeup();
 		}
 	} else {
 		iec61851.wait_after_cp_disconnect = system_timer_get_ms();
@@ -609,7 +610,7 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	memcpy(&response->ev_wakeup_enabled, parts.data, sizeof(GetEVWakuep_Response) - sizeof(TFPMessageHeader));
 
 	get_control_pilot_disconnect(NULL, (GetControlPilotDisconnect_Response*)&parts);
-	memcpy(&response->control_pilot_disconnected, parts.data, sizeof(GetControlPilotDisconnect_Response) - sizeof(TFPMessageHeader));
+	memcpy(&response->control_pilot_disconnect, parts.data, sizeof(GetControlPilotDisconnect_Response) - sizeof(TFPMessageHeader));
 
 	get_boost_mode(NULL, (GetBoostMode_Response*)&parts);
 	memcpy(&response->boost_mode_enabled, parts.data, sizeof(GetBoostMode_Response) - sizeof(TFPMessageHeader));

@@ -69,8 +69,8 @@ typedef struct {
 	uint32_t wait_after_cp_disconnect;
 
 	uint32_t state_b1b2_transition_time;
-	uint32_t state_b1b2_transition_disconnect_time;
-	bool state_b1b2_transition_done;
+
+	uint32_t state_b1b2_transition_seen;
 } IEC61851;
 
 extern IEC61851 iec61851;
@@ -81,5 +81,6 @@ void iec61851_tick(void);
 uint32_t iec61851_get_ma_from_pp_resistance(void);
 uint32_t iec61851_get_max_ma(void);
 float iec61851_get_duty_cycle_for_ma(uint32_t ma);
+void iec61851_reset_ev_wakeup(void);
 
 #endif
