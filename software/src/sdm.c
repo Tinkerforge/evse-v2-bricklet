@@ -429,6 +429,7 @@ void sdm_tick(void) {
 				sdm.state = 0;
 				break;
 			}
+			sdm.new_system_type = false;
 
 			//rs485.modbus_common_error_counters.slave_device_failure = 4;
 			SDMRegisterType password;
