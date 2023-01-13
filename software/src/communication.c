@@ -336,7 +336,7 @@ BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetA
 	response->header.length = sizeof(GetAllEnergyMeterValuesLowLevel_Response);
 
 	const uint8_t packet_length = 60;
-	const uint16_t max_end = 84*sizeof(float);
+	const uint16_t max_end = 85*sizeof(float);
 	const uint16_t start = packet_payload_index * packet_length;
 	const uint16_t end = MIN(start + packet_length, max_end);
 	const uint16_t copy_num = end-start;
