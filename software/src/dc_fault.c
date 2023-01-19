@@ -26,12 +26,14 @@
 
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
+#include "bricklib2/utility/util_definitions.h"
 
 #include "iec61851.h"
 #include "adc.h"
 #include "led.h"
 #include "evse.h"
 #include "communication.h"
+#include "contactor_check.h"
 
 #include "xmc_gpio.h"
 
@@ -194,6 +196,14 @@ void dc_fault_tick(void) {
 
 	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
 		dc_fault.last_fault_time = system_timer_get_ms();
+
+		// Ignore all ADC measurements for a while if the contactor is
+		// switched on or off, to be sure that the resulting EMI spike does
+		// not give us a wrong measurement.
+		adc_ignore_results(4);
+
+		// Also ignore contactor check for a while when contactor changes state
+		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
 		// Contactor is normally only controlled in the iec61851 tick, 
 		// but in case of dc fault condition we turn the contactor off
