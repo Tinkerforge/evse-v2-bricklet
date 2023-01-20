@@ -392,7 +392,7 @@
       "idf": "",
       "netlist": "evse-v2.net",
       "specctra_dsn": "",
-      "step": "",
+      "step": "evse-v2.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
