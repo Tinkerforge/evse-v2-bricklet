@@ -257,8 +257,8 @@ void evse_factory_reset(void) {
 
 uint16_t evse_get_cp_duty_cycle(void) {
 	uint16_t duty_cycle = (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
-	if((duty_cycle >= 4) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
-		return duty_cycle - 4;
+	if((duty_cycle >= EVSE_BOOST_MODE_US) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
+		return duty_cycle - EVSE_BOOST_MODE_US;
 	}
 
 	return duty_cycle;
@@ -275,7 +275,7 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 	// If boost mode is enabled we add 4us to the duty cycle. This means that we are still within the standard.
 	uint16_t adc_boost = 0;
 	if((duty_cycle != 0) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
-		adc_boost = 4;
+		adc_boost = EVSE_BOOST_MODE_US;
 	}
 
 	const uint16_t current_cp_duty_cycle = ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER);
