@@ -154,13 +154,13 @@ if __name__ == "__main__":
     if res_cppe == 4294967295:
         print(' * ... OK ({0} Ohm)'.format(res_cppe))
     else:
-        print('-----------------> NICHT OK {0}'.format(res_cppe))
+        print('-----------------> NICHT OK {0} Ohm'.format(res_cppe))
         evse_tester.exit(1)
     vol_cppe = evse_tester.get_cp_pe_voltage()
     if test_value(vol_cppe, 12213):
         print(' * ... OK ({0} mV)'.format(vol_cppe))
     else:
-        print('-----------------> NICHT OK {0}'.format(vol_cppe))
+        print('-----------------> NICHT OK {0} mV'.format(vol_cppe))
         evse_tester.exit(1)
 
     print(' * 2700 Ohm')
