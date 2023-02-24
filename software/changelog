@@ -77,5 +77,7 @@
 - Split control pilot API into set/get_control_pilot_disconnect and set/get_ev_wakeup
 - Implement ev wakup (disconnect CP if EV does not wakeup by itself) according to IEC61851
 
-2023-XX-XX: 2.1.10 (TBD)
+2023-02-24: 2.1.10 (TBD)
 - Set contactor check invalid counter in case of emergency contactor shutdown (dc error)
+- Only set meter configuration once instead of continuously
+- Transfer correct amount of meter values (last value was always 0)
