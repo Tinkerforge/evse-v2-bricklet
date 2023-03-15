@@ -29,6 +29,7 @@
 #include "communication.h"
 #include "evse.h"
 #include "iec61851.h"
+#include "configs/config_evse.h"
 
 ChargingSlot charging_slot;
 
@@ -69,8 +70,10 @@ void charging_slot_init(void) {
 }
 
 void charging_slot_tick(void) {
+    // Handle pp resistance configuration
     charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE] = iec61851_get_ma_from_pp_resistance();
 
+    // Handle shutdown input configuration
     if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) ||
        (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN)) {
         charging_slot.active[CHARGING_SLOT_INPUT0] = true;
@@ -87,13 +90,26 @@ void charging_slot_tick(void) {
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
     }
 
-    if(evse.input_configuration == EVSE_V2_INPUT_UNCONFIGURED) {
+    // Handle general purpose input configuration
+    if(evse.input_configuration == EVSE_V2_INPUT_UNCONFIGURED) { // Explicitly uncofingured
         charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
         charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
-    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_32A) {
+    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_32A) { // Configured for max current
+        const bool input        = XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN);
+        const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_32A)) ||
+                                  ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_32A));
+        if(input_active) {
+            charging_slot.max_current[CHARGING_SLOT_INPUT1]     = charging_slot_input_config_max_current[evse.input_configuration];
+        } else {
+            charging_slot.max_current[CHARGING_SLOT_INPUT1]     = 32000;
+        }
+
         charging_slot.active[CHARGING_SLOT_INPUT1]              = true;
-        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = charging_slot_input_config_max_current[evse.input_configuration];
+        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
+    } else { // Currently unsupported configuration
+        charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
+        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
     }
 }
