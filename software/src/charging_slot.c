@@ -32,6 +32,10 @@
 
 ChargingSlot charging_slot;
 
+const uint16_t charging_slot_input_config_max_current[] = {
+    32000, 0, 6000, 10000, 13000, 16000, 20000, 25000, 32000, 0, 6000, 10000, 13000, 16000, 20000, 25000, 32000
+};
+
 uint32_t charging_slot_get_ma_incoming_cable(void) {
 	switch(evse.config_jumper_current) {
 		case EVSE_CONFIG_JUMPER_CURRENT_6A:  return 6000;
@@ -81,6 +85,16 @@ void charging_slot_tick(void) {
         charging_slot.active[CHARGING_SLOT_INPUT0]              = false;
         charging_slot.max_current[CHARGING_SLOT_INPUT0]         = 32000;
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
+    }
+
+    if(evse.input_configuration == EVSE_V2_INPUT_UNCONFIGURED) {
+        charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
+        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
+        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
+    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_32A) {
+        charging_slot.active[CHARGING_SLOT_INPUT1]              = true;
+        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = charging_slot_input_config_max_current[evse.input_configuration];
+        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
     }
 }
 

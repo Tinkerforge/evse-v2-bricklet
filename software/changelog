@@ -81,3 +81,6 @@
 - Set contactor check invalid counter in case of emergency contactor shutdown (dc error)
 - Only set meter configuration once instead of continuously
 - Transfer correct amount of meter values (last value was always 0)
+
+TBD: 2.1.11 (TBD)
+- Add max current input configuration support
