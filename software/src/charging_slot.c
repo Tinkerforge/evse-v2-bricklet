@@ -34,7 +34,7 @@
 ChargingSlot charging_slot;
 
 const uint16_t charging_slot_input_config_max_current[] = {
-    32000, 0, 6000, 10000, 13000, 16000, 20000, 25000, 32000, 0, 6000, 10000, 13000, 16000, 20000, 25000, 32000
+    32000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000
 };
 
 uint32_t charging_slot_get_ma_incoming_cable(void) {
@@ -95,10 +95,10 @@ void charging_slot_tick(void) {
         charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
         charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
-    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_32A) { // Configured for max current
+    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_25A) { // Configured for max current
         const bool input        = XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN);
-        const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_32A)) ||
-                                  ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_32A));
+        const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A)) ||
+                                  ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A));
         if(input_active) {
             charging_slot.max_current[CHARGING_SLOT_INPUT1]     = charging_slot_input_config_max_current[evse.input_configuration];
         } else {
