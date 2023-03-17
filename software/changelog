@@ -82,5 +82,5 @@
 - Only set meter configuration once instead of continuously
 - Transfer correct amount of meter values (last value was always 0)
 
-TBD: 2.1.11 (TBD)
+2023-03-17: 2.1.11 (e10c4cd)
 - Add max current input configuration support
