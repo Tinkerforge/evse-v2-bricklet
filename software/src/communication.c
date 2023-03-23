@@ -122,7 +122,9 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	response->jumper_configuration  = evse.config_jumper_current;
 	response->has_lock_switch       = evse.has_lock_switch;
 	response->evse_version          = 20;
-	if(sdm.meter_type == SDM_METER_TYPE_UNKNOWN) {
+	if(!sdm.each_value_read_once) {
+		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
+	} else if(sdm.meter_type == SDM_METER_TYPE_UNKNOWN) {
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
 	} else if(sdm.meter_type == SDM_METER_TYPE_SDM72V2) {
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72V2;

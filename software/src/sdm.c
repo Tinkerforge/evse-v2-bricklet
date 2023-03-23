@@ -29,6 +29,8 @@
 #include "rs485.h"
 #include "modbus.h"
 
+#include <math.h>
+
 // Superset of a SDM meter register map
 // Currently this consists of the SDM630 registers.
 const uint16_t sdm_registers_to_read[] = {
@@ -152,9 +154,16 @@ void sdm_write_register(uint8_t slave_address, uint16_t starting_address, SDMReg
 void sdm_init(void) {
 	uint32_t relative_energy_save = sdm.relative_energy.data;
 	memset(&sdm, 0, sizeof(SDM));
-	memset(&sdm_register, 0 , sizeof(SDMRegister));
 	_Static_assert(SDM_REGISTER_NUM == (sizeof(sdm_register)/sizeof(uint32_t)), "Register size doesnt matcoh register numbers");
 	_Static_assert(SDM_REGISTER_FAST_NUM == (sizeof(sdm_register_fast)/sizeof(uint32_t)), "Register Fast size doesnt matcoh register numbers");
+
+	// Initialize registers with NaN
+	for(uint8_t i = 0; i < SDM_REGISTER_NUM; i++) {
+		((float*)&sdm_register)[i] = NAN;
+	}
+	for(uint8_t i = 0; i < SDM_REGISTER_FAST_NUM; i++) {
+		((float*)&sdm_register_fast)[i] = NAN;
+	}
 
 	sdm.relative_energy.data = relative_energy_save;
 	sdm.first_tick = system_timer_get_ms();
@@ -356,13 +365,15 @@ void sdm_tick(void) {
 				while(!sdm_registers_available_in_sdm72v2[sdm.register_position]) {
 					sdm.register_position++;
 					if(sdm.register_position >= SDM_REGISTER_NUM) {
-						sdm.register_position = 0;
+						sdm.register_position    = 0;
+						sdm.each_value_read_once = true;
 					}
 				}
 			}
 			if(sdm.meter_type == SDM_METER_TYPE_UNKNOWN) {
 				sdm_read_holding_registers(1, SDM_HOLDING_REG_METER_CODE, 1);
-				sdm.state = 100;
+				sdm.state             = 100;
+				sdm.register_position = 0; // Reset register position to start
 				break;
 			} else if(system_timer_is_time_elapsed_ms(sdm.register_fast_time, 500) || (sdm.register_fast_position > 0)) {
 				sdm_read_input_registers(1, sdm_registers_fast_to_read[sdm.register_fast_position], 2);
@@ -397,7 +408,8 @@ void sdm_tick(void) {
 				} else {
 					sdm.register_position++;
 					if(sdm.register_position >= SDM_REGISTER_NUM) {
-						sdm.register_position = 0;
+						sdm.register_position    = 0;
+						sdm.each_value_read_once = true;
 					}
 				}
 			}

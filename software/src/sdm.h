@@ -132,6 +132,8 @@ typedef struct {
 
 	SDMRegisterType relative_energy;
 	SDMMeterType meter_type;
+
+	bool each_value_read_once;
 } SDM;
 
 extern SDM sdm;
