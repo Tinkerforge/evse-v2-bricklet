@@ -84,3 +84,6 @@
 
 2023-03-17: 2.1.11 (e10c4cd)
 - Add max current input configuration support
+
+2023-04-14: 2.1.12 (0b09849)
+- Initialize meter values as NaN and return unkown meter until each value read once
