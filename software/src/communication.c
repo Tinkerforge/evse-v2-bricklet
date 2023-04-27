@@ -444,7 +444,7 @@ BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, G
 }
 
 BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, SetIndicatorLED_Response *response) {
-	if((data->indication >= 256) && (data->indication != 1001) && (data->indication != 1002) && (data->indication != 1003)) {
+	if((data->indication >= 256) && (data->indication != 1001) && (data->indication != 1002) && (data->indication != 1003) && ((data->indication < 2001) || (data->indication > 2010))) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 

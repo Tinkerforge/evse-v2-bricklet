@@ -51,6 +51,7 @@ typedef struct {
 	uint32_t blink_count;
 	bool blink_on;
 	uint32_t blink_last_time;
+	bool blink_external;
 
 	bool flicker_on;
 	uint32_t flicker_last_time;
@@ -74,6 +75,8 @@ typedef struct {
 	uint8_t api_nag_counter;
 	uint8_t api_nag_index;
 	uint32_t api_nag_time;
+
+	bool currently_in_wait_state;
 } LED;
 
 extern LED led;
