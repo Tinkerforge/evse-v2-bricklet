@@ -90,3 +90,4 @@
 
 TBD: 2.1.13 (TBD)
 - Add blink led indicator code 2001-2010 for custom error code with 1-10 "blink amount"
+- Add automatic DC fault test after each charging session and at least every 24h

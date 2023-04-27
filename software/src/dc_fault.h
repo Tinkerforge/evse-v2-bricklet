@@ -36,6 +36,7 @@ typedef enum {
 typedef struct {
     DCFaultState state;
     uint32_t last_fault_time;
+    uint32_t last_run_time;
 
     bool x6;
     bool x30;
@@ -46,6 +47,7 @@ typedef struct {
     uint8_t  calibration_state;
     uint32_t calibration_time;
     bool     calibration_check[3];
+
 } DCFault;
 
 extern DCFault dc_fault;

@@ -162,6 +162,11 @@ void dc_fault_calibration_tick(void) {
 }
 
 void dc_fault_tick(void) {
+	// Run dc fault test at least every 24h
+	if(system_timer_is_time_elapsed_ms(dc_fault.last_run_time, 1000*60*60*24)) {
+		dc_fault.calibration_start = true;
+	}
+
 	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
 		led_set_blinking(EVSE_V2_ERROR_STATE_DC_FAULT);
 		// In case of any dc fault error we don't run the dc fault code anymore.
@@ -176,7 +181,8 @@ void dc_fault_tick(void) {
 	}
 
 	if(dc_fault.calibration_start && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
-		dc_fault.calibration_running  = true;
+		dc_fault.calibration_running = true;
+		dc_fault.last_run_time       = system_timer_get_ms();
 		dc_fault_calibration_reset();
 		return;
 	}

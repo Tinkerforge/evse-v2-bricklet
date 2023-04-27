@@ -180,6 +180,7 @@ void communication_init(void);
 #define FID_GET_BUTTON_PRESS_BOOT_TIME 33
 #define FID_SET_BOOST_MODE 34
 #define FID_GET_BOOST_MODE 35
+#define FID_TRIGGER_DC_FAULT_TEST 36
 
 
 typedef struct {
@@ -524,6 +525,16 @@ typedef struct {
 	bool boost_mode_enabled;
 } __attribute__((__packed__)) GetBoostMode_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint32_t password;
+} __attribute__((__packed__)) TriggerDCFaultTest;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool started;
+} __attribute__((__packed__)) TriggerDCFaultTest_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -561,6 +572,7 @@ BootloaderHandleMessageResponse factory_reset(const FactoryReset *data);
 BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressBootTime *data, GetButtonPressBootTime_Response *response);
 BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data);
 BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response);
+BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response);
 
 // Callbacks
 

@@ -84,6 +84,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_BUTTON_PRESS_BOOT_TIME: return get_button_press_boot_time(message, response);
 		case FID_SET_BOOST_MODE: return set_boost_mode(message);
 		case FID_GET_BOOST_MODE: return get_boost_mode(message, response);
+		case FID_TRIGGER_DC_FAULT_TEST: return trigger_dc_fault_test(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -659,6 +660,17 @@ BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoos
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response) {
+	response->header.length = sizeof(TriggerDCFaultTest_Response);
+	if(!dc_fault.calibration_running && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+		response->started = true;
+		dc_fault.calibration_start = true;
+	} else {
+		response->started = false;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
 
 void communication_tick(void) {
 //	communication_callback_tick();
