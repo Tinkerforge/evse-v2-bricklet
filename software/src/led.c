@@ -332,7 +332,7 @@ void led_tick_status_api(void) {
 	} else if(led.api_indication == 1003) {
 		led_tick_status_api_nag();
 	} else if(led.api_indication > 2000 && led.api_indication < 2011) {
-		if(!led.blink_external) {
+		if(led.blink_external != led.api_indication) {
 			// If external blinking is activated, turn LED off and start in off state
 			// with last time set to now.
 			// This way we don't waste any time and the first blinking pattern already has
@@ -342,7 +342,7 @@ void led_tick_status_api(void) {
 			led.blink_count     = 0;
 			led.blink_on        = false;
 			led.blink_last_time = system_timer_get_ms();
-			led.blink_external  = true;
+			led.blink_external  = led.api_indication;
 		}
 		led_tick_status_blinking();
 	}
@@ -350,13 +350,13 @@ void led_tick_status_api(void) {
 	if(system_timer_is_time_elapsed_ms(led.api_start, led.api_duration) && !led.currently_in_wait_state) {
 		led_reset_api_state();
 		led_set_on(true);
-		led.blink_external = false;
+		led.blink_external = -1;
 	}
 }
 
 void led_tick(void) {
 	if((led.state != LED_STATE_API) || (led.api_indication <= 2000) || (led.api_indication >= 2011)) {
-		led.blink_external  = false;
+		led.blink_external  = -1;
 	}
 
 	switch(led.state) {

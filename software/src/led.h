@@ -51,7 +51,7 @@ typedef struct {
 	uint32_t blink_count;
 	bool blink_on;
 	uint32_t blink_last_time;
-	bool blink_external;
+	int16_t blink_external;
 
 	bool flicker_on;
 	uint32_t flicker_last_time;
