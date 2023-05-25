@@ -554,11 +554,14 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 			iec61851_reset_ev_wakeup();
 		}
 	} else {
-		iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-		adc_ignore_results(2);
-		XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+		// If we are currently waking up the EV we don't allow CP disconnect to be turned off again from external
+		if(!iec61851.currently_beeing_woken_up) {
+			iec61851.wait_after_cp_disconnect = system_timer_get_ms();
+			adc_ignore_results(2);
+			XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 
-		evse.control_pilot_disconnect = data->control_pilot_disconnect;
+			evse.control_pilot_disconnect = data->control_pilot_disconnect;
+		}
 	}
 
 	response->header.length               = sizeof(SetControlPilotDisconnect_Response);
