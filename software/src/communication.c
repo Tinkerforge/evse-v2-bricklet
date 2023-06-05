@@ -392,9 +392,9 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 	evse.output_configuration         = data->output_configuration;
 
 	// n-channel mosfet (signals inverted)
-	if(evse.output_configuration == EVSE_V2_OUTPUT_LOW) {
+	if(evse.output_configuration == EVSE_V2_OUTPUT_CONNECTED_TO_GROUND) {
 		XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
-	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH) {
+	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH_IMPEDANCE) {
 		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 	}
 
@@ -677,10 +677,9 @@ BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *
 }
 
 BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data) {
-	// n-channel mosfet (signals inverted)
-	if(data->gp_output == EVSE_V2_OUTPUT_LOW) {
+	if(data->gp_output == EVSE_V2_OUTPUT_CONNECTED_TO_GROUND) {
 		XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
-	} else if(data->gp_output == EVSE_V2_OUTPUT_HIGH) {
+	} else if(data->gp_output == EVSE_V2_OUTPUT_HIGH_IMPEDANCE) {
 		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 	}
 

@@ -164,7 +164,7 @@ void evse_load_config(void) {
 
 	if(page[EVSE_CONFIG_MAGIC2_POS] != EVSE_CONFIG_MAGIC2) {
 		evse.input_configuration          = 0;
-		evse.output_configuration         = EVSE_V2_OUTPUT_HIGH;
+		evse.output_configuration         = EVSE_V2_OUTPUT_HIGH_IMPEDANCE;
 		button.configuration              = EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING;
 	} else {
 		evse.input_configuration          = page[EVSE_CONFIG_INPUT_POS];
@@ -495,15 +495,14 @@ void evse_init(void) {
 
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.last_contactor_switch = system_timer_get_ms();
-	evse.output_configuration = EVSE_V2_OUTPUT_HIGH;
+	evse.output_configuration = EVSE_V2_OUTPUT_HIGH_IMPEDANCE;
 	evse.control_pilot_disconnect = false;
 	evse.ev_wakeup_enabled = true;
 
 	evse_load_config();
-	// n-channel mosfet (signals inverted)
-	if(evse.output_configuration == EVSE_V2_OUTPUT_LOW) {
+	if(evse.output_configuration == EVSE_V2_OUTPUT_CONNECTED_TO_GROUND) {
 		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_high);
-	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH) {
+	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH_IMPEDANCE) {
 		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_low);
 	}
 
