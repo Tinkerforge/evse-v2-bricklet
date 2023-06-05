@@ -85,6 +85,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_BOOST_MODE: return set_boost_mode(message);
 		case FID_GET_BOOST_MODE: return get_boost_mode(message, response);
 		case FID_TRIGGER_DC_FAULT_TEST: return trigger_dc_fault_test(message, response);
+		case FID_SET_GP_OUTPUT: return set_gp_output(message);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -674,6 +675,18 @@ BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
+
+BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data) {
+	// n-channel mosfet (signals inverted)
+	if(data->gp_output == EVSE_V2_OUTPUT_LOW) {
+		XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
+	} else if(data->gp_output == EVSE_V2_OUTPUT_HIGH) {
+		XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
 
 void communication_tick(void) {
 //	communication_callback_tick();

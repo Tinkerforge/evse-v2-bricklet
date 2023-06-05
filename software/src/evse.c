@@ -483,7 +483,6 @@ void evse_init(void) {
 	XMC_GPIO_Init(EVSE_RELAY_PIN,         &pin_config_output_high);
 	XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,   &pin_config_output_low);
 	XMC_GPIO_Init(EVSE_CP_DISCONNECT_PIN, &pin_config_output_low);
-	XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN,     &pin_config_output_low);
 
 	XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
 	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
@@ -501,6 +500,13 @@ void evse_init(void) {
 	evse.ev_wakeup_enabled = true;
 
 	evse_load_config();
+	// n-channel mosfet (signals inverted)
+	if(evse.output_configuration == EVSE_V2_OUTPUT_LOW) {
+		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_high);
+	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH) {
+		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_low);
+	}
+
 	evse_init_jumper();
 	evse_init_lock_switch();
 

@@ -181,6 +181,7 @@ void communication_init(void);
 #define FID_SET_BOOST_MODE 34
 #define FID_GET_BOOST_MODE 35
 #define FID_TRIGGER_DC_FAULT_TEST 36
+#define FID_SET_GP_OUTPUT 37
 
 
 typedef struct {
@@ -535,6 +536,11 @@ typedef struct {
 	bool started;
 } __attribute__((__packed__)) TriggerDCFaultTest_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t gp_output;
+} __attribute__((__packed__)) SetGPOutput;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -573,6 +579,7 @@ BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressB
 BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data);
 BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response);
 BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response);
+BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data);
 
 // Callbacks
 
