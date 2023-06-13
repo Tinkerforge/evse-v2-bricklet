@@ -19,6 +19,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+// On some systems, math.h declares a function named logf(float) to calculate
+// the natural logarithm of a float number. bricklib2's logging.h defines
+// a macro called logf(...) to log fatal errors. The hack below renames the
+// unused logf from math.h to logf_math to avoid colliding with logf from
+// logging.h.
+#define logf logf_math
+#include <math.h>
+#undef logf
+
+
 #include "sdm.h"
 
 #include "bricklib2/hal/system_timer/system_timer.h"
@@ -28,8 +38,6 @@
 
 #include "rs485.h"
 #include "modbus.h"
-
-#include <math.h>
 
 // Superset of a SDM meter register map
 // Currently this consists of the SDM630 registers.
