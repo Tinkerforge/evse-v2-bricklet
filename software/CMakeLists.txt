@@ -37,11 +37,12 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/led.c"
 	"${PROJECT_SOURCE_DIR}/src/button.c"
 	"${PROJECT_SOURCE_DIR}/src/dc_fault.c"
-	"${PROJECT_SOURCE_DIR}/src/rs485.c"
-	"${PROJECT_SOURCE_DIR}/src/modbus.c"
-	"${PROJECT_SOURCE_DIR}/src/timer.c"
-	"${PROJECT_SOURCE_DIR}/src/sdm.c"
 	"${PROJECT_SOURCE_DIR}/src/charging_slot.c"
+
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/modbus.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/sdm.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/uartbb/uartbb.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/system_timer/system_timer.c"

@@ -29,6 +29,7 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/bootloader/bootloader.h"
+#include "bricklib2/warp/sdm.h"
 
 #include "adc.h"
 #include "iec61851.h"
@@ -36,7 +37,6 @@
 #include "contactor_check.h"
 #include "led.h"
 #include "dc_fault.h"
-#include "sdm.h"
 #include "communication.h"
 #include "charging_slot.h"
 #include "button.h"

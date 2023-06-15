@@ -27,6 +27,8 @@
 #include "bricklib2/hal/ccu4_pwm/ccu4_pwm.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/utility/util_definitions.h"
+#include "bricklib2/warp/sdm.h"
+#include "bricklib2/warp/rs485.h"
 
 #include "configs/config_evse.h"
 #include "configs/config_contactor_check.h"
@@ -37,8 +39,6 @@
 #include "contactor_check.h"
 #include "lock.h"
 #include "button.h"
-#include "sdm.h"
-#include "rs485.h"
 #include "dc_fault.h"
 #include "charging_slot.h"
 

@@ -27,6 +27,8 @@
 #include "bricklib2/bootloader/bootloader.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
+#include "bricklib2/warp/rs485.h"
+#include "bricklib2/warp/sdm.h"
 #include "communication.h"
 
 #include "evse.h"
@@ -37,8 +39,6 @@
 #include "button.h"
 #include "adc.h"
 #include "dc_fault.h"
-#include "rs485.h"
-#include "sdm.h"
 #include "charging_slot.h"
 
 int main(void) {

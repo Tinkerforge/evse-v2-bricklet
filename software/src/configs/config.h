@@ -44,6 +44,8 @@
 
 #define CRC16_USE_MODBUS
 
+#define IS_CHARGER
+
 // #define EVSE_LOCK_ENABLE
 
 #include "config_custom_bootloader.h"

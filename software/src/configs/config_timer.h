@@ -1,7 +1,7 @@
-/* evse-v2-bricklet
- * Copyright (C) 2017, 2021 Olaf Lüke <olaf@tinkerforge.com>
+/* warp-energy-manager-bricklet
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * timer.h: Timer handling (originally from rs485-bricklet)
+ * config_timer.h: Config for RS485 timer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,20 +19,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef CONFIG_TIMER_H
+#define CONFIG_TIMER_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "xmc_ccu4.h"
 
-#define TIMER_RESET() \
-  do {\
-    CCU41_CC41->TCCLR = CCU4_CC4_TCCLR_TCC_Msk;\
-    CCU41_CC41->TCSET = CCU4_CC4_TCSET_TRBS_Msk;\
-  } while(false)
-
-bool timer_us_elapsed_since_last_timer_reset(const uint32_t us);
-void timer_init(void);
-void timer_tick(void);
+#define TIMER_CCU      CCU41
+#define TIMER_CCU_CC40 CCU41_CC40
+#define TIMER_CCU_CC41 CCU41_CC41
 
 #endif
