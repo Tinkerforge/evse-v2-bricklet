@@ -27,13 +27,13 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/utility/util_definitions.h"
+#include "bricklib2/warp/contactor_check.h"
 
 #include "iec61851.h"
 #include "adc.h"
 #include "led.h"
 #include "evse.h"
 #include "communication.h"
-#include "contactor_check.h"
 
 #include "xmc_gpio.h"
 

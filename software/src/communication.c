@@ -29,6 +29,7 @@
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/warp/sdm.h"
 #include "bricklib2/warp/rs485.h"
+#include "bricklib2/warp/contactor_check.h"
 
 #include "configs/config_evse.h"
 #include "configs/config_contactor_check.h"
@@ -36,7 +37,6 @@
 #include "adc.h"
 #include "iec61851.h"
 #include "led.h"
-#include "contactor_check.h"
 #include "lock.h"
 #include "button.h"
 #include "dc_fault.h"

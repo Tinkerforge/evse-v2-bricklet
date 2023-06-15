@@ -29,12 +29,12 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/warp/rs485.h"
 #include "bricklib2/warp/sdm.h"
+#include "bricklib2/warp/contactor_check.h"
 #include "communication.h"
 
 #include "evse.h"
 #include "iec61851.h"
 #include "lock.h"
-#include "contactor_check.h"
 #include "led.h"
 #include "button.h"
 #include "adc.h"
