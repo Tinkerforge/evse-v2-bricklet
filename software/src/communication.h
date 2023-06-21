@@ -107,6 +107,9 @@ void communication_init(void);
 #define EVSE_V2_ENERGY_METER_TYPE_SDM72 1
 #define EVSE_V2_ENERGY_METER_TYPE_SDM630 2
 #define EVSE_V2_ENERGY_METER_TYPE_SDM72V2 3
+#define EVSE_V2_ENERGY_METER_TYPE_SDM72CTM 4
+#define EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2 5
+#define EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD 6
 
 #define EVSE_V2_INPUT_UNCONFIGURED 0
 #define EVSE_V2_INPUT_ACTIVE_LOW_MAX_0A 1
@@ -226,6 +229,7 @@ typedef struct {
 	uint8_t gpio[3];
 	uint32_t charging_time;
 	uint32_t time_since_state_change;
+	uint32_t time_since_dc_fault_check;
 	uint32_t uptime;
 } __attribute__((__packed__)) GetLowLevelState_Response;
 

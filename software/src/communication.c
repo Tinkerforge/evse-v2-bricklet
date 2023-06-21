@@ -142,27 +142,28 @@ bool get_bit(const uint32_t value, uint8_t const bit_position) {
 }
 
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response) {
-	response->header.length           = sizeof(GetLowLevelState_Response);
-	response->led_state               = led.state;
-	response->cp_pwm_duty_cycle       = evse_get_cp_duty_cycle();
-	response->adc_values[0]           = adc[0].result[0];
-	response->adc_values[1]           = adc[1].result[0];
-	response->adc_values[2]           = adc[0].result[1];
-	response->adc_values[3]           = adc[1].result[1];
-	response->adc_values[4]           = adc[2].result[0];
-	response->adc_values[5]           = adc[3].result[0];
-	response->adc_values[6]           = adc[4].result[0];
-	response->voltages[0]             = adc[0].result_mv[0];
-	response->voltages[1]             = adc[1].result_mv[0];
-	response->voltages[2]             = adc[0].result_mv[1];
-	response->voltages[3]             = adc[1].result_mv[1];
-	response->voltages[4]             = adc[2].result_mv[0];
-	response->voltages[5]             = adc[3].result_mv[0];
-	response->voltages[6]             = adc[4].result_mv[0];
-	response->resistances[0]          = adc_result.cp_pe_resistance;
-	response->resistances[1]          = adc_result.pp_pe_resistance;
-	response->uptime                  = system_timer_get_ms();
-	response->time_since_state_change = response->uptime - iec61851.last_state_change;
+	response->header.length             = sizeof(GetLowLevelState_Response);
+	response->led_state                 = led.state;
+	response->cp_pwm_duty_cycle         = evse_get_cp_duty_cycle();
+	response->adc_values[0]             = adc[0].result[0];
+	response->adc_values[1]             = adc[1].result[0];
+	response->adc_values[2]             = adc[0].result[1];
+	response->adc_values[3]             = adc[1].result[1];
+	response->adc_values[4]             = adc[2].result[0];
+	response->adc_values[5]             = adc[3].result[0];
+	response->adc_values[6]             = adc[4].result[0];
+	response->voltages[0]               = adc[0].result_mv[0];
+	response->voltages[1]               = adc[1].result_mv[0];
+	response->voltages[2]               = adc[0].result_mv[1];
+	response->voltages[3]               = adc[1].result_mv[1];
+	response->voltages[4]               = adc[2].result_mv[0];
+	response->voltages[5]               = adc[3].result_mv[0];
+	response->voltages[6]               = adc[4].result_mv[0];
+	response->resistances[0]            = adc_result.cp_pe_resistance;
+	response->resistances[1]            = adc_result.pp_pe_resistance;
+	response->uptime                    = system_timer_get_ms();
+	response->time_since_state_change   = response->uptime - iec61851.last_state_change;
+	response->time_since_dc_fault_check = response->uptime - dc_fault.last_run_time;
 
 	const uint32_t port0 = XMC_GPIO_PORT0->IN;
 	const uint32_t port1 = XMC_GPIO_PORT1->IN;

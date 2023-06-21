@@ -93,3 +93,4 @@ TBD: 2.1.13 (TBD)
 - Add automatic DC fault test after each charging session and at least every 24h
 - Make sure active cp disconnect can not be turned off again through API from external
 - Make sure meter type is only reconfigured once per complete read of register set
+- Add "time_since_dc_fault_check" parameter to "get_low_level_state" function
