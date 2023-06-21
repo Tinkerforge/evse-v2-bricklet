@@ -94,3 +94,4 @@ TBD: 2.1.13 (TBD)
 - Make sure active cp disconnect can not be turned off again through API from external
 - Make sure meter type is only reconfigured once per complete read of register set
 - Add "time_since_dc_fault_check" parameter to "get_low_level_state" function
+- Reset timeout counter when meter is found for the first time (through bricklib)
