@@ -61,6 +61,12 @@ void dc_fault_init(void) {
 void dc_fault_update_values(void) {
 	static uint32_t t[3] = {0};
 
+	// Don't update the dc fault values if the contactor is not turned on
+	// It doesn't make any sense to check in this case, we can only get false positives
+	if(XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+		return;
+	}
+
 	// Add an additional 1s timeout directly after the contactor is turned on/off
 	if(!system_timer_is_time_elapsed_ms(evse.last_contactor_switch, 1000)) {
 		return;
