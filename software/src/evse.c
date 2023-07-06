@@ -497,6 +497,7 @@ void evse_init(void) {
 	evse.last_contactor_switch = system_timer_get_ms();
 	evse.output_configuration = EVSE_V2_OUTPUT_HIGH_IMPEDANCE;
 	evse.control_pilot_disconnect = false;
+	evse.boost_mode_enabled = false;
 	evse.ev_wakeup_enabled = true;
 
 	evse_load_config();
@@ -514,7 +515,6 @@ void evse_init(void) {
 	evse.factory_reset_time = 0;
 	evse.communication_watchdog_time = 0;
 	evse.contactor_turn_off_time = 0;
-	evse.boost_mode_enabled = false;
 }
 
 void evse_tick_debug(void) {

@@ -98,3 +98,4 @@
 
 2023-XX-XX: 2.1.14 (TBD)
 - Don't check for DC fault when contactor is turned off
+- Fix read of stored startup value of boost mode
