@@ -46,7 +46,10 @@ void iec61851_set_state(IEC61851State state) {
 		// If we change from an error state to something else we save the time
 		// If we then change to state C we wait at least 30 seconds
 		// -> Don't start charging immediately after error
-		if((iec61851.state == IEC61851_STATE_EF) || iec61851.state == IEC61851_STATE_D) {
+		if((iec61851.state == IEC61851_STATE_D) && (iec61851.last_error_time == 0)) {
+			iec61851.last_error_time = system_timer_get_ms();
+		}
+		if(iec61851.state == IEC61851_STATE_EF) { // User has to disconnect first for error state EF
 			iec61851.last_error_time = system_timer_get_ms();
 		}
 		if((state == IEC61851_STATE_C) && (iec61851.last_error_time != 0)) {
