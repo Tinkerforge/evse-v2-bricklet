@@ -43,12 +43,12 @@ IEC61851 iec61851;
 
 void iec61851_set_state(IEC61851State state) {
 	if(state != iec61851.state) {
-		// If we change the state from an error state to something else we save the time
-		if(iec61851.state == IEC61851_STATE_EF) {
+		// If we change from an error state to something else we save the time
+		// If we then change to state C we wait at least 30 seconds
+		// -> Don't start charging immediately after error
+		if((iec61851.state == IEC61851_STATE_EF) || iec61851.state == IEC61851_STATE_D) {
 			iec61851.last_error_time = system_timer_get_ms();
 		}
-
-		// If we change to state C and we were in an error state before, we wait at least 30 seconds
 		if((state == IEC61851_STATE_C) && (iec61851.last_error_time != 0)) {
 			if(!system_timer_is_time_elapsed_ms(iec61851.last_error_time, 30*1000)) {
 				return;
@@ -56,7 +56,20 @@ void iec61851_set_state(IEC61851State state) {
 			iec61851.last_error_time = 0;
 		}
 
-		// If we change to state C and the charging timer was not started, we start it
+		// If we change from state C to something else we save the time
+		// If we then change back to state C we wait at least 5 seconds
+		// -> Don't start charging immediately after charging was stopped
+		if(iec61851.state == IEC61851_STATE_C) {
+			iec61851.last_state_c_end_time = system_timer_get_ms();
+		}
+		if((state == IEC61851_STATE_C) && (iec61851.last_state_c_end_time != 0)) {
+			if(!system_timer_is_time_elapsed_ms(iec61851.last_state_c_end_time, 5*1000)) {
+				return;
+			}
+			iec61851.last_state_c_end_time = 0;
+		}
+
+		// If we change to state C and the charging timer was not started, we start
 		if((state == IEC61851_STATE_C) && (evse.charging_time == 0)) {
 			evse.charging_time = system_timer_get_ms();
 		}
