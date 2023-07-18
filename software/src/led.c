@@ -26,6 +26,9 @@
 #include "bricklib2/logging/logging.h"
 
 #include "xmc_ccu4.h"
+#include "xmc_ccu8.h"
+
+#include "hardware_version.h"
 
 #include <string.h>
 
@@ -69,9 +72,15 @@ const uint16_t led_cie1931[256] = {
 #define LED_OFF LED_MAX_DUTY_CYCLE
 
 void led_set_duty_cycle(const uint16_t compare_value) {
-	XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_LED_SLICE, compare_value);
-    XMC_CCU4_EnableShadowTransfer(EVSE_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)) |
-    		                                    (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)));
+	if(hardware_version.is_v2) {
+		XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, compare_value);
+    	XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) | (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
+	} else if(hardware_version.is_v3) {
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_CCU, XMC_CCU8_SHADOW_TRANSFER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_SLICE_3 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_3);
+	}
 }
 
 void led_reset_api_state(void) {
@@ -153,9 +162,7 @@ void led_set_off(void) {
 	led_set_duty_cycle(LED_OFF);
 }
 
-void led_init(void) {
-	memset(&led, 0, sizeof(LED));
-
+void led_init_v2(void) {
 	const XMC_CCU4_SLICE_COMPARE_CONFIG_t compare_config = {
 		.timer_mode          = XMC_CCU4_SLICE_TIMER_COUNT_MODE_EA,
 		.monoshot            = false,
@@ -177,21 +184,73 @@ void led_init(void) {
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
 
-    XMC_CCU4_Init(EVSE_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    XMC_CCU4_StartPrescaler(EVSE_LED_CCU);
-    XMC_CCU4_SLICE_CompareInit(EVSE_LED_SLICE, &compare_config);
+    XMC_CCU4_Init(EVSE_V2_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    XMC_CCU4_StartPrescaler(EVSE_V2_LED_CCU);
+    XMC_CCU4_SLICE_CompareInit(EVSE_V2_LED_SLICE, &compare_config);
 
     // Set the period and compare register values
-    XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
-    XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_LED_SLICE, 0);
+    XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_V2_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
+    XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, 0);
 
-    XMC_CCU4_EnableShadowTransfer(EVSE_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)) |
-    		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)));
+    XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) |
+    		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
 
-    XMC_GPIO_Init(EVSE_LED_PIN, &gpio_out_config);
+    XMC_GPIO_Init(EVSE_V2_LED_PIN, &gpio_out_config);
 
-    XMC_CCU4_EnableClock(EVSE_LED_CCU, EVSE_LED_SLICE_NUMBER);
-    XMC_CCU4_SLICE_StartTimer(EVSE_LED_SLICE);
+    XMC_CCU4_EnableClock(EVSE_V2_LED_CCU, EVSE_V2_LED_SLICE_NUMBER);
+    XMC_CCU4_SLICE_StartTimer(EVSE_V2_LED_SLICE);
+}
+
+void led_init_v3(void) {
+	const XMC_CCU8_SLICE_COMPARE_CONFIG_t compare_config = {
+		.timer_mode          = XMC_CCU8_SLICE_TIMER_COUNT_MODE_EA,
+		.monoshot            = false,
+		.shadow_xfer_clear   = 0,
+		.dither_timer_period = 0,
+		.dither_duty_cycle   = 0,
+		.prescaler_mode      = XMC_CCU8_SLICE_PRESCALER_MODE_NORMAL,
+		.prescaler_initval   = 0,
+		.float_limit         = 0,
+		.dither_limit        = 0,
+		.passive_level_out0  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out1  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out2  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out3  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.timer_concatenation = 0
+	};
+
+	XMC_CCU8_Init(EVSE_V3_LED_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_CCU);
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_R_SLICE, &compare_config);
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_G_SLICE, &compare_config);
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_B_SLICE, &compare_config);
+
+	// Set the period and compare register values
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_R_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_G_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_B_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0); // TODO: which compare channel?
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
+
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_CCU, XMC_CCU8_SHADOW_TRANSFER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_SLICE_3 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_3);
+
+	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_R_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_G_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_B_SLICE_NUMBER);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_R_SLICE);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_G_SLICE);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_B_SLICE);
+}
+
+void led_init(void) {
+	memset(&led, 0, sizeof(LED));
+
+	if(hardware_version.is_v2) {
+		led_init_v2();
+	} else if(hardware_version.is_v3) {
+		led_init_v3();
+	}
 
 	led_set_duty_cycle(LED_OFF);
 	led_reset_api_state();

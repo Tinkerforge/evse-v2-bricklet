@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2021-2023 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * config_contactor_check.h: Config for welded/defective contactor check
+ * config_hardware_version.h: EVSE hardware version config
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,19 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONTACTOR_CHECK_CONFIG_H
-#define CONTACTOR_CHECK_CONFIG_H
+#ifndef CONFIG_HARDWARE_VERSION_H
+#define CONFIG_HARDWARE_VERSION_H
 
 #include "xmc_gpio.h"
 
-// EVSE V2 (50Hz signal before and after contactor)
-#define CONTACTOR_CHECK_AC1_PIN P2_6
-#define CONTACTOR_CHECK_AC2_PIN P2_7
-#define CONTACTOR_CHECK_RELAY_PIN_IS_INVERTED true
-
-// EVSE V3 (High or low signal from contactor feedback)
-#define CONTACTOR_CHECK_FB1_PIN P2_6 // Feedback contactor 1
-#define CONTACTOR_CHECK_FB2_PIN P2_7 // Feedback contactor 2
-#define CONTACTOR_CHECK_PE_PIN  P2_8 // PE check
+#define HARDWARE_VERSION_DETECTION  P4_7
 
 #endif

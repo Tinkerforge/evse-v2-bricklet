@@ -41,6 +41,7 @@
 #include "charging_slot.h"
 #include "button.h"
 #include "iec61851.h"
+#include "hardware_version.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -74,7 +75,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 	}
 #endif
 
-	if(((bool)!XMC_GPIO_GetInput(EVSE_RELAY_PIN)) != contactor) {
+	if(((bool)!XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) != contactor) {
 		if(((cp_duty_cycle == 0) || (cp_duty_cycle == 1000)) && (!contactor)) {
 			// If the duty cycle is set to either 0% or 100% PWM and the contactor is supposed to be turned off,
 			// it is possible that the WARP Charger wants to turn off the charging session while the car
@@ -128,9 +129,9 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
 		if(contactor) {
-			XMC_GPIO_SetOutputLow(EVSE_RELAY_PIN);
+			XMC_GPIO_SetOutputLow(EVSE_CONTACTOR_PIN);
 		} else {
-			XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
+			XMC_GPIO_SetOutputHigh(EVSE_CONTACTOR_PIN);
 		}
 
 		evse.last_contactor_switch = system_timer_get_ms();
@@ -256,7 +257,7 @@ void evse_factory_reset(void) {
 }
 
 uint16_t evse_get_cp_duty_cycle(void) {
-	uint16_t duty_cycle = (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
+	uint16_t duty_cycle = (uint16_t)((48000 - ccu4_pwm_get_duty_cycle(EVSE_V2_CP_PWM_SLICE_NUMBER))/48.0 + 0.5);
 	if((duty_cycle >= EVSE_BOOST_MODE_US) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
 		return duty_cycle - EVSE_BOOST_MODE_US;
 	}
@@ -278,12 +279,15 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 		adc_boost = EVSE_BOOST_MODE_US;
 	}
 
-	const uint16_t current_cp_duty_cycle = ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER);
+	const uint16_t current_cp_duty_cycle = ccu4_pwm_get_duty_cycle(EVSE_V2_CP_PWM_SLICE_NUMBER);
 	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5);
 
 	if(current_cp_duty_cycle != new_cp_duty_cycle) {
 		adc_enable_all(duty_cycle > 999.99);
-		ccu4_pwm_set_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER, new_cp_duty_cycle);
+
+		// EVSE V2 uses CCU40, EVSE V3 uses CCU41
+		XMC_CCU4_SLICE_SetTimerCompareMatch(hardware_version.is_v2 ? CCU40_CC40 : CCU41_CC40, new_cp_duty_cycle);
+		XMC_CCU4_EnableShadowTransfer(hardware_version.is_v2 ? CCU40 : CCU41, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0);
 	}
 }
 
@@ -366,7 +370,7 @@ void evse_init_jumper(void) {
 	}
 }
 
-// Use CCU40 slice 0 for CP/PE PWM on P1_0
+// Use CCU40 slice 0 for CP/PE PWM on P1_0 (EVSE V2) or P0_4 (EVSE V3)
 // Use CCU40 slice 1 synchronously with slice 0 but with fixed duty-cycle
 // Slice 1 is used to generate IRQ for ADC measurements to make sure that CP/PE PWM high level is measured at end of duty-cycle
 void evse_init_cp_pwm(void) {
@@ -393,7 +397,7 @@ void evse_init_cp_pwm(void) {
 	};
 
 	const XMC_GPIO_CONFIG_t gpio_out_config	= {
-		.mode                = XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT2,
+		.mode                = hardware_version.is_v2 ? XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT2 : XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT4,
 		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
@@ -480,18 +484,21 @@ void evse_init(void) {
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
-	XMC_GPIO_Init(EVSE_RELAY_PIN,         &pin_config_output_high);
-	XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,   &pin_config_output_low);
+	XMC_GPIO_Init(EVSE_CONTACTOR_PIN, &pin_config_output_high);
 	XMC_GPIO_Init(EVSE_CP_DISCONNECT_PIN, &pin_config_output_low);
 
-	XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
-	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
-	XMC_GPIO_Init(EVSE_SHUTDOWN_PIN,           &pin_config_input);
+	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,      &pin_config_input);
+	XMC_GPIO_Init(EVSE_SHUTDOWN_PIN,      &pin_config_input);
 
 	evse_init_cp_pwm();
 
-//	ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
-//	ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
+	if(hardware_version.is_v2) {
+		// Support for lock switch motor only in EVSE V2 
+		XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,        &pin_config_output_low);
+		XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
+//		ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
+//		ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
+	}
 
 	evse.config_jumper_current_software = 6000; // default software configuration is 6A
 	evse.last_contactor_switch = system_timer_get_ms();
@@ -528,7 +535,7 @@ void evse_tick_debug(void) {
 		uartbb_printf("Jumper configuration: %d\n\r", evse.config_jumper_current);
 		uartbb_printf("LED State: %d\n\r", led.state);
 		uartbb_printf("Resistance: CP %d, PP %d\n\r", adc_result.cp_pe_resistance, adc_result.pp_pe_resistance);
-		uartbb_printf("CP PWM duty cycle: %d\n\r", ccu4_pwm_get_duty_cycle(EVSE_CP_PWM_SLICE_NUMBER));
+		uartbb_printf("CP PWM duty cycle: %d\n\r", ccu4_pwm_get_duty_cycle(EVSE_V2_CP_PWM_SLICE_NUMBER));
 		uartbb_printf("Contactor Check: AC1 %d, AC2 %d, State: %d, Error: %d\n\r", contactor_check.ac1_edge_count, contactor_check.ac2_edge_count, contactor_check.state, contactor_check.error);
 		uartbb_printf("GPIO: Input %d, Output %d\n\r", XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN), XMC_GPIO_GetInput(EVSE_OUTPUT_GP_PIN));
 		uartbb_printf("Lock State: %d\n\r", lock.state);

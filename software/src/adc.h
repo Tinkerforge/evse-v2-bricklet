@@ -74,7 +74,7 @@ typedef struct {
 	int64_t cp_pe_pwm_low_result[2];
 } ADCResult;
 
-extern ADC adc[ADC_NUM];
+extern ADC *adc;
 extern ADCResult adc_result;
 
 void adc_init(void);

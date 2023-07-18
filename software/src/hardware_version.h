@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2021-2023 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * config_contactor_check.h: Config for welded/defective contactor check
+ * hardware_version.h: Hardware version detection and support
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,19 +19,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONTACTOR_CHECK_CONFIG_H
-#define CONTACTOR_CHECK_CONFIG_H
+#ifndef HARDWARE_VERSION_H
+#define HARDWARE_VERSION_H
+
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "xmc_gpio.h"
 
-// EVSE V2 (50Hz signal before and after contactor)
-#define CONTACTOR_CHECK_AC1_PIN P2_6
-#define CONTACTOR_CHECK_AC2_PIN P2_7
-#define CONTACTOR_CHECK_RELAY_PIN_IS_INVERTED true
+typedef struct {
+    bool is_v2;
+    bool is_v3;
+} HardwareVersion;
 
-// EVSE V3 (High or low signal from contactor feedback)
-#define CONTACTOR_CHECK_FB1_PIN P2_6 // Feedback contactor 1
-#define CONTACTOR_CHECK_FB2_PIN P2_7 // Feedback contactor 2
-#define CONTACTOR_CHECK_PE_PIN  P2_8 // PE check
+typedef struct {
+    XMC_GPIO_PORT_t *const port;
+    uint8_t pin;
+} HardwareVersionPortPin;
 
+extern HardwareVersion hardware_version;
+
+void hardware_version_init(void);
+XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num);
+const uint8_t hardware_version_get_pin(const uint8_t pin_num);
 #endif

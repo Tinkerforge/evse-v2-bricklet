@@ -27,10 +27,13 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/bootloader/bootloader.h"
 #include "bricklib2/utility/util_definitions.h"
+#include "hardware_version.h"
 
 #define ADC_DIODE_DROP 650
 
-ADC adc[ADC_NUM] = {
+ADC *adc;
+
+ADC adc_v2[ADC_NUM] = {
 	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
 		.port          = XMC_GPIO_PORT2,
 		.pin           = 1,
@@ -83,6 +86,59 @@ ADC adc[ADC_NUM] = {
 	},
 };
 
+ADC adc_v3[ADC_NUM] = {
+	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 4,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 6,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP1"
+	},
+	{ // Channel ADC_CHANNEL_VCP2  (w/ resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 5,
+		.result_reg    = 6,
+		.channel_num   = 7,
+		.channel_alias = -1,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP2"
+	},
+	{ // Channel ADC_CHANNEL_VPP
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 1,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 6,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "VPP"
+	},
+	{ // Channel ADC_CHANNEL_V12P
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 2,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 7,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "V12P"
+	},
+	{ // Channel ADC_CHANNEL_V12M
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 3,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 5,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "V12M"
+	},
+};
+
 ADCResult adc_result;
 
 #define adc_conversion_done_irq IRQ_Hdlr_15
@@ -104,6 +160,12 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 }
 
 void adc_init_adc(void) {
+	if(hardware_version.is_v2) {
+		adc = adc_v2;
+	} else if(hardware_version.is_v3) {
+		adc = adc_v3;
+	}
+
 	for(uint8_t i = 0; i < ADC_NUM; i ++) {
 		const XMC_GPIO_CONFIG_t input_pin_config = {
 			.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
@@ -154,9 +216,9 @@ void adc_init_adc(void) {
 	const XMC_VADC_BACKGROUND_CONFIG_t adc_background_config = {
 		.conv_start_mode   = XMC_VADC_STARTMODE_CIR,       // Conversion start mode selected as cancel inject repeat
 		.req_src_priority  = XMC_VADC_GROUP_RS_PRIORITY_1, // Priority of the Background request source in the VADC module
-		.trigger_signal    = XMC_VADC_REQ_TR_A,            // If Trigger needed then this denotes the Trigger signal
+		.trigger_signal    = XMC_VADC_REQ_TR_A, // If Trigger needed then this denotes the Trigger signal
 		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
-		.gate_signal       = XMC_VADC_REQ_GT_A,			   // If Gating needed then this denotes the Gating signal
+		.gate_signal       = XMC_VADC_REQ_GT_A, // If Gating needed then this denotes the Gating signal
 		.timer_mode        = 0,							   // Timer Mode Disabled
 		.external_trigger  = 1,                            // Trigger is Enabled
 		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled

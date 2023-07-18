@@ -40,11 +40,13 @@
 #include "adc.h"
 #include "dc_fault.h"
 #include "charging_slot.h"
+#include "hardware_version.h"
 
 int main(void) {
 	logging_init();
 	logd("Start EVSE Bricklet 2.0\n\r");
 
+	hardware_version_init();
 	communication_init();
 	evse_init();
 	charging_slot_init();

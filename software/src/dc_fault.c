@@ -34,6 +34,7 @@
 #include "led.h"
 #include "evse.h"
 #include "communication.h"
+#include "hardware_version.h"
 
 #include "xmc_gpio.h"
 
@@ -63,7 +64,7 @@ void dc_fault_update_values(void) {
 
 	// Don't update the dc fault values if the contactor is not turned on
 	// It doesn't make any sense to check in this case, we can only get false positives
-	if(XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+	if(XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) {
 		return;
 	}
 
@@ -186,7 +187,7 @@ void dc_fault_tick(void) {
 		return;
 	}
 
-	if(dc_fault.calibration_start && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+	if(dc_fault.calibration_start && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) {
 		dc_fault.calibration_running = true;
 		dc_fault.last_run_time       = system_timer_get_ms();
 		dc_fault_calibration_reset();
@@ -220,7 +221,7 @@ void dc_fault_tick(void) {
 		// Contactor is normally only controlled in the iec61851 tick, 
 		// but in case of dc fault condition we turn the contactor off
 		// no matter what state we are in or similar.
-		XMC_GPIO_SetOutputHigh(EVSE_RELAY_PIN);
+		XMC_GPIO_SetOutputHigh(EVSE_CONTACTOR_PIN);
 		iec61851.state = IEC61851_STATE_EF;
 	}
 }

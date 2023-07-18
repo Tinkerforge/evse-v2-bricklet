@@ -41,6 +41,7 @@
 #include "button.h"
 #include "dc_fault.h"
 #include "charging_slot.h"
+#include "hardware_version.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -667,7 +668,7 @@ BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoos
 
 BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response) {
 	response->header.length = sizeof(TriggerDCFaultTest_Response);
-	if(!dc_fault.calibration_running && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_RELAY_PIN)) {
+	if(!dc_fault.calibration_running && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) {
 		response->started = true;
 		dc_fault.calibration_start = true;
 	} else {

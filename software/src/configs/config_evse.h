@@ -23,24 +23,52 @@
 #define CONFIG_EVSE_H
 
 #include "xmc_gpio.h"
+#include "hardware_version.h"
 
-#define EVSE_CP_PWM_SLICE_NUMBER       0
-#define EVSE_CP_PWM_PIN                P1_0
-#define EVSE_CP_DISCONNECT_PIN         P1_4
-
+// Lock motor is EVSE V2 only
 #define EVSE_MOTOR_ENABLE_SLICE_NUMBER 3 // TODO!
 #define EVSE_MOTOR_ENABLE_PIN          P1_5
 #define EVSE_MOTOR_PHASE_PIN           P1_6
 #define EVSE_MOTOR_FAULT_PIN           P0_1
 #define EVSE_MOTOR_INPUT_SWITCH_PIN    P1_1
 
-#define EVSE_RELAY_PIN                 P1_2
-#define EVSE_CONTACTOR_PIN             P1_2
-#define EVSE_INPUT_GP_PIN              P2_9
-#define EVSE_OUTPUT_GP_PIN             P1_3
-#define EVSE_SHUTDOWN_PIN              P0_9
+#define EVSE_V2_CP_PWM_SLICE_NUMBER       0
+#define EVSE_V3_CP_PWM_SLICE_NUMBER       0 // TODO
 
-#define EVSE_CONFIG_JUMPER_PIN0        P0_5
-#define EVSE_CONFIG_JUMPER_PIN1        P0_0
 
+#define EVSE_CP_PWM_PIN_NUM               4
+#define EVSE_CP_DISCONNECT_PIN_NUM        5
+#define EVSE_INPUT_GP_PIN_NUM             6
+#define EVSE_OUTPUT_GP_PIN_NUM            7
+#define EVSE_SHUTDOWN_PIN_NUM             8
+#define EVSE_CONFIG_JUMPER_PIN0_NUM       9
+#define EVSE_CONFIG_JUMPER_PIN1_NUM       10
+#define EVSE_CONTACTOR_PIN_NUM            11 // TODO: second contactor pin for v3
+
+#define EVSE_CP_PWM_PIN                   hardware_version_get_port(EVSE_CP_PWM_PIN_NUM),         hardware_version_get_pin(EVSE_CP_PWM_PIN_NUM)
+#define EVSE_CP_DISCONNECT_PIN            hardware_version_get_port(EVSE_CP_DISCONNECT_PIN_NUM),  hardware_version_get_pin(EVSE_CP_DISCONNECT_PIN_NUM)
+#define EVSE_INPUT_GP_PIN                 hardware_version_get_port(EVSE_INPUT_GP_PIN_NUM),       hardware_version_get_pin(EVSE_INPUT_GP_PIN_NUM)
+#define EVSE_OUTPUT_GP_PIN                hardware_version_get_port(EVSE_OUTPUT_GP_PIN_NUM),      hardware_version_get_pin(EVSE_OUTPUT_GP_PIN_NUM)
+#define EVSE_SHUTDOWN_PIN                 hardware_version_get_port(EVSE_SHUTDOWN_PIN_NUM),       hardware_version_get_pin(EVSE_SHUTDOWN_PIN_NUM)
+#define EVSE_CONFIG_JUMPER_PIN0           hardware_version_get_port(EVSE_CONFIG_JUMPER_PIN0_NUM), hardware_version_get_pin(EVSE_CONFIG_JUMPER_PIN0_NUM)
+#define EVSE_CONFIG_JUMPER_PIN1           hardware_version_get_port(EVSE_CONFIG_JUMPER_PIN1_NUM), hardware_version_get_pin(EVSE_CONFIG_JUMPER_PIN1_NUM)
+#define EVSE_CONTACTOR_PIN                hardware_version_get_port(EVSE_CONTACTOR_PIN_NUM),      hardware_version_get_pin(EVSE_CONTACTOR_PIN_NUM)
+
+#define EVSE_V2_CP_PWM_PIN                P1_0
+#define EVSE_V2_CP_DISCONNECT_PIN         P1_4
+#define EVSE_V2_INPUT_GP_PIN              P2_9
+#define EVSE_V2_OUTPUT_GP_PIN             P1_3
+#define EVSE_V2_SHUTDOWN_PIN              P0_9
+#define EVSE_V2_CONFIG_JUMPER_PIN0        P0_5
+#define EVSE_V2_CONFIG_JUMPER_PIN1        P0_0
+#define EVSE_V2_CONTACTOR_PIN             P1_2
+
+#define EVSE_V3_CP_PWM_PIN                P1_4
+#define EVSE_V3_CP_DISCONNECT_PIN         P4_4
+#define EVSE_V3_INPUT_GP_PIN              NULL, 0 // Not available
+#define EVSE_V3_OUTPUT_GP_PIN             NULL, 0 // Not available
+#define EVSE_V3_SHUTDOWN_PIN              P4_6
+#define EVSE_V3_CONFIG_JUMPER_PIN0        P4_5
+#define EVSE_V3_CONFIG_JUMPER_PIN1        P2_9
+#define EVSE_V3_CONTACTOR_PIN             P1_6 // TODO: Contactor 0 or 1 the correct one here?
 #endif

@@ -24,6 +24,7 @@
 
 #include "xmc_gpio.h"
 
+// Button pin is same in EVSE V2 and V3
 #define EVSE_BUTTON_PIN  P0_12
 
 #endif

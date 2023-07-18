@@ -37,6 +37,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/button.c"
 	"${PROJECT_SOURCE_DIR}/src/dc_fault.c"
 	"${PROJECT_SOURCE_DIR}/src/charging_slot.c"
+	"${PROJECT_SOURCE_DIR}/src/hardware_version.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"
@@ -72,6 +73,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_scu.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_flash.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu4.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu8.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_vadc.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_scu.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_uart.c"

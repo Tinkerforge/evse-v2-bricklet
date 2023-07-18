@@ -24,10 +24,26 @@
 
 #include "xmc_gpio.h"
 
+// EVSE V2 -> only one blue LED
 // CCU4_1.OUT_2
-#define EVSE_LED_CCU           CCU41
-#define EVSE_LED_SLICE         CCU41_CC42
-#define EVSE_LED_SLICE_NUMBER  2 
-#define EVSE_LED_PIN           P4_6
+#define EVSE_V2_LED_CCU             CCU41
+#define EVSE_V2_LED_SLICE           CCU41_CC42
+#define EVSE_V2_LED_SLICE_NUMBER    2 
+#define EVSE_V2_LED_PIN             P4_6
+
+// EVSE V3 -> RGB LED
+#define EVSE_V3_LED_CCU           CCU80
+
+#define EVSE_V3_LED_R_SLICE         CCU80_CC80
+#define EVSE_V3_LED_R_SLICE_NUMBER  0
+#define EVSE_V3_LED_R_PIN           P1_0
+
+#define EVSE_V3_LED_G_SLICE         CCU80_CC83
+#define EVSE_V3_LED_G_SLICE_NUMBER  3
+#define EVSE_V3_LED_G_PIN           P1_3
+
+#define EVSE_V3_LED_B_SLICE         CCU80_CC82
+#define EVSE_V3_LED_B_SLICE_NUMBER  2 
+#define EVSE_V3_LED_B_PIN           P1_2
 
 #endif
