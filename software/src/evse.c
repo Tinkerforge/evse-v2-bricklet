@@ -52,11 +52,14 @@
 
 EVSE evse;
 
+// Interrupt for debugging
+#if 0
 #define evse_cp_pwm_irq IRQ_Hdlr_30
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) evse_cp_pwm_irq(void) {
 	XMC_VADC_GLOBAL_BackgroundTriggerConversion(VADC);
 	XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
 }
+#endif
 
 
 void evse_set_output(const float cp_duty_cycle, const bool contactor) {
@@ -442,7 +445,8 @@ void evse_init_cp_pwm(void) {
 	XMC_CCU4_SLICE_SetInterruptNode(CCU40_CC42, XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP, XMC_CCU4_SLICE_SR_ID_2);
 
 	evse_set_cp_duty_cycle(1000.0);
-	// Interrupt for testing
+
+	// Interrupt for debugging, uncomment if needed
 //	NVIC_SetPriority(30, 1);
 //	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU40_SR2_IRQ30);
 //	NVIC_EnableIRQ(30);
@@ -487,13 +491,13 @@ void evse_init(void) {
 	XMC_GPIO_Init(EVSE_CONTACTOR_PIN, &pin_config_output_high);
 	XMC_GPIO_Init(EVSE_CP_DISCONNECT_PIN, &pin_config_output_low);
 
-	XMC_GPIO_Init(EVSE_INPUT_GP_PIN,      &pin_config_input);
 	XMC_GPIO_Init(EVSE_SHUTDOWN_PIN,      &pin_config_input);
 
 	evse_init_cp_pwm();
 
 	if(hardware_version.is_v2) {
-		// Support for lock switch motor only in EVSE V2 
+		// Support for lock switch motor and input pin only in EVSE V2 
+		XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
 		XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,        &pin_config_output_low);
 		XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
 //		ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
@@ -508,10 +512,14 @@ void evse_init(void) {
 	evse.ev_wakeup_enabled = true;
 
 	evse_load_config();
-	if(evse.output_configuration == EVSE_V2_OUTPUT_CONNECTED_TO_GROUND) {
-		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_high);
-	} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH_IMPEDANCE) {
-		XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_low);
+
+	// Support for gp output pin only in EVSE V2
+	if(hardware_version.is_v2) {
+		if(evse.output_configuration == EVSE_V2_OUTPUT_CONNECTED_TO_GROUND) {
+			XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_high);
+		} else if(evse.output_configuration == EVSE_V2_OUTPUT_HIGH_IMPEDANCE) {
+			XMC_GPIO_Init(EVSE_OUTPUT_GP_PIN, &pin_config_output_low);
+		}
 	}
 
 	evse_init_jumper();
@@ -537,7 +545,9 @@ void evse_tick_debug(void) {
 		uartbb_printf("Resistance: CP %d, PP %d\n\r", adc_result.cp_pe_resistance, adc_result.pp_pe_resistance);
 		uartbb_printf("CP PWM duty cycle: %d\n\r", ccu4_pwm_get_duty_cycle(EVSE_V2_CP_PWM_SLICE_NUMBER));
 		uartbb_printf("Contactor Check: AC1 %d, AC2 %d, State: %d, Error: %d\n\r", contactor_check.ac1_edge_count, contactor_check.ac2_edge_count, contactor_check.state, contactor_check.error);
-		uartbb_printf("GPIO: Input %d, Output %d\n\r", XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN), XMC_GPIO_GetInput(EVSE_OUTPUT_GP_PIN));
+		if(hardware_version.is_v2) {
+			uartbb_printf("GPIO: Input %d, Output %d\n\r", XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN), XMC_GPIO_GetInput(EVSE_OUTPUT_GP_PIN));
+		}
 		uartbb_printf("Lock State: %d\n\r", lock.state);
 	}
 #endif

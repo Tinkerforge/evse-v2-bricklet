@@ -96,7 +96,7 @@ void charging_slot_tick(void) {
         charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
         charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
     } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_25A) { // Configured for max current
-        const bool input        = XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN);
+        const bool input        = hardware_version.is_v2 ? XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN) : false;
         const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A)) ||
                                   ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A));
         if(input_active) {

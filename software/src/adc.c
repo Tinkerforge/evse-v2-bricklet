@@ -141,8 +141,9 @@ ADC adc_v3[ADC_NUM] = {
 
 ADCResult adc_result;
 
+// Interrupt for debugging
+#if 0
 #define adc_conversion_done_irq IRQ_Hdlr_15
-
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) adc_conversion_done_irq(void) {
 	XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
 	__NOP();
@@ -158,6 +159,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 	__NOP();
 	XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 }
+#endif
 
 void adc_init_adc(void) {
 	if(hardware_version.is_v2) {
