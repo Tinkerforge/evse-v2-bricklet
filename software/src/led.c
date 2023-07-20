@@ -79,7 +79,9 @@ void led_set_duty_cycle(const uint16_t compare_value) {
 		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
 		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
 		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
-		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_CCU, XMC_CCU8_SHADOW_TRANSFER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_SLICE_3 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_3);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SHADOW);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SHADOW);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SHADOW);
 	}
 }
 
@@ -202,7 +204,7 @@ void led_init_v2(void) {
 }
 
 void led_init_v3(void) {
-	const XMC_CCU8_SLICE_COMPARE_CONFIG_t compare_config = {
+	XMC_CCU8_SLICE_COMPARE_CONFIG_t compare_config = {
 		.timer_mode          = XMC_CCU8_SLICE_TIMER_COUNT_MODE_EA,
 		.monoshot            = false,
 		.shadow_xfer_clear   = 0,
@@ -219,10 +221,26 @@ void led_init_v3(void) {
 		.timer_concatenation = 0
 	};
 
-	XMC_CCU8_Init(EVSE_V3_LED_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-	XMC_CCU8_StartPrescaler(EVSE_V3_LED_CCU);
+	XMC_CCU8_Init(EVSE_V3_LED_R_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_Init(EVSE_V3_LED_G_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_Init(EVSE_V3_LED_B_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_R_CCU);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_G_CCU);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_B_CCU);
+	compare_config.passive_level_out0 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_R_PASSIVE_LEVEL;
 	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_R_SLICE, &compare_config);
+	compare_config.passive_level_out0 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_G_PASSIVE_LEVEL;
 	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_G_SLICE, &compare_config);
+	compare_config.passive_level_out0 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_B_PASSIVE_LEVEL;
 	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_B_SLICE, &compare_config);
 
 	// Set the period and compare register values
@@ -233,11 +251,24 @@ void led_init_v3(void) {
 	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
 	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
 
-	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_CCU, XMC_CCU8_SHADOW_TRANSFER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 | XMC_CCU8_SHADOW_TRANSFER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_2 | XMC_CCU8_SHADOW_TRANSFER_SLICE_3 | XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_3);
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SHADOW);
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SHADOW);
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SHADOW);
 
-	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_R_SLICE_NUMBER);
-	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_G_SLICE_NUMBER);
-	XMC_CCU8_EnableClock(EVSE_V3_LED_CCU, EVSE_V3_LED_B_SLICE_NUMBER);
+	XMC_GPIO_CONFIG_t gpio_out_config = {
+		.mode                = EVSE_V3_LED_R_ALT,
+		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
+		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
+	};
+    XMC_GPIO_Init(EVSE_V3_LED_R_PIN, &gpio_out_config);
+	gpio_out_config.mode = EVSE_V3_LED_G_ALT;
+    XMC_GPIO_Init(EVSE_V3_LED_G_PIN, &gpio_out_config);
+	gpio_out_config.mode = EVSE_V3_LED_B_ALT;
+    XMC_GPIO_Init(EVSE_V3_LED_B_PIN, &gpio_out_config);
+
+	XMC_CCU8_EnableClock(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SLICE_NUMBER);
 	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_R_SLICE);
 	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_G_SLICE);
 	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_B_SLICE);
