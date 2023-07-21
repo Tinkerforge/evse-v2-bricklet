@@ -218,9 +218,9 @@ void adc_init_adc(void) {
 	const XMC_VADC_BACKGROUND_CONFIG_t adc_background_config = {
 		.conv_start_mode   = XMC_VADC_STARTMODE_CIR,       // Conversion start mode selected as cancel inject repeat
 		.req_src_priority  = XMC_VADC_GROUP_RS_PRIORITY_1, // Priority of the Background request source in the VADC module
-		.trigger_signal    = XMC_VADC_REQ_TR_A, // If Trigger needed then this denotes the Trigger signal
+		.trigger_signal    = hardware_version.is_v2 ?  XMC_VADC_REQ_TR_A : XMC_VADC_REQ_TR_C, // If Trigger needed then this denotes the Trigger signal
 		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
-		.gate_signal       = XMC_VADC_REQ_GT_A, // If Gating needed then this denotes the Gating signal
+		.gate_signal       = hardware_version.is_v2 ?  XMC_VADC_REQ_GT_A : XMC_VADC_REQ_GT_C, // If Gating needed then this denotes the Gating signal
 		.timer_mode        = 0,							   // Timer Mode Disabled
 		.external_trigger  = 1,                            // Trigger is Enabled
 		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled

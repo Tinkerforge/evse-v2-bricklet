@@ -46,6 +46,8 @@
 
 #define IS_CHARGER
 
+#define HAS_HARDWARE_VERSION
+
 // #define EVSE_LOCK_ENABLE
 
 #include "config_custom_bootloader.h"

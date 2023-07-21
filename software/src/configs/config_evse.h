@@ -32,9 +32,7 @@
 #define EVSE_MOTOR_FAULT_PIN           P0_1
 #define EVSE_MOTOR_INPUT_SWITCH_PIN    P1_1
 
-#define EVSE_V2_CP_PWM_SLICE_NUMBER       0
-#define EVSE_V3_CP_PWM_SLICE_NUMBER       0 // TODO
-
+#define EVSE_CP_PWM_SLICE_NUMBER          0
 
 #define EVSE_CP_PWM_PIN_NUM               4
 #define EVSE_CP_DISCONNECT_PIN_NUM        5
@@ -70,5 +68,5 @@
 #define EVSE_V3_SHUTDOWN_PIN              P4_6
 #define EVSE_V3_CONFIG_JUMPER_PIN0        P4_5
 #define EVSE_V3_CONFIG_JUMPER_PIN1        P2_9
-#define EVSE_V3_CONTACTOR_PIN             P1_6 // TODO: Contactor 0 or 1 the correct one here?
+#define EVSE_V3_CONTACTOR_PIN             P1_6 // TODO: Contactor 0 or 1 the correct one here? P1_5 and P1_6 is used
 #endif

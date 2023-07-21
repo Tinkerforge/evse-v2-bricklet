@@ -24,8 +24,10 @@
 
 #include "xmc_ccu4.h"
 
-#define TIMER_CCU      CCU41
-#define TIMER_CCU_CC40 CCU41_CC40
-#define TIMER_CCU_CC41 CCU41_CC41
+#include "hardware_version.h"
+
+#define TIMER_CCU      (hardware_version.is_v2 ? CCU41 : CCU40)
+#define TIMER_CCU_CC40 (hardware_version.is_v2 ? CCU41_CC40 : CCU40_CC40)
+#define TIMER_CCU_CC41 (hardware_version.is_v2 ? CCU41_CC41 : CCU40_CC41)
 
 #endif
