@@ -575,7 +575,7 @@ void evse_init(void) {
 
 
 	if(hardware_version.is_v2) {
-		evse_v3_init_cp_pwm();
+		evse_v2_init_cp_pwm();
 		// Support for lock switch motor and input pin only in EVSE V2 
 		XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
 		XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,        &pin_config_output_low);
