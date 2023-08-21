@@ -96,7 +96,7 @@
 - Add "time_since_dc_fault_check" parameter to "get_low_level_state" function
 - Reset timeout counter when meter is found for the first time (through bricklib)
 
-2023-XX-XX: 2.1.14 (TBD)
+2023-08-21: 2.1.14 (61003a7)
 - Don't check for DC fault when contactor is turned off
 - Fix read of stored startup value of boost mode
 - Wait for at least 30 seconds until contactor is turned on again after state D
