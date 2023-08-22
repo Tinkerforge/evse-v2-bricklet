@@ -100,4 +100,4 @@
 - Don't check for DC fault when contactor is turned off
 - Fix read of stored startup value of boost mode
 - Wait for at least 30 seconds until contactor is turned on again after state D
-- Wait for at least 5 seconds until contactor is tunred on again after charging was stopped
+- Wait for at least 5 seconds until contactor is turned on again after charging was stopped
