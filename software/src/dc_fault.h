@@ -43,6 +43,7 @@ typedef struct {
     bool error;
 
     bool     calibration_start;
+    bool     calibration_start_external;
     bool     calibration_running;
     uint8_t  calibration_state;
     uint32_t calibration_time;
@@ -54,5 +55,6 @@ extern DCFault dc_fault;
 
 void dc_fault_init(void);
 void dc_fault_tick(void);
+void dc_fault_calibration_reset(void);
 
 #endif

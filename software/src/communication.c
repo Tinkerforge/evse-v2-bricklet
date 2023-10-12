@@ -42,6 +42,7 @@
 #include "dc_fault.h"
 #include "charging_slot.h"
 #include "hardware_version.h"
+#include "phase_control.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -87,6 +88,9 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_BOOST_MODE: return get_boost_mode(message, response);
 		case FID_TRIGGER_DC_FAULT_TEST: return trigger_dc_fault_test(message, response);
 		case FID_SET_GP_OUTPUT: return set_gp_output(message);
+		case FID_GET_TEMPERATURE: return get_temperature(message, response);
+		case FID_SET_PHASE_CONTROL: return set_phase_control(message);
+		case FID_GET_PHASE_CONTROL: return get_phase_control(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -380,8 +384,17 @@ BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEn
 }
 
 BootloaderHandleMessageResponse reset_dc_fault_current_state(const ResetDCFaultCurrentState *data) {
+	// TODO: Only do dc fault reset if currently no calibration running
 	if(data->password == 0xDC42FA23) {
+		// Set back dc fault state to normal
 		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
+
+		// Completely reset dc fault calibration state
+		dc_fault.calibration_running = false;
+		dc_fault_calibration_reset();
+
+		// Immediately start a new dc fault calibration (to go back to error state in case of a defective dc fault sensor)
+		dc_fault.calibration_start = true;
 		led_set_on(false);
 	}
 
@@ -440,6 +453,9 @@ BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data) {
 BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, GetIndicatorLED_Response *response) {
 	response->header.length = sizeof(GetIndicatorLED_Response);
 	response->indication    = led.api_indication;
+	response->color_h       = led.set_h;
+	response->color_s       = led.set_s;
+	response->color_v       = led.set_v;
 	if((led.api_duration == 0) || system_timer_is_time_elapsed_ms(led.api_start, led.api_duration)) {
 		response->duration  = 0;
 	} else {
@@ -456,9 +472,40 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 
 	response->header.length = sizeof(SetIndicatorLED_Response);
 
+	led.set_h = data->color_h;
+	led.set_s = data->color_s;
+	led.set_v = data->color_v;
+
+	if(hardware_version.is_v2) {
+		led.h = LED_HUE_BLUE;
+		led.s = 255;
+		led.v = 255;
+	} else if(hardware_version.is_v3) {
+		if(data->color_v == 0) {
+			led.s = 255;
+			led.v = 255;
+			if(data->indication == 1001) {
+				led.h = LED_HUE_OK;
+			} else if(data->indication == 1002) {
+				led.h = LED_HUE_ERROR;
+			} else if(data->indication == 1003) {
+				led.h = LED_HUE_STANDARD;
+			} else if((data->indication > 2000) && (data->indication < 2011)) {
+				led.h = LED_HUE_ORANGE;
+			} else {
+				led.h = LED_HUE_STANDARD;
+			}
+		} else {
+			led.h = data->color_h;
+			led.s = data->color_s;
+			led.v = data->color_v;
+		}
+	}
+
 	// If the state and indication stays the same we just update the duration
 	// This way the animation does not become choppy
 	if((led.state == LED_STATE_API) && (led.api_indication == data->indication)) {
+
 		led.api_duration = data->duration;
 		led.api_start    = system_timer_get_ms();
 		response->status = 0;
@@ -468,7 +515,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 	// Otherwise we reset the current animation and start the new one
 	if((led.state == LED_STATE_OFF) || (led.state == LED_STATE_ON) || (led.state == LED_STATE_API)) {
 		response->status     = 0;
-
+	
 		led.api_ack_counter  = 0;
 		led.api_ack_index    = 0;
 		led.api_ack_time     = 0;
@@ -692,6 +739,38 @@ BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data) {
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
+BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetTemperature_Response *response) {
+	response->header.length = sizeof(GetTemperature_Response);
+	if(hardware_version.is_v2) {
+		response->temperature = 0;
+	} else {
+		response->temperature = 0; // TODO
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data) {
+	if(!((data->phases == 1) || (data->phases == 3))) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(hardware_version.is_v3) {
+		phase_control.requested = data->phases;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response) {
+	response->header.length    = sizeof(GetPhaseControl_Response);
+	response->phases_current   = phase_control.current;
+	response->phases_requested = phase_control.requested;
+	response->phases_status    = phase_control.status;
+
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
 
 void communication_tick(void) {
 //	communication_callback_tick();

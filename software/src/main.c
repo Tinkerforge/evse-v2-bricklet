@@ -41,6 +41,7 @@
 #include "dc_fault.h"
 #include "charging_slot.h"
 #include "hardware_version.h"
+#include "phase_control.h"
 
 int main(void) {
 	logging_init();
@@ -59,6 +60,7 @@ int main(void) {
 	dc_fault_init();
 	rs485_init();
 	sdm_init();
+	phase_control_init();
 
 	while(true) {
 		bootloader_tick();
@@ -73,5 +75,6 @@ int main(void) {
 		rs485_tick();
 		sdm_tick();
 		charging_slot_tick();
+		phase_control_tick();
 	}
 }

@@ -40,9 +40,7 @@
 
 DCFault dc_fault;
 
-void dc_fault_init(void) {
-	memset(&dc_fault, 0, sizeof(DCFault));
-
+void dc_fault_init_pins(void) {
 	const XMC_GPIO_CONFIG_t pin_config_output_high = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
 		.output_level     = XMC_GPIO_OUTPUT_LEVEL_HIGH
@@ -57,6 +55,11 @@ void dc_fault_init(void) {
 	XMC_GPIO_Init(DC_FAULT_X6_PIN,  &pin_config_input);
 	XMC_GPIO_Init(DC_FAULT_X30_PIN, &pin_config_input);
 	XMC_GPIO_Init(DC_FAULT_ERR_PIN, &pin_config_input);
+}
+
+void dc_fault_init(void) {
+	memset(&dc_fault, 0, sizeof(DCFault));
+	dc_fault_init_pins();
 }
 
 void dc_fault_update_values(void) {
@@ -106,6 +109,12 @@ void dc_fault_calibration_reset(void) {
 	dc_fault.calibration_check[0] = false;
 	dc_fault.calibration_check[1] = false;
 	dc_fault.calibration_check[2] = false;
+	dc_fault.x6                   = false;
+	dc_fault.x30                  = false;
+	dc_fault.error                = false;
+
+	// Set calibration pins back to default
+	dc_fault_init_pins();
 }
 
 void dc_fault_calibration_tick(void) {

@@ -57,6 +57,10 @@ void communication_init(void);
 #define EVSE_V2_CONTACTOR_STATE_AC1_LIVE_AC2_NLIVE 1
 #define EVSE_V2_CONTACTOR_STATE_AC1_NLIVE_AC2_LIVE 2
 #define EVSE_V2_CONTACTOR_STATE_AC1_LIVE_AC2_LIVE 3
+#define EVSE_V2_CONTACTOR_STATE_CONTACTOR1_OFF_CONTACTOR2_OFF 4
+#define EVSE_V2_CONTACTOR_STATE_CONTACTOR1_ON_CONTACTOR2_OFF 5
+#define EVSE_V2_CONTACTOR_STATE_CONTACTOR1_OFF_CONTACTOR2_ON 6
+#define EVSE_V2_CONTACTOR_STATE_CONTACTOR1_ON_CONTACTOR2_ON 7
 
 #define EVSE_V2_LOCK_STATE_INIT 0
 #define EVSE_V2_LOCK_STATE_OPEN 1
@@ -185,6 +189,9 @@ void communication_init(void);
 #define FID_GET_BOOST_MODE 35
 #define FID_TRIGGER_DC_FAULT_TEST 36
 #define FID_SET_GP_OUTPUT 37
+#define FID_GET_TEMPERATURE 38
+#define FID_SET_PHASE_CONTROL 39
+#define FID_GET_PHASE_CONTROL 40
 
 
 typedef struct {
@@ -384,12 +391,18 @@ typedef struct {
 	TFPMessageHeader header;
 	int16_t indication;
 	uint16_t duration;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 } __attribute__((__packed__)) GetIndicatorLED_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	int16_t indication;
 	uint16_t duration;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 } __attribute__((__packed__)) SetIndicatorLED;
 
 typedef struct {
@@ -545,6 +558,31 @@ typedef struct {
 	uint8_t gp_output;
 } __attribute__((__packed__)) SetGPOutput;
 
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetTemperature;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t temperature;
+} __attribute__((__packed__)) GetTemperature_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t phases;
+} __attribute__((__packed__)) SetPhaseControl;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetPhaseControl;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t phases_current;
+	uint8_t phases_requested;
+	uint8_t phases_status;
+} __attribute__((__packed__)) GetPhaseControl_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -584,6 +622,9 @@ BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data);
 BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response);
 BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response);
 BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data);
+BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetTemperature_Response *response);
+BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data);
+BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response);
 
 // Callbacks
 
