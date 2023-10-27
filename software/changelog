@@ -101,9 +101,12 @@
 - Start immediate DC fault sensor re-calibration after dc fault reset (to go back to error state in case of a defective sensor)
 - Fix read of stored startup value of boost mode
 - Wait for at least 30 seconds until contactor is turned on again after state D
-- Wait for at least 5 seconds until contactor is tunred on again after charging was stopped
-- Add support for RGB LED
-- Add support for phase control
-- Add API for temperature sensor
+- Wait for at least 5 seconds until contactor is turned on again after charging was stopped
+
+TBD: 2.2.0 (TBD)
+- First release with WARP3 support
+- Add support for RGB LED (WARP3)
+- Add support for phase control (WARP3)
+- Add API for temperature sensor (WARP3)
 - Improve diode detection
 - Use new unified meter implementation from bricklib2
