@@ -28,7 +28,7 @@
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/warp/rs485.h"
-#include "bricklib2/warp/sdm.h"
+#include "bricklib2/warp/meter.h"
 #include "bricklib2/warp/contactor_check.h"
 #include "communication.h"
 
@@ -59,7 +59,7 @@ int main(void) {
 	adc_init();
 	dc_fault_init();
 	rs485_init();
-	sdm_init();
+	meter_init();
 	phase_control_init();
 
 	while(true) {
@@ -73,7 +73,7 @@ int main(void) {
 		evse_tick();
 		dc_fault_tick();
 		rs485_tick();
-		sdm_tick();
+		meter_tick();
 		charging_slot_tick();
 		phase_control_tick();
 	}

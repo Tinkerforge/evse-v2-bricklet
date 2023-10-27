@@ -29,7 +29,7 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/bootloader/bootloader.h"
-#include "bricklib2/warp/sdm.h"
+#include "bricklib2/warp/meter.h"
 #include "bricklib2/warp/contactor_check.h"
 
 #include "adc.h"
@@ -163,11 +163,11 @@ void evse_load_config(void) {
 	// We initialize the config data with sane default values.
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
 		evse.legacy_managed               = false;
-		sdm.relative_energy.f             = 0.0f;
+		meter.relative_energy.f           = 0.0f;
 		evse.shutdown_input_configuration = EVSE_V2_SHUTDOWN_INPUT_IGNORED;
 	} else {
 		evse.legacy_managed               = page[EVSE_CONFIG_MANAGED_POS];
-		sdm.relative_energy.data          = page[EVSE_CONFIG_REL_ENERGY_POS];
+		meter.relative_energy.data        = page[EVSE_CONFIG_REL_ENERGY_POS];
 		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
@@ -217,7 +217,7 @@ void evse_load_config(void) {
 
 	logd("Load config:\n\r");
 	logd(" * legacy managed    %d\n\r", evse.legacy_managed);
-	logd(" * relener           %d\n\r", sdm.relative_energy.data);
+	logd(" * relener           %d\n\r", meter.relative_energy.data);
 	logd(" * shutdown input    %d\n\r", evse.shutdown_input_configuration);
 	logd(" * slot current      %d %d %d %d %d %d %d %d", charging_slot.max_current_default[0], charging_slot.max_current_default[1], charging_slot.max_current_default[2], charging_slot.max_current_default[3], charging_slot.max_current_default[4], charging_slot.max_current_default[5], charging_slot.max_current_default[6], charging_slot.max_current_default[7]);
 	logd(" * slot active/clear %d %d %d %d %d %d %d %d", charging_slot.clear_on_disconnect_default[0], charging_slot.clear_on_disconnect_default[1], charging_slot.clear_on_disconnect_default[2], charging_slot.clear_on_disconnect_default[3], charging_slot.clear_on_disconnect_default[4], charging_slot.clear_on_disconnect_default[5], charging_slot.clear_on_disconnect_default[6], charging_slot.clear_on_disconnect_default[7]);
@@ -229,13 +229,13 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_MAGIC_POS]          = EVSE_CONFIG_MAGIC;
 	page[EVSE_CONFIG_MANAGED_POS]        = evse.legacy_managed;
 	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS] = evse.shutdown_input_configuration;
-	if(sdm.reset_energy_meter) {
-		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm_register_fast.absolute_energy.data;
-		sdm.relative_energy.data         = sdm_register_fast.absolute_energy.data;
+	if(meter.reset_energy_meter) {
+		page[EVSE_CONFIG_REL_ENERGY_POS] = meter_register_set.total_kwh_sum.data;
+		meter.relative_energy.data       = meter_register_set.total_kwh_sum.data;
 	} else {
-		page[EVSE_CONFIG_REL_ENERGY_POS] = sdm.relative_energy.data;
+		page[EVSE_CONFIG_REL_ENERGY_POS] = meter.relative_energy.data;
 	}
-	sdm.reset_energy_meter = false;
+	meter.reset_energy_meter = false;
 
 	page[EVSE_CONFIG_MAGIC2_POS]         = EVSE_CONFIG_MAGIC2;
 	page[EVSE_CONFIG_INPUT_POS]          = evse.input_configuration;

@@ -27,7 +27,7 @@
 #include "bricklib2/hal/ccu4_pwm/ccu4_pwm.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/utility/util_definitions.h"
-#include "bricklib2/warp/sdm.h"
+#include "bricklib2/warp/meter.h"
 #include "bricklib2/warp/rs485.h"
 #include "bricklib2/warp/contactor_check.h"
 
@@ -129,14 +129,20 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	response->jumper_configuration  = evse.config_jumper_current;
 	response->has_lock_switch       = evse.has_lock_switch;
 	response->evse_version          = hardware_version.is_v2 ? 20 : 30;
-	if(!sdm.each_value_read_once) {
+	
+	if(!meter.each_value_read_once) {
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
-	} else if(sdm.meter_type == SDM_METER_TYPE_UNKNOWN) {
-		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
-	} else if(sdm.meter_type == SDM_METER_TYPE_SDM72V2) {
-		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72V2;
 	} else {
-		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630;
+		switch(meter.type) {
+			case METER_TYPE_UNKNOWN:     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+			case METER_TYPE_UNSUPPORTED: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+			case METER_TYPE_SDM630:      response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630; break;
+			case METER_TYPE_SDM72V2:     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72V2; break;
+			case METER_TYPE_SDM72CTM:    response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72CTM; break;
+			case METER_TYPE_SDM630MCTV2: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2; break;
+			case METER_TYPE_DSZ15DZMOD:  response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD; break;
+			default:                     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+		}
 	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
@@ -327,15 +333,15 @@ BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotD
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
 	response->header.length    = sizeof(GetEnergyMeterValues_Response);
-	response->power            = sdm_register_fast.power.f;
-	response->energy_absolute  = sdm_register_fast.absolute_energy.f;
-	response->energy_relative  = sdm_register_fast.absolute_energy.f - sdm.relative_energy.f;
-	response->phases_active[0] = (((sdm_register_fast.current_per_phase[0].f > 0.3f) & sdm.phases_connected[0]) << 0) |
-	                             (((sdm_register_fast.current_per_phase[1].f > 0.3f) & sdm.phases_connected[1]) << 1) |
-	                             (((sdm_register_fast.current_per_phase[2].f > 0.3f) & sdm.phases_connected[2]) << 2);
-	response->phases_connected[0] = (sdm.phases_connected[0] << 0) |
-	                                (sdm.phases_connected[1] << 1) |
-	                                (sdm.phases_connected[2] << 2);
+	response->power            = meter_register_set.total_system_power.f;
+	response->energy_absolute  = meter_register_set.total_kwh_sum.f;
+	response->energy_relative  = meter_register_set.total_kwh_sum.f - meter.relative_energy.f;
+	response->phases_active[0] = (((meter_register_set.current[0].f > 0.3f) & meter.phases_connected[0]) << 0) |
+	                             (((meter_register_set.current[1].f > 0.3f) & meter.phases_connected[1]) << 1) |
+	                             (((meter_register_set.current[2].f > 0.3f) & meter.phases_connected[2]) << 2);
+	response->phases_connected[0] = (meter.phases_connected[0] << 0) |
+	                                (meter.phases_connected[1] << 1) |
+	                                (meter.phases_connected[2] << 2);
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -350,7 +356,7 @@ BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetA
 	const uint16_t start = packet_payload_index * packet_length;
 	const uint16_t end = MIN(start + packet_length, max_end);
 	const uint16_t copy_num = end-start;
-	uint8_t *copy_from = (uint8_t*)&sdm_register;
+	uint8_t *copy_from = (uint8_t*)&meter_register_set;
 
 	response->values_chunk_offset = start/4;
 	memcpy(response->values_chunk_data, &copy_from[start], copy_num);
@@ -377,7 +383,7 @@ BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErro
 }
 
 BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEnergyMeterRelativeEnergy *data) {
-	sdm.reset_energy_meter = true;
+	meter.reset_energy_meter = true;
 	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;

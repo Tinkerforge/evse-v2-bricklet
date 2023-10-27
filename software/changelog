@@ -106,3 +106,4 @@
 - Add support for phase control
 - Add API for temperature sensor
 - Improve diode detection
+- Use new unified meter implementation from bricklib2

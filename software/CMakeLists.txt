@@ -44,7 +44,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/modbus.c"
-	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/sdm.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/uartbb/uartbb.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/system_timer/system_timer.c"
@@ -100,3 +100,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/bricklib2/cmake/configs/config_comcu_add
 
 # add preprocessor defines
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/bricklib2/cmake/configs/config_xmc1_add_preprocessor_defines.txt)
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf -lm) # Use lib math (sqrt etc)
+ADD_DEFINITIONS(-DARM_MATH_CM0) # Use CMSIS DSP math support
