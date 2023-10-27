@@ -33,10 +33,13 @@
 #define ADC_NUM 5
 
 #define ADC_CHANNEL_VCP1 0
-#define ADC_CHANNEL_VPP  1
-#define ADC_CHANNEL_VCP2 2
+#define ADC_CHANNEL_VCP2 1
+#define ADC_CHANNEL_VPP  2
 #define ADC_CHANNEL_V12P 3
 #define ADC_CHANNEL_V12M 4
+
+#define ADC_POSITIVE_MEASUREMENT 0
+#define ADC_NEGATIVE_MEASUREMENT 1
 
 typedef struct {
     // Pin
@@ -54,8 +57,8 @@ typedef struct {
 	uint64_t result_sum[2];
 	uint32_t result_count[2];
 	int64_t result[2];
-
 	int32_t result_mv[2];
+	uint8_t result_index[2];
 
 	uint8_t ignore_count;
 

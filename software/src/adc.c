@@ -356,11 +356,11 @@ void adc_check_result(const uint8_t i) {
 	if(result & (1 << 31)) {
 		uint16_t r = result & 0xFFFF;
 		if((i <= 1) && (r < 2048)) {
-			adc[i].result_sum[1] += r;
-			adc[i].result_count[1]++;
+			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT] += r;
+			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT]++;
 		} else {
-			adc[i].result_sum[0] += r;
-			adc[i].result_count[0]++;
+			adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] += r;
+			adc[i].result_count[ADC_POSITIVE_MEASUREMENT]++;
 		}
 
 		if(i == 0) {
@@ -378,21 +378,23 @@ void adc_check_result(const uint8_t i) {
 }
 
 void adc_check_count(const uint8_t i) {
-	if(i <= 1) {
-		if(adc[i].result_count[1] >= 50) {
-			adc[i].result_mv[1]    = (adc[i].result[1]*600*3300/4095-990*1000)/75;
+	if(i <= ADC_CHANNEL_VCP2) {
+		if(adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] >= 50) {
+			adc[i].result_mv[ADC_NEGATIVE_MEASUREMENT]    = (adc[i].result[ADC_NEGATIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
 
-			adc[i].result[1]       = adc[i].result_sum[1]/adc[i].result_count[1];
-			adc[i].result_sum[1]   = 0;
-			adc[i].result_count[1] = 0;
+			adc[i].result[ADC_NEGATIVE_MEASUREMENT]       = adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]/adc[i].result_count[ADC_NEGATIVE_MEASUREMENT];
+			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]   = 0;
+			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] = 0;
+
+			adc[i].result_index[ADC_NEGATIVE_MEASUREMENT]++;
 		}
 	}
 
-	if(adc[i].result_count[0] >= 50) {
-		adc[i].result[0] = adc[i].result_sum[0]/adc[i].result_count[0];
+	if(adc[i].result_count[ADC_POSITIVE_MEASUREMENT] >= 50) {
+		adc[i].result[ADC_POSITIVE_MEASUREMENT] = adc[i].result_sum[ADC_POSITIVE_MEASUREMENT]/adc[i].result_count[ADC_POSITIVE_MEASUREMENT];
 
-		adc[i].result_sum[0] = 0;
-		adc[i].result_count[0] = 0;
+		adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] = 0;
+		adc[i].result_count[ADC_POSITIVE_MEASUREMENT] = 0;
 
 		// Return if ADC count counter > 0
 		if(adc[i].ignore_count > 0) {
@@ -400,41 +402,43 @@ void adc_check_count(const uint8_t i) {
 			return;
 		}
 
+		adc[i].result_index[ADC_POSITIVE_MEASUREMENT]++;
+
 		//uint32_t new_time = system_timer_get_ms();
 
-		if(i == 2) { // PP/PE
-			adc[i].result_mv[0] = adc[i].result[0]*3300/4095;
+		if(i == ADC_CHANNEL_VPP) { // PP/PE
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*3300/4095;
 
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
-			const uint32_t divisor = 5000*2 - adc[2].result_mv[0]*(1+2);
+			const uint32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
 			if(divisor == 0) {
 				adc_result.pp_pe_resistance = 0xFFFFFFFF;
 			} else {
-				adc_result.pp_pe_resistance = 1000*2*adc[2].result_mv[0]/divisor;
+				adc_result.pp_pe_resistance = 1000*2*adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]/divisor;
 				if(adc_result.pp_pe_resistance > 10000) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
 			}
-		} else if(i == 3) { // +12V rail
-			adc[i].result_mv[0] = adc[i].result[0]*4*3300/4095;
+		} else if(i == ADC_CHANNEL_V12P) { // +12V rail
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*4*3300/4095;
 		} else {
-			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/75;
-			if(i == 1) {
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = (adc[i].result[ADC_POSITIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
+			if(i == ADC_CHANNEL_VCP2) {
 				adc_result.resistance_counter++;
 
 				// resistance divider, 910 ohm on EVSE
 				// diode voltage drop 650mV (value is educated guess)
-				if(adc[0].result_mv[0] <= adc[1].result_mv[0]) {
+				if(adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] <= adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT]) {
 					adc_result.cp_pe_resistance = 0xFFFFFFFF;
 				} else {
-					const uint32_t divisor = adc[0].result_mv[0] - adc[1].result_mv[0];
-					adc_result.cp_pe_resistance = 910*(adc[1].result_mv[0] - ADC_DIODE_DROP)/divisor;
+					const uint32_t divisor = adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT];
+					adc_result.cp_pe_resistance = 910*(adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT] - ADC_DIODE_DROP)/divisor;
 					if(adc_result.cp_pe_resistance > 32000) {
 						adc_result.cp_pe_resistance = 0xFFFFFFFF;
 					}
 				}
 			}
-		};
+		}
 	}
 }
 

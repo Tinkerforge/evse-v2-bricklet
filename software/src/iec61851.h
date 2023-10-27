@@ -64,6 +64,13 @@ typedef struct {
 	uint32_t last_state_change;
 
 	uint8_t diode_error_counter;
+	uint8_t diode_ok_counter;
+	bool diode_check_pending;
+	uint16_t diode_vcp1_last_count;
+	uint16_t diode_vcp2_last_count;
+	uint8_t diode_vcp1_seen;
+	uint8_t diode_vcp2_seen;
+
 	uint32_t last_error_time;
 	uint32_t last_state_c_end_time;
 

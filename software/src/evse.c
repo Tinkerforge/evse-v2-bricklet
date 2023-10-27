@@ -110,6 +110,11 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		}
 
 		if(contactor) {
+			// If we are asked to turn the contactor on, we first wait for the diode check to finish
+			if(iec61851.diode_check_pending) {
+				return;
+			}
+
 			// If we are asked to turn the contactor on, we want to see at least two adc measurements in a row
 			// that supports this conclusion.
 			// To do this the ADC code increaes a counter every time a new CP/PE resistance is saved.
