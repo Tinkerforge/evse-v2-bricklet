@@ -41,7 +41,8 @@
 #define EVSE_SHUTDOWN_PIN_NUM             8
 #define EVSE_CONFIG_JUMPER_PIN0_NUM       9
 #define EVSE_CONFIG_JUMPER_PIN1_NUM       10
-#define EVSE_CONTACTOR_PIN_NUM            11 // TODO: second contactor pin for v3
+#define EVSE_CONTACTOR_PIN_NUM            11
+#define EVSE_PHASE_SWITCH_PIN_NUM         12
 
 #define EVSE_CP_PWM_PIN                   hardware_version_get_port(EVSE_CP_PWM_PIN_NUM),         hardware_version_get_pin(EVSE_CP_PWM_PIN_NUM)
 #define EVSE_CP_DISCONNECT_PIN            hardware_version_get_port(EVSE_CP_DISCONNECT_PIN_NUM),  hardware_version_get_pin(EVSE_CP_DISCONNECT_PIN_NUM)
@@ -51,6 +52,7 @@
 #define EVSE_CONFIG_JUMPER_PIN0           hardware_version_get_port(EVSE_CONFIG_JUMPER_PIN0_NUM), hardware_version_get_pin(EVSE_CONFIG_JUMPER_PIN0_NUM)
 #define EVSE_CONFIG_JUMPER_PIN1           hardware_version_get_port(EVSE_CONFIG_JUMPER_PIN1_NUM), hardware_version_get_pin(EVSE_CONFIG_JUMPER_PIN1_NUM)
 #define EVSE_CONTACTOR_PIN                hardware_version_get_port(EVSE_CONTACTOR_PIN_NUM),      hardware_version_get_pin(EVSE_CONTACTOR_PIN_NUM)
+#define EVSE_PHASE_SWITCH_PIN             hardware_version_get_port(EVSE_PHASE_SWITCH_PIN_NUM),   hardware_version_get_pin(EVSE_PHASE_SWITCH_PIN_NUM)
 
 #define EVSE_V2_CP_PWM_PIN                P1_0
 #define EVSE_V2_CP_DISCONNECT_PIN         P1_4
@@ -60,6 +62,7 @@
 #define EVSE_V2_CONFIG_JUMPER_PIN0        P0_5
 #define EVSE_V2_CONFIG_JUMPER_PIN1        P0_0
 #define EVSE_V2_CONTACTOR_PIN             P1_2
+#define EVSE_V2_PHASE_SWITCH_PIN          NULL, 0 // Not available
 
 #define EVSE_V3_CP_PWM_PIN                P1_4
 #define EVSE_V3_CP_DISCONNECT_PIN         P4_4
@@ -68,5 +71,7 @@
 #define EVSE_V3_SHUTDOWN_PIN              P4_6
 #define EVSE_V3_CONFIG_JUMPER_PIN0        P4_5
 #define EVSE_V3_CONFIG_JUMPER_PIN1        P2_9
-#define EVSE_V3_CONTACTOR_PIN             P1_6 // TODO: Contactor 0 or 1 the correct one here? P1_5 and P1_6 is used
+#define EVSE_V3_CONTACTOR_PIN             P1_6
+#define EVSE_V3_PHASE_SWITCH_PIN          P1_5
+
 #endif

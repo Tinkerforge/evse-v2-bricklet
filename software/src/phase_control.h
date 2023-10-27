@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
  * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * configphase_control.c: Config for control switching between 1- and 3-phase
+ * phase_control.h: Control switching between 1- and 3-phase
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONFIG_PHASE_CONTROL_H
-#define CONFIG_PHASE_CONTROL_H
+#ifndef PHASE_CONTROL_H
+#define PHASE_CONTROL_H
 
-#include "xmc_gpio.h"
+#include <stdint.h>
+
+typedef struct {
+    uint8_t current;
+    uint8_t requested;
+    uint8_t status;
+} PhaseControl;
+
+extern PhaseControl phase_control;
+
+void phase_control_init(void);
+void phase_control_tick(void);
 
 #endif
