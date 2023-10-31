@@ -39,6 +39,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/charging_slot.c"
 	"${PROJECT_SOURCE_DIR}/src/hardware_version.c"
 	"${PROJECT_SOURCE_DIR}/src/phase_control.c"
+	"${PROJECT_SOURCE_DIR}/src/tmp1075n.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"

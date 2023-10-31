@@ -42,6 +42,7 @@
 #include "charging_slot.h"
 #include "hardware_version.h"
 #include "phase_control.h"
+#include "tmp1075n.h"
 
 int main(void) {
 	logging_init();
@@ -61,6 +62,7 @@ int main(void) {
 	rs485_init();
 	meter_init();
 	phase_control_init();
+	tmp1075n_init();
 
 	while(true) {
 		bootloader_tick();
@@ -76,5 +78,6 @@ int main(void) {
 		meter_tick();
 		charging_slot_tick();
 		phase_control_tick();
+		tmp1075n_tick();
 	}
 }
