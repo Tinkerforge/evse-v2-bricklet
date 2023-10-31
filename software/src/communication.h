@@ -564,7 +564,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint16_t temperature;
+	int16_t temperature;
 } __attribute__((__packed__)) GetTemperature_Response;
 
 typedef struct {

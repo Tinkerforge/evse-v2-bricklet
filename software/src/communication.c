@@ -43,6 +43,7 @@
 #include "charging_slot.h"
 #include "hardware_version.h"
 #include "phase_control.h"
+#include "tmp1075n.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -750,7 +751,7 @@ BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetT
 	if(hardware_version.is_v2) {
 		response->temperature = 0;
 	} else {
-		response->temperature = 0; // TODO
+		response->temperature = tmp1075n.temperature;
 	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
