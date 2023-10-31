@@ -167,6 +167,7 @@ void dc_fault_calibration_tick(void) {
 				} else {
 					// DC faul test/calibration not OK
 					dc_fault.state = DC_FAULT_CALIBRATION;
+					dc_fault.state |= (dc_fault.calibration_check[0] << 3) | (dc_fault.calibration_check[1] << 4) | (dc_fault.calibration_check[2] << 5);
 				}
 
 				dc_fault.calibration_running = false;
@@ -217,6 +218,8 @@ void dc_fault_tick(void) {
 	} else {
 		dc_fault.state = DC_FAULT_UNKOWN;
 	}
+
+	dc_fault.state |= (dc_fault.x6 << 3) | (dc_fault.x30 << 4) | (dc_fault.error << 5);
 
 	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
 		dc_fault.last_fault_time = system_timer_get_ms();
