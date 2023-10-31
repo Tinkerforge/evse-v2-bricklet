@@ -208,7 +208,9 @@ void dc_fault_tick(void) {
 	if(!dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) {
 		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
 		dc_fault.last_fault_time = 0;
-	} else if(dc_fault.x6 && dc_fault.x30 && !dc_fault.error) {
+	} else if(dc_fault.x6 && dc_fault.x30 && !dc_fault.error) { // X904 module
+		dc_fault.state = DC_FAULT_6MA;
+	} else if(dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) { // X804 module
 		dc_fault.state = DC_FAULT_6MA;
 	} else if(dc_fault.x6 && dc_fault.x30 && dc_fault.error) {
 		dc_fault.state = DC_FAULT_SYSTEM;

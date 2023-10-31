@@ -110,3 +110,5 @@ TBD: 2.2.0 (TBD)
 - Add API for temperature sensor (WARP3)
 - Improve diode detection
 - Use new unified meter implementation from bricklib2
+- Add support for X804 6mA fault current detection
+	This should now show 6mA error for X904 and X804 correctly
