@@ -114,3 +114,4 @@ TBD: 2.2.0 (TBD)
 	This should now show 6mA error for X904 and X804 correctly
 - Add additional debug information to dc fault state
 	Note: Bits 0-2 are unchanged by this, but bits 3-5 are now used (were unused before)
+- Add DC fault sensor type detection

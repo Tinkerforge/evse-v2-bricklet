@@ -153,9 +153,17 @@ void dc_fault_calibration_tick(void) {
 			break;
 		}
 
-		case 4: { // Wait 1s for 6x and 30x to go low again 
-		         // (datasheet says 2030 to 2100ms, we have 2400 in sum)
-			if(system_timer_is_time_elapsed_ms(dc_fault.calibration_time, 1000)) {
+		case 4: { // Wait 400ms. With sensor X804 errror pin goes high, with sensor X904 error pin stays low
+			if(system_timer_is_time_elapsed_ms(dc_fault.calibration_time, 400)) {
+				dc_fault.sensor_type = XMC_GPIO_GetInput(DC_FAULT_ERR_PIN) ? DC_FAULT_SENSOR_X804 : DC_FAULT_SENSOR_X904;
+				dc_fault.calibration_time = system_timer_get_ms();
+				dc_fault.calibration_state++;
+			}
+		}
+
+		case 5: { // Wait 1s for 6x and 30x to go low again 
+		         // (datasheet says 2030 to 2100ms, we have 2200 in sum)
+			if(system_timer_is_time_elapsed_ms(dc_fault.calibration_time, 400)) {
 				dc_fault.calibration_check[2] = (!XMC_GPIO_GetInput(DC_FAULT_X6_PIN)) || (!XMC_GPIO_GetInput(DC_FAULT_X30_PIN));
 
 				if(dc_fault.calibration_check[0] && dc_fault.calibration_check[1] && dc_fault.calibration_check[2]) {
@@ -168,6 +176,7 @@ void dc_fault_calibration_tick(void) {
 					// DC faul test/calibration not OK
 					dc_fault.state = DC_FAULT_CALIBRATION;
 					dc_fault.state |= (dc_fault.calibration_check[0] << 3) | (dc_fault.calibration_check[1] << 4) | (dc_fault.calibration_check[2] << 5);
+					dc_fault.state |= dc_fault.sensor_type << 6;
 				}
 
 				dc_fault.calibration_running = false;
@@ -184,7 +193,7 @@ void dc_fault_tick(void) {
 		dc_fault.calibration_start = true;
 	}
 
-	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+	if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		led_set_blinking(EVSE_V2_ERROR_STATE_DC_FAULT);
 		// In case of any dc fault error we don't run the dc fault code anymore.
 		// We never want to accidentially reset back to normal condition 
@@ -220,8 +229,9 @@ void dc_fault_tick(void) {
 	}
 
 	dc_fault.state |= (dc_fault.x6 << 3) | (dc_fault.x30 << 4) | (dc_fault.error << 5);
+	dc_fault.state |= dc_fault.sensor_type << 6;
 
-	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+	if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		dc_fault.last_fault_time = system_timer_get_ms();
 
 		// Ignore all ADC measurements for a while if the contactor is

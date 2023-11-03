@@ -33,8 +33,14 @@ typedef enum {
     DC_FAULT_CALIBRATION
 } DCFaultState;
 
+typedef enum {
+    DC_FAULT_SENSOR_X904 = 0,
+    DC_FAULT_SENSOR_X804 = 1,
+} DCFaultSensorType;
+
 typedef struct {
     DCFaultState state;
+    DCFaultSensorType sensor_type;
     uint32_t last_fault_time;
     uint32_t last_run_time;
 
@@ -48,7 +54,6 @@ typedef struct {
     uint8_t  calibration_state;
     uint32_t calibration_time;
     bool     calibration_check[3];
-
 } DCFault;
 
 extern DCFault dc_fault;

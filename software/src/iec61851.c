@@ -238,7 +238,7 @@ void iec61851_state_ef(void) {
 }
 
 void iec61851_tick(void) {
-	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+	if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		led_set_blinking(3);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if(contactor_check.error != 0) {
