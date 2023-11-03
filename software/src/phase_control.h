@@ -23,16 +23,21 @@
 #define PHASE_CONTROL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct {
     uint8_t current;
     uint8_t requested;
-    uint8_t status;
+
+    bool in_progress;
+    uint8_t progress_state;
+    uint32_t progress_state_time;
 } PhaseControl;
 
 extern PhaseControl phase_control;
 
 void phase_control_init(void);
 void phase_control_tick(void);
+void phase_control_state_phase_change(void);
 
 #endif

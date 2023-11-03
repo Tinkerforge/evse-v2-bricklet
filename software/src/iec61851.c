@@ -38,6 +38,7 @@
 #include "dc_fault.h"
 #include "communication.h"
 #include "charging_slot.h"
+#include "phase_control.h"
 
 IEC61851 iec61851;
 
@@ -307,6 +308,11 @@ void iec61851_tick(void) {
 			} else {
 				return;
 			}
+		}
+
+		if(phase_control.in_progress) {
+			phase_control_state_phase_change();
+			return;
 		}
 
 		// If the CP contact is disconnected we stay in the current IEC state, independend of the measured resistance
