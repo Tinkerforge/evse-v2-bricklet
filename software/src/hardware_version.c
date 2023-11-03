@@ -58,7 +58,7 @@ static const HardwareVersionPortPin hardware_version_v3[] = {
 	{EVSE_V3_CONFIG_JUMPER_PIN0},
 	{EVSE_V3_CONFIG_JUMPER_PIN1},
 	{EVSE_V3_CONTACTOR_PIN},
-	{EVSE_V2_PHASE_SWITCH_PIN}
+	{EVSE_V3_PHASE_SWITCH_PIN}
 };
 
 HardwareVersion hardware_version;
