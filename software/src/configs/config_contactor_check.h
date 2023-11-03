@@ -30,8 +30,9 @@
 #define CONTACTOR_CHECK_RELAY_PIN_IS_INVERTED true
 
 // EVSE V3 (High or low signal from contactor feedback)
-#define CONTACTOR_CHECK_FB1_PIN P2_6 // Feedback contactor 1
-#define CONTACTOR_CHECK_FB2_PIN P2_7 // Feedback contactor 2
+#define CONTACTOR_CHECK_FB1_PIN P2_7 // Feedback contactor 1
+#define CONTACTOR_CHECK_FB2_PIN P2_6 // Feedback contactor 2
+// 50 Hz signal if PE is connected correctly
 #define CONTACTOR_CHECK_PE_PIN  P2_8 // PE check
 
 #endif
