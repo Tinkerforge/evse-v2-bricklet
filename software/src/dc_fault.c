@@ -215,17 +215,32 @@ void dc_fault_tick(void) {
 
 	dc_fault_update_values();
 
-	if(!dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) {
-		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
-		dc_fault.last_fault_time = 0;
-	} else if(dc_fault.x6 && dc_fault.x30 && !dc_fault.error) { // X904 module
-		dc_fault.state = DC_FAULT_6MA;
-	} else if(dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) { // X804 module
-		dc_fault.state = DC_FAULT_6MA;
-	} else if(dc_fault.x6 && dc_fault.x30 && dc_fault.error) {
-		dc_fault.state = DC_FAULT_SYSTEM;
-	} else {
-		dc_fault.state = DC_FAULT_UNKOWN;
+	if(dc_fault.sensor_type == DC_FAULT_SENSOR_X804) {
+		if(!dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_NORMAL_CONDITION;
+			dc_fault.last_fault_time = 0;
+		} else if(dc_fault.x6 && dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_6MA_DC_AND_20MA_AC;
+		} else if(dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_6MA_DC;
+		} else if(!dc_fault.x6 && dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_20MA_AC;
+		} else if(dc_fault.x6 && dc_fault.x30 && dc_fault.error) {
+			dc_fault.state = DC_FAULT_SYSTEM;
+		} else {
+			dc_fault.state = DC_FAULT_UNKOWN;
+		}
+	} else { // DC_FAULT_SENSOR_X904
+		if(!dc_fault.x6 && !dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_NORMAL_CONDITION;
+			dc_fault.last_fault_time = 0;
+		} else if(dc_fault.x6 && dc_fault.x30 && !dc_fault.error) {
+			dc_fault.state = DC_FAULT_6MA_DC;
+		} else if(dc_fault.x6 && dc_fault.x30 && dc_fault.error) {
+			dc_fault.state = DC_FAULT_SYSTEM;
+		} else {
+			dc_fault.state = DC_FAULT_UNKOWN;
+		}
 	}
 
 	dc_fault.state |= (dc_fault.x6 << 3) | (dc_fault.x30 << 4) | (dc_fault.error << 5);
