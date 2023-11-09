@@ -48,50 +48,52 @@
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
 BootloaderHandleMessageResponse handle_message(const void *message, void *response) {
+	const uint8_t length = ((TFPMessageHeader*)message)->length;
+
 	// Restart communication watchdog timer.
 	evse.communication_watchdog_time = system_timer_get_ms();
 
 	switch(tfp_get_fid_from_message(message)) {
-		case FID_GET_STATE: return get_state(message, response);
-		case FID_GET_HARDWARE_CONFIGURATION: return get_hardware_configuration(message, response);
-		case FID_GET_LOW_LEVEL_STATE: return get_low_level_state(message, response);
-		case FID_SET_CHARGING_SLOT: return set_charging_slot(message);
-		case FID_SET_CHARGING_SLOT_MAX_CURRENT: return set_charging_slot_max_current(message);
-		case FID_SET_CHARGING_SLOT_ACTIVE: return set_charging_slot_active(message);
-		case FID_SET_CHARGING_SLOT_CLEAR_ON_DISCONNECT: return set_charging_slot_clear_on_disconnect(message);
-		case FID_GET_CHARGING_SLOT: return get_charging_slot(message, response);
-		case FID_GET_ALL_CHARGING_SLOTS: return get_all_charging_slots(message, response);
-		case FID_SET_CHARGING_SLOT_DEFAULT: return set_charging_slot_default(message);
-		case FID_GET_CHARGING_SLOT_DEFAULT: return get_charging_slot_default(message, response);
-		case FID_GET_ENERGY_METER_VALUES: return get_energy_meter_values(message, response);
-		case FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL: return get_all_energy_meter_values_low_level(message, response);
-		case FID_GET_ENERGY_METER_ERRORS: return get_energy_meter_errors(message, response);
-		case FID_RESET_ENERGY_METER_RELATIVE_ENERGY: return reset_energy_meter_relative_energy(message);
-		case FID_RESET_DC_FAULT_CURRENT_STATE: return reset_dc_fault_current_state(message);
-		case FID_SET_GPIO_CONFIGURATION: return set_gpio_configuration(message);
-		case FID_GET_GPIO_CONFIGURATION: return get_gpio_configuration(message, response);
-		case FID_GET_DATA_STORAGE: return get_data_storage(message, response);
-		case FID_SET_DATA_STORAGE: return set_data_storage(message);
-		case FID_GET_INDICATOR_LED: return get_indicator_led(message, response);
-		case FID_SET_INDICATOR_LED: return set_indicator_led(message, response);
-		case FID_SET_BUTTON_CONFIGURATION: return set_button_configuration(message);
-		case FID_GET_BUTTON_CONFIGURATION: return get_button_configuration(message, response);
-		case FID_GET_BUTTON_STATE: return get_button_state(message, response);
-		case FID_SET_EV_WAKEUP: return set_ev_wakeup(message);
-		case FID_GET_EV_WAKUEP: return get_ev_wakuep(message, response);
-		case FID_SET_CONTROL_PILOT_DISCONNECT: return set_control_pilot_disconnect(message, response);
-		case FID_GET_CONTROL_PILOT_DISCONNECT: return get_control_pilot_disconnect(message, response);
-		case FID_GET_ALL_DATA_1: return get_all_data_1(message, response);
-		case FID_GET_ALL_DATA_2: return get_all_data_2(message, response);
-		case FID_FACTORY_RESET: return factory_reset(message);
-		case FID_GET_BUTTON_PRESS_BOOT_TIME: return get_button_press_boot_time(message, response);
-		case FID_SET_BOOST_MODE: return set_boost_mode(message);
-		case FID_GET_BOOST_MODE: return get_boost_mode(message, response);
-		case FID_TRIGGER_DC_FAULT_TEST: return trigger_dc_fault_test(message, response);
-		case FID_SET_GP_OUTPUT: return set_gp_output(message);
-		case FID_GET_TEMPERATURE: return get_temperature(message, response);
-		case FID_SET_PHASE_CONTROL: return set_phase_control(message);
-		case FID_GET_PHASE_CONTROL: return get_phase_control(message, response);
+		case FID_GET_STATE:                             return length != sizeof(GetState)                         ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_state(message, response);
+		case FID_GET_HARDWARE_CONFIGURATION:            return length != sizeof(GetHardwareConfiguration)         ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_hardware_configuration(message, response);
+		case FID_GET_LOW_LEVEL_STATE:                   return length != sizeof(GetLowLevelState)                 ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_low_level_state(message, response);
+		case FID_SET_CHARGING_SLOT:                     return length != sizeof(SetChargingSlot)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_slot(message);
+		case FID_SET_CHARGING_SLOT_MAX_CURRENT:         return length != sizeof(SetChargingSlotMaxCurrent)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_slot_max_current(message);
+		case FID_SET_CHARGING_SLOT_ACTIVE:              return length != sizeof(SetChargingSlotActive)            ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_slot_active(message);
+		case FID_SET_CHARGING_SLOT_CLEAR_ON_DISCONNECT: return length != sizeof(SetChargingSlotClearOnDisconnect) ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_slot_clear_on_disconnect(message);
+		case FID_GET_CHARGING_SLOT:                     return length != sizeof(GetChargingSlot)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_charging_slot(message, response);
+		case FID_GET_ALL_CHARGING_SLOTS:                return length != sizeof(GetAllChargingSlots)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_all_charging_slots(message, response);
+		case FID_SET_CHARGING_SLOT_DEFAULT:             return length != sizeof(SetChargingSlotDefault)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_slot_default(message);
+		case FID_GET_CHARGING_SLOT_DEFAULT:             return length != sizeof(GetChargingSlotDefault)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_charging_slot_default(message, response);
+		case FID_GET_ENERGY_METER_VALUES:               return length != sizeof(GetEnergyMeterValues)             ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_energy_meter_values(message, response);
+		case FID_GET_ALL_ENERGY_METER_VALUES_LOW_LEVEL: return length != sizeof(GetAllEnergyMeterValuesLowLevel)  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_all_energy_meter_values_low_level(message, response);
+		case FID_GET_ENERGY_METER_ERRORS:               return length != sizeof(GetEnergyMeterErrors)             ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_energy_meter_errors(message, response);
+		case FID_RESET_ENERGY_METER_RELATIVE_ENERGY:    return length != sizeof(ResetEnergyMeterRelativeEnergy)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : reset_energy_meter_relative_energy(message);
+		case FID_RESET_DC_FAULT_CURRENT_STATE:          return length != sizeof(ResetDCFaultCurrentState)         ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : reset_dc_fault_current_state(message);
+		case FID_SET_GPIO_CONFIGURATION:                return length != sizeof(SetGPIOConfiguration)             ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_gpio_configuration(message);
+		case FID_GET_GPIO_CONFIGURATION:                return length != sizeof(GetGPIOConfiguration)             ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_gpio_configuration(message, response);
+		case FID_GET_DATA_STORAGE:                      return length != sizeof(GetDataStorage)                   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_data_storage(message, response);
+		case FID_SET_DATA_STORAGE:                      return length != sizeof(SetDataStorage)                   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_data_storage(message);
+		case FID_GET_INDICATOR_LED:                     return length != sizeof(GetIndicatorLED)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_indicator_led(message, response);
+		case FID_SET_INDICATOR_LED:                     return length != sizeof(SetIndicatorLED)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_indicator_led(message, response);
+		case FID_SET_BUTTON_CONFIGURATION:              return length != sizeof(SetButtonConfiguration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_button_configuration(message);
+		case FID_GET_BUTTON_CONFIGURATION:              return length != sizeof(GetButtonConfiguration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_button_configuration(message, response);
+		case FID_GET_BUTTON_STATE:                      return length != sizeof(GetButtonState)                   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_button_state(message, response);
+		case FID_SET_EV_WAKEUP:                         return length != sizeof(SetEVWakeup)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_ev_wakeup(message);
+		case FID_GET_EV_WAKUEP:                         return length != sizeof(GetEVWakuep)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_ev_wakuep(message, response);
+		case FID_SET_CONTROL_PILOT_DISCONNECT:          return length != sizeof(SetControlPilotDisconnect)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_control_pilot_disconnect(message, response);
+		case FID_GET_CONTROL_PILOT_DISCONNECT:          return length != sizeof(GetControlPilotDisconnect)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_control_pilot_disconnect(message, response);
+		case FID_GET_ALL_DATA_1:                        return length != sizeof(GetAllData1)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_all_data_1(message, response);
+		case FID_GET_ALL_DATA_2:                        return length != sizeof(GetAllData2)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_all_data_2(message, response);
+		case FID_FACTORY_RESET:                         return length != sizeof(FactoryReset)                     ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : factory_reset(message);
+		case FID_GET_BUTTON_PRESS_BOOT_TIME:            return length != sizeof(GetButtonPressBootTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_button_press_boot_time(message, response);
+		case FID_SET_BOOST_MODE:                        return length != sizeof(SetBoostMode)                     ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_boost_mode(message);
+		case FID_GET_BOOST_MODE:                        return length != sizeof(GetBoostMode)                     ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_boost_mode(message, response);
+		case FID_TRIGGER_DC_FAULT_TEST:                 return length != sizeof(TriggerDCFaultTest)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : trigger_dc_fault_test(message, response);
+		case FID_SET_GP_OUTPUT:                         return length != sizeof(SetGPOutput)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_gp_output(message);
+		case FID_GET_TEMPERATURE:                       return length != sizeof(GetTemperature)                   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_temperature(message, response);
+		case FID_SET_PHASE_CONTROL:                     return length != sizeof(SetPhaseControl)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_control(message);
+		case FID_GET_PHASE_CONTROL:                     return length != sizeof(GetPhaseControl)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_control(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
