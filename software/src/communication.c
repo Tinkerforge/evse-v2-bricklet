@@ -680,6 +680,12 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_boost_mode(NULL, (GetBoostMode_Response*)&parts);
 	memcpy(&response->boost_mode_enabled, parts.data, sizeof(GetBoostMode_Response) - sizeof(TFPMessageHeader));
 
+	get_temperature(NULL, (GetTemperature_Response*)&parts);
+	memcpy(&response->temperature, parts.data, sizeof(GetTemperature_Response) - sizeof(TFPMessageHeader));
+
+	get_phase_control(NULL, (GetPhaseControl_Response*)&parts);
+	memcpy(&response->phases_current, parts.data, sizeof(GetPhaseControl_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 

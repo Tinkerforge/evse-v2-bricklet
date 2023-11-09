@@ -502,6 +502,9 @@ typedef struct {
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 	int16_t indication;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 	uint16_t duration;
 	uint8_t button_configuration;
 	uint32_t button_press_time;
@@ -510,6 +513,10 @@ typedef struct {
 	bool ev_wakeup_enabled;
 	bool control_pilot_disconnect;
 	bool boost_mode_enabled;
+	int16_t temperature;
+	uint8_t phases_current;
+	uint8_t phases_requested;
+	uint8_t phases_status;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
