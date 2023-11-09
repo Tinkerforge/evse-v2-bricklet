@@ -502,10 +502,10 @@ typedef struct {
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 	int16_t indication;
+	uint16_t duration;
 	uint16_t color_h;
 	uint8_t color_s;
 	uint8_t color_v;
-	uint16_t duration;
 	uint8_t button_configuration;
 	uint32_t button_press_time;
 	uint32_t button_release_time;
