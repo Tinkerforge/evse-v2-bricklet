@@ -238,7 +238,10 @@ void iec61851_state_ef(void) {
 }
 
 void iec61851_tick(void) {
-	if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
+	if(hardware_version.is_v3 && (contactor_check.error & 1)) { // PE error should have highest priority
+		led_set_blinking(4);
+		iec61851_set_state(IEC61851_STATE_EF);
+	} else if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		led_set_blinking(3);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if(contactor_check.error != 0) {
