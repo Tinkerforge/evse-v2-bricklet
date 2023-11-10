@@ -144,6 +144,7 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 			case METER_TYPE_SDM72CTM:    response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72CTM; break;
 			case METER_TYPE_SDM630MCTV2: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2; break;
 			case METER_TYPE_DSZ15DZMOD:  response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD; break;
+			case METER_TYPE_DEM4A:       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DEM4A; break;
 			default:                     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
 		}
 	}
