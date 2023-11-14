@@ -35,8 +35,6 @@ void tmp1075n_init(void) {
         return;
     } 
 
-    return;
-
     memset(&tmp1075n, 0, sizeof(TMP1075N));
 
     tmp1075n.i2c_fifo.baudrate         = TMP1075N_I2C_BAUDRATE;
@@ -68,8 +66,6 @@ void tmp1075n_tick(void) {
     if(hardware_version.is_v2) {
         return;
     } 
-
-    return;
 
     I2CFifoState state = i2c_fifo_next_state(&tmp1075n.i2c_fifo);
 
@@ -129,12 +125,10 @@ void tmp1075n_tick(void) {
         }
     }
 
-
     if((state == I2C_FIFO_STATE_IDLE) || (state & I2C_FIFO_STATE_READY)) {
         // Read temperature once per 500ms
         if(system_timer_is_time_elapsed_ms(tmp1075n.last_read, 500)) {
             i2c_fifo_read_direct(&tmp1075n.i2c_fifo, 2, false);
         }
     }
-
 }
