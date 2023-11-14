@@ -87,9 +87,9 @@ void tmp1075n_tick(void) {
     }
 
     switch(state) {
-        case I2C_FIFO_STATE_READ_REGISTER_READY: {
-            uint8_t buffer[2];
-            uint8_t length = i2c_fifo_read_fifo(&tmp1075n.i2c_fifo, buffer, 2);
+        case I2C_FIFO_STATE_READ_DIRECT_READY: {
+            uint8_t buffer[16];
+            uint8_t length = i2c_fifo_read_fifo(&tmp1075n.i2c_fifo, buffer, 16);
             if(length != 2) {
                 loge("TMP1075N I2C unexpected read length : %d\n\r", length);
                 tmp1075n_init();
