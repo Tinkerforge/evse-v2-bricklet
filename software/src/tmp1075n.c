@@ -102,8 +102,11 @@ void tmp1075n_tick(void) {
                 value = value | 0xF000;
             }
             tmp1075n.temperature = ((((int32_t)value) * 625) / 100);       
-
             tmp1075n.last_read = system_timer_get_ms();
+
+            // Temperature is read, set state back to idle.
+            // The next read will be started after the timeout that is handled below.
+            tmp1075n.i2c_fifo.state = I2C_FIFO_STATE_IDLE;
             break;
         }
 
