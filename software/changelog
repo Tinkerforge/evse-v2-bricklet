@@ -105,11 +105,16 @@
 
 TBD: 2.2.0 (TBD)
 - First release with WARP3 support
+	Starting with this release the firmware will support EVSE V2 and EVSE V3
+- Add EVSE version detection (V2/V3)
 - Add support for RGB LED (WARP3)
 - Add support for phase control (WARP3)
 - Add API for temperature sensor (WARP3)
+- Add driver for TMP1075N temperature sensor (WARP3)
 - Improve diode detection
 - Use new unified meter implementation from bricklib2
+- Add support for DSZ15DZMOD meter from Eltako (through bricklib2)
+- Add support for DEM4A meter from YTL (through bricklib2)
 - Add support for X804 6mA fault current detection
 	This should now show 6mA error for X904 and X804 correctly
 - Add additional debug information to dc fault state
