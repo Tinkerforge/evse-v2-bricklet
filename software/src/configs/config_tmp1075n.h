@@ -27,7 +27,7 @@
 
 #define TMP1075N_I2C_BAUDRATE         100000
 
-#define TMP1075N_I2C_ADDRESS          0b10010000
+#define TMP1075N_I2C_ADDRESS          0b1001001
 #define TMP1075N_I2C                  XMC_I2C0_CH1
 
 #define TMP1075N_SCL_PORT             XMC_GPIO_PORT0
