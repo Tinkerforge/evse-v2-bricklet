@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #############################################################
-# This file was automatically generated on 2023-11-02.      #
+# This file was automatically generated on 2023-11-14.      #
 #                                                           #
 # Python Bindings Version 2.1.30                            #
 #                                                           #
@@ -33,7 +33,7 @@ GetGPIOConfiguration = namedtuple('GPIOConfiguration', ['shutdown_input_configur
 GetIndicatorLED = namedtuple('IndicatorLED', ['indication', 'duration', 'color_h', 'color_s', 'color_v'])
 GetButtonState = namedtuple('ButtonState', ['button_press_time', 'button_release_time', 'button_pressed'])
 GetAllData1 = namedtuple('AllData1', ['iec61851_state', 'charger_state', 'contactor_state', 'contactor_error', 'allowed_charging_current', 'error_state', 'lock_state', 'dc_fault_current_state', 'jumper_configuration', 'has_lock_switch', 'evse_version', 'energy_meter_type', 'power', 'energy_relative', 'energy_absolute', 'phases_active', 'phases_connected', 'error_count'])
-GetAllData2 = namedtuple('AllData2', ['shutdown_input_configuration', 'input_configuration', 'output_configuration', 'indication', 'duration', 'button_configuration', 'button_press_time', 'button_release_time', 'button_pressed', 'ev_wakeup_enabled', 'control_pilot_disconnect', 'boost_mode_enabled'])
+GetAllData2 = namedtuple('AllData2', ['shutdown_input_configuration', 'input_configuration', 'output_configuration', 'indication', 'duration', 'color_h', 'color_s', 'color_v', 'button_configuration', 'button_press_time', 'button_release_time', 'button_pressed', 'ev_wakeup_enabled', 'control_pilot_disconnect', 'boost_mode_enabled', 'temperature', 'phases_current', 'phases_requested', 'phases_status'])
 GetPhaseControl = namedtuple('PhaseControl', ['phases_current', 'phases_requested', 'phases_status'])
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
 GetIdentity = namedtuple('Identity', ['uid', 'connected_uid', 'position', 'hardware_version', 'firmware_version', 'device_identifier'])
@@ -142,10 +142,12 @@ class BrickletEVSEV2(Device):
     JUMPER_CONFIGURATION_SOFTWARE = 7
     JUMPER_CONFIGURATION_UNCONFIGURED = 8
     DC_FAULT_CURRENT_STATE_NORMAL_CONDITION = 0
-    DC_FAULT_CURRENT_STATE_6_MA_ERROR = 1
+    DC_FAULT_CURRENT_STATE_6_MA_DC_ERROR = 1
     DC_FAULT_CURRENT_STATE_SYSTEM_ERROR = 2
     DC_FAULT_CURRENT_STATE_UNKNOWN_ERROR = 3
     DC_FAULT_CURRENT_STATE_CALIBRATION_ERROR = 4
+    DC_FAULT_CURRENT_STATE_20_MA_AC_ERROR = 5
+    DC_FAULT_CURRENT_STATE_6_MA_AC_AND_20_MA_AC_ERROR = 6
     SHUTDOWN_INPUT_IGNORED = 0
     SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN = 1
     SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE = 2
@@ -564,7 +566,7 @@ class BrickletEVSEV2(Device):
         """
         self.check_validity()
 
-        return GetAllData2(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ALL_DATA_2, (), '', 28, 'B B B h H B I I ! ! ! !'))
+        return GetAllData2(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ALL_DATA_2, (), '', 37, 'B B B h H H B B B I I ! ! ! ! h B B B'))
 
     def factory_reset(self, password):
         r"""
