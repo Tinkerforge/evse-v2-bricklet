@@ -122,3 +122,4 @@ TBD: 2.2.0 (TBD)
 - Add DC fault sensor type detection
 - Add support for 20mA AC fault current detection
 	Note: This does not replace an AC RCD!
+- Add support for resetable relative import/export energy

@@ -163,11 +163,11 @@ void evse_load_config(void) {
 	// We initialize the config data with sane default values.
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
 		evse.legacy_managed               = false;
-		meter.relative_energy.f           = 0.0f;
+		meter.relative_energy_sum.f       = 0.0f;
 		evse.shutdown_input_configuration = EVSE_V2_SHUTDOWN_INPUT_IGNORED;
 	} else {
 		evse.legacy_managed               = page[EVSE_CONFIG_MANAGED_POS];
-		meter.relative_energy.data        = page[EVSE_CONFIG_REL_ENERGY_POS];
+		meter.relative_energy_sum.data    = page[EVSE_CONFIG_REL_SUM_POS];
 		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
@@ -187,6 +187,14 @@ void evse_load_config(void) {
 	} else {
 		evse.boost_mode_enabled           = page[EVSE_CONFIG_BOOST_POS];
 		evse.ev_wakeup_enabled            = page[EVSE_CONFIG_EV_WAKUEP_POS];
+	}
+
+	if(page[EVSE_CONFIG_MAGIC4_POS] != EVSE_CONFIG_MAGIC4) {
+		meter.relative_energy_import.f    = 0.0f;
+		meter.relative_energy_export.f    = 0.0f;
+	} else {
+		meter.relative_energy_import.data = page[EVSE_CONFIG_REL_IMPORT_POS];
+		meter.relative_energy_export.data = page[EVSE_CONFIG_REL_EXPORT_POS];
 	}
 
 	// Handle charging slot defaults
@@ -217,7 +225,7 @@ void evse_load_config(void) {
 
 	logd("Load config:\n\r");
 	logd(" * legacy managed    %d\n\r", evse.legacy_managed);
-	logd(" * relener           %d\n\r", meter.relative_energy.data);
+	logd(" * relener           %d %d %d\n\r", meter.relative_energy_sum.data, meter.relative_energy_import.data, meter.relative_energy_export.data);
 	logd(" * shutdown input    %d\n\r", evse.shutdown_input_configuration);
 	logd(" * slot current      %d %d %d %d %d %d %d %d", charging_slot.max_current_default[0], charging_slot.max_current_default[1], charging_slot.max_current_default[2], charging_slot.max_current_default[3], charging_slot.max_current_default[4], charging_slot.max_current_default[5], charging_slot.max_current_default[6], charging_slot.max_current_default[7]);
 	logd(" * slot active/clear %d %d %d %d %d %d %d %d", charging_slot.clear_on_disconnect_default[0], charging_slot.clear_on_disconnect_default[1], charging_slot.clear_on_disconnect_default[2], charging_slot.clear_on_disconnect_default[3], charging_slot.clear_on_disconnect_default[4], charging_slot.clear_on_disconnect_default[5], charging_slot.clear_on_disconnect_default[6], charging_slot.clear_on_disconnect_default[7]);
@@ -226,25 +234,33 @@ void evse_load_config(void) {
 void evse_save_config(void) {
 	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
 
-	page[EVSE_CONFIG_MAGIC_POS]          = EVSE_CONFIG_MAGIC;
-	page[EVSE_CONFIG_MANAGED_POS]        = evse.legacy_managed;
-	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS] = evse.shutdown_input_configuration;
+	page[EVSE_CONFIG_MAGIC_POS]           = EVSE_CONFIG_MAGIC;
+	page[EVSE_CONFIG_MANAGED_POS]         = evse.legacy_managed;
+	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS]  = evse.shutdown_input_configuration;
 	if(meter.reset_energy_meter) {
-		page[EVSE_CONFIG_REL_ENERGY_POS] = meter_register_set.total_kwh_sum.data;
-		meter.relative_energy.data       = meter_register_set.total_kwh_sum.data;
+		page[EVSE_CONFIG_REL_SUM_POS]     = meter_register_set.total_kwh_sum.data;
+		page[EVSE_CONFIG_REL_IMPORT_POS]  = meter_register_set.total_import_kwh.data;
+		page[EVSE_CONFIG_REL_EXPORT_POS]  = meter_register_set.total_export_kwh.data;
+		meter.relative_energy_sum.data    = meter_register_set.total_kwh_sum.data;
+		meter.relative_energy_import.data = meter_register_set.total_import_kwh.data;
+		meter.relative_energy_export.data = meter_register_set.total_export_kwh.data;
 	} else {
-		page[EVSE_CONFIG_REL_ENERGY_POS] = meter.relative_energy.data;
+		page[EVSE_CONFIG_REL_SUM_POS]     = meter.relative_energy_sum.data;
+		page[EVSE_CONFIG_REL_IMPORT_POS]  = meter.relative_energy_import.data;
+		page[EVSE_CONFIG_REL_EXPORT_POS]  = meter.relative_energy_export.data;
 	}
 	meter.reset_energy_meter = false;
 
-	page[EVSE_CONFIG_MAGIC2_POS]         = EVSE_CONFIG_MAGIC2;
-	page[EVSE_CONFIG_INPUT_POS]          = evse.input_configuration;
-	page[EVSE_CONFIG_OUTPUT_POS]         = evse.output_configuration;
-	page[EVSE_CONFIG_BUTTON_POS]         = button.configuration;
+	page[EVSE_CONFIG_MAGIC2_POS]          = EVSE_CONFIG_MAGIC2;
+	page[EVSE_CONFIG_INPUT_POS]           = evse.input_configuration;
+	page[EVSE_CONFIG_OUTPUT_POS]          = evse.output_configuration;
+	page[EVSE_CONFIG_BUTTON_POS]          = button.configuration;
 
-	page[EVSE_CONFIG_MAGIC3_POS]         = EVSE_CONFIG_MAGIC3;
-	page[EVSE_CONFIG_BOOST_POS]          = evse.boost_mode_enabled;
-	page[EVSE_CONFIG_EV_WAKUEP_POS]      = evse.ev_wakeup_enabled;
+	page[EVSE_CONFIG_MAGIC3_POS]          = EVSE_CONFIG_MAGIC3;
+	page[EVSE_CONFIG_BOOST_POS]           = evse.boost_mode_enabled;
+	page[EVSE_CONFIG_EV_WAKUEP_POS]       = evse.ev_wakeup_enabled;
+
+	page[EVSE_CONFIG_MAGIC4_POS]          = EVSE_CONFIG_MAGIC4;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

@@ -314,8 +314,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	float power;
-	float energy_relative;
-	float energy_absolute;
+	float current[3];
 	uint8_t phases_active[1];
 	uint8_t phases_connected[1];
 } __attribute__((__packed__)) GetEnergyMeterValues_Response;

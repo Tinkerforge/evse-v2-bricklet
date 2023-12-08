@@ -363,8 +363,9 @@ BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotD
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
 	response->header.length    = sizeof(GetEnergyMeterValues_Response);
 	response->power            = meter_register_set.total_system_power.f;
-	response->energy_absolute  = meter_register_set.total_kwh_sum.f;
-	response->energy_relative  = meter_register_set.total_kwh_sum.f - meter.relative_energy.f;
+	response->current[0]       = meter_register_set.current[0].f;
+	response->current[1]       = meter_register_set.current[1].f;
+	response->current[2]       = meter_register_set.current[2].f;
 	response->phases_active[0] = (((meter_register_set.current[0].f > 0.3f) & meter.phases_connected[0]) << 0) |
 	                             (((meter_register_set.current[1].f > 0.3f) & meter.phases_connected[1]) << 1) |
 	                             (((meter_register_set.current[2].f > 0.3f) & meter.phases_connected[2]) << 2);
@@ -381,7 +382,7 @@ BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetA
 	response->header.length = sizeof(GetAllEnergyMeterValuesLowLevel_Response);
 
 	const uint8_t packet_length = 60;
-	const uint16_t max_end = 85*sizeof(float);
+	const uint16_t max_end = 88*sizeof(float);
 	const uint16_t start = packet_payload_index * packet_length;
 	const uint16_t end = MIN(start + packet_length, max_end);
 	const uint16_t copy_num = end-start;
