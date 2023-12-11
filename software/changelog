@@ -123,3 +123,5 @@ TBD: 2.2.0 (TBD)
 - Add support for 20mA AC fault current detection
 	Note: This does not replace an AC RCD!
 - Add support for resetable relative import/export energy
+- Change GetEnergyMeterValues parameter (current instead of energy)
+	Note: The "fast read" values are now the same between Energy Manager and EVSE
