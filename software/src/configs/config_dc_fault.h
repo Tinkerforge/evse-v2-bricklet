@@ -24,9 +24,24 @@
 
 #include "xmc_gpio.h"
 
-#define DC_FAULT_X6_PIN     P4_4
-#define DC_FAULT_X30_PIN    P4_5
-#define DC_FAULT_ERR_PIN    P0_3
-#define DC_FAULT_TST_PIN    P0_8
+#define DC_FAULT_X6_PIN_NUM    0
+#define DC_FAULT_X30_PIN_NUM   1
+#define DC_FAULT_ERR_PIN_NUM   2
+#define DC_FAULT_TST_PIN_NUM   3
+
+#define DC_FAULT_X6_PIN        hardware_version_get_port(DC_FAULT_X6_PIN_NUM),  hardware_version_get_pin(DC_FAULT_X6_PIN_NUM)
+#define DC_FAULT_X30_PIN       hardware_version_get_port(DC_FAULT_X30_PIN_NUM), hardware_version_get_pin(DC_FAULT_X30_PIN_NUM)
+#define DC_FAULT_ERR_PIN       hardware_version_get_port(DC_FAULT_ERR_PIN_NUM), hardware_version_get_pin(DC_FAULT_ERR_PIN_NUM)
+#define DC_FAULT_TST_PIN       hardware_version_get_port(DC_FAULT_TST_PIN_NUM), hardware_version_get_pin(DC_FAULT_TST_PIN_NUM)
+
+#define DC_FAULT_V2_X6_PIN     P4_4
+#define DC_FAULT_V2_X30_PIN    P4_5
+#define DC_FAULT_V2_ERR_PIN    P0_3
+#define DC_FAULT_V2_TST_PIN    P0_8
+
+#define DC_FAULT_V3_X6_PIN     P0_1
+#define DC_FAULT_V3_X30_PIN    P0_0
+#define DC_FAULT_V3_ERR_PIN    P0_3
+#define DC_FAULT_V3_TST_PIN    P0_5
 
 #endif

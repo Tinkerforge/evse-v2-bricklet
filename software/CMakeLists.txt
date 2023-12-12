@@ -33,21 +33,26 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/adc.c"
 	"${PROJECT_SOURCE_DIR}/src/iec61851.c"
 	"${PROJECT_SOURCE_DIR}/src/lock.c"
-	"${PROJECT_SOURCE_DIR}/src/contactor_check.c"
 	"${PROJECT_SOURCE_DIR}/src/led.c"
 	"${PROJECT_SOURCE_DIR}/src/button.c"
 	"${PROJECT_SOURCE_DIR}/src/dc_fault.c"
-	"${PROJECT_SOURCE_DIR}/src/rs485.c"
-	"${PROJECT_SOURCE_DIR}/src/modbus.c"
-	"${PROJECT_SOURCE_DIR}/src/timer.c"
-	"${PROJECT_SOURCE_DIR}/src/sdm.c"
 	"${PROJECT_SOURCE_DIR}/src/charging_slot.c"
+	"${PROJECT_SOURCE_DIR}/src/hardware_version.c"
+	"${PROJECT_SOURCE_DIR}/src/phase_control.c"
+	"${PROJECT_SOURCE_DIR}/src/tmp1075n.c"
+
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/modbus.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/uartbb/uartbb.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/system_timer/system_timer.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/startup/startup_xmc1.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/startup/startup_xmc1400.S"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/spi_fifo/spi_fifo.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/i2c_fifo/i2c_fifo.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/ccu4_pwm/ccu4_pwm.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/os/coop_task.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/os/coop_task_pendsv_handler.S"
@@ -71,9 +76,11 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_scu.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_flash.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu4.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu8.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_vadc.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_scu.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_uart.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_i2c.c"
 )
 
 MESSAGE(STATUS "\nFound following source files:\n ${SOURCES}\n")
@@ -96,3 +103,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/bricklib2/cmake/configs/config_comcu_add
 
 # add preprocessor defines
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/bricklib2/cmake/configs/config_xmc1_add_preprocessor_defines.txt)
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf -lm) # Use lib math (sqrt etc)
+ADD_DEFINITIONS(-DARM_MATH_CM0) # Use CMSIS DSP math support

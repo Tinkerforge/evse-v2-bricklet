@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2021 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * contactor_check.h: Welded/defective contactor check functions
+ * tmp1075n.h: Driver for TMP1075N temperature sensor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,37 +19,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONTACTOR_CHECK_H
-#define CONTACTOR_CHECK_H
+#ifndef TMP1075N_H
+#define TMP1075N_H
 
-#include <stdint.h>
-#include <stdbool.h>
-
-typedef enum {
-    CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE = 0,
-    CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE  = 1,
-    CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE  = 2,
-    CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE   = 3,
-} ContactorCheckState;
+#include "bricklib2/hal/i2c_fifo/i2c_fifo.h"
 
 typedef struct {
-    uint32_t ac1_edge_count;
-    uint32_t ac2_edge_count;
+    I2CFifo i2c_fifo;
+    int16_t temperature;
 
-    bool ac1_last_value;
-    bool ac2_last_value;
+    uint32_t last_read;
+} TMP1075N;
 
-    uint32_t last_check;
+extern TMP1075N tmp1075n;
 
-    uint8_t invalid_counter;
-
-    ContactorCheckState state;
-    uint8_t error;
-} ContactorCheck;
-
-extern ContactorCheck contactor_check;
-
-void contactor_check_init(void);
-void contactor_check_tick(void);
+void tmp1075n_tick(void);
+void tmp1075n_init(void);
 
 #endif

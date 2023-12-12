@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2021 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * config_button.h: EVSE button config
+ * config_hardware_version.h: EVSE hardware version config
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,12 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONFIG_BUTTON_H
-#define CONFIG_BUTTON_H
+#ifndef CONFIG_HARDWARE_VERSION_H
+#define CONFIG_HARDWARE_VERSION_H
 
 #include "xmc_gpio.h"
 
-// Button pin is same in EVSE V2 and V3
-#define EVSE_BUTTON_PIN  P0_12
+#define HARDWARE_VERSION_DETECTION  P4_7
 
 #endif

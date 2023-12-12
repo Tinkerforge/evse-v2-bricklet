@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2021 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * config_button.h: EVSE button config
+ * phase_control.h: Control switching between 1- and 3-phase
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,12 +19,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONFIG_BUTTON_H
-#define CONFIG_BUTTON_H
+#ifndef PHASE_CONTROL_H
+#define PHASE_CONTROL_H
 
-#include "xmc_gpio.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-// Button pin is same in EVSE V2 and V3
-#define EVSE_BUTTON_PIN  P0_12
+typedef struct {
+    uint8_t current;
+    uint8_t requested;
+
+    bool in_progress;
+    uint8_t progress_state;
+    uint32_t progress_state_time;
+} PhaseControl;
+
+extern PhaseControl phase_control;
+
+void phase_control_init(void);
+void phase_control_tick(void);
+void phase_control_state_phase_change(void);
 
 #endif

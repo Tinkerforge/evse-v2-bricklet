@@ -27,10 +27,13 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/bootloader/bootloader.h"
 #include "bricklib2/utility/util_definitions.h"
+#include "hardware_version.h"
 
 #define ADC_DIODE_DROP 650
 
-ADC adc[ADC_NUM] = {
+ADC *adc;
+
+ADC adc_v2[ADC_NUM] = {
 	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
 		.port          = XMC_GPIO_PORT2,
 		.pin           = 1,
@@ -83,10 +86,64 @@ ADC adc[ADC_NUM] = {
 	},
 };
 
+ADC adc_v3[ADC_NUM] = {
+	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 4,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 6,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP1"
+	},
+	{ // Channel ADC_CHANNEL_VCP2  (w/ resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 5,
+		.result_reg    = 6,
+		.channel_num   = 7,
+		.channel_alias = -1,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP2"
+	},
+	{ // Channel ADC_CHANNEL_VPP
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 1,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 6,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "VPP"
+	},
+	{ // Channel ADC_CHANNEL_V12P
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 2,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 7,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "V12P"
+	},
+	{ // Channel ADC_CHANNEL_V12M
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 3,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 5,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "V12M"
+	},
+};
+
 ADCResult adc_result;
 
+// Interrupt for debugging
+#if 0
 #define adc_conversion_done_irq IRQ_Hdlr_15
-
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) adc_conversion_done_irq(void) {
 	XMC_GPIO_SetOutputHigh(EVSE_OUTPUT_GP_PIN);
 	__NOP();
@@ -102,8 +159,15 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 	__NOP();
 	XMC_GPIO_SetOutputLow(EVSE_OUTPUT_GP_PIN);
 }
+#endif
 
 void adc_init_adc(void) {
+	if(hardware_version.is_v2) {
+		adc = adc_v2;
+	} else if(hardware_version.is_v3) {
+		adc = adc_v3;
+	}
+
 	for(uint8_t i = 0; i < ADC_NUM; i ++) {
 		const XMC_GPIO_CONFIG_t input_pin_config = {
 			.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
@@ -154,9 +218,9 @@ void adc_init_adc(void) {
 	const XMC_VADC_BACKGROUND_CONFIG_t adc_background_config = {
 		.conv_start_mode   = XMC_VADC_STARTMODE_CIR,       // Conversion start mode selected as cancel inject repeat
 		.req_src_priority  = XMC_VADC_GROUP_RS_PRIORITY_1, // Priority of the Background request source in the VADC module
-		.trigger_signal    = XMC_VADC_REQ_TR_A,            // If Trigger needed then this denotes the Trigger signal
+		.trigger_signal    = hardware_version.is_v2 ?  XMC_VADC_REQ_TR_A : XMC_VADC_REQ_TR_C, // If Trigger needed then this denotes the Trigger signal
 		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
-		.gate_signal       = XMC_VADC_REQ_GT_A,			   // If Gating needed then this denotes the Gating signal
+		.gate_signal       = hardware_version.is_v2 ?  XMC_VADC_REQ_GT_A : XMC_VADC_REQ_GT_C, // If Gating needed then this denotes the Gating signal
 		.timer_mode        = 0,							   // Timer Mode Disabled
 		.external_trigger  = 1,                            // Trigger is Enabled
 		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled
@@ -292,11 +356,11 @@ void adc_check_result(const uint8_t i) {
 	if(result & (1 << 31)) {
 		uint16_t r = result & 0xFFFF;
 		if((i <= 1) && (r < 2048)) {
-			adc[i].result_sum[1] += r;
-			adc[i].result_count[1]++;
+			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT] += r;
+			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT]++;
 		} else {
-			adc[i].result_sum[0] += r;
-			adc[i].result_count[0]++;
+			adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] += r;
+			adc[i].result_count[ADC_POSITIVE_MEASUREMENT]++;
 		}
 
 		if(i == 0) {
@@ -314,21 +378,23 @@ void adc_check_result(const uint8_t i) {
 }
 
 void adc_check_count(const uint8_t i) {
-	if(i <= 1) {
-		if(adc[i].result_count[1] >= 50) {
-			adc[i].result_mv[1]    = (adc[i].result[1]*600*3300/4095-990*1000)/75;
+	if(i <= ADC_CHANNEL_VCP2) {
+		if(adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] >= 50) {
+			adc[i].result_mv[ADC_NEGATIVE_MEASUREMENT]    = (adc[i].result[ADC_NEGATIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
 
-			adc[i].result[1]       = adc[i].result_sum[1]/adc[i].result_count[1];
-			adc[i].result_sum[1]   = 0;
-			adc[i].result_count[1] = 0;
+			adc[i].result[ADC_NEGATIVE_MEASUREMENT]       = adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]/adc[i].result_count[ADC_NEGATIVE_MEASUREMENT];
+			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]   = 0;
+			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] = 0;
+
+			adc[i].result_index[ADC_NEGATIVE_MEASUREMENT]++;
 		}
 	}
 
-	if(adc[i].result_count[0] >= 50) {
-		adc[i].result[0] = adc[i].result_sum[0]/adc[i].result_count[0];
+	if(adc[i].result_count[ADC_POSITIVE_MEASUREMENT] >= 50) {
+		adc[i].result[ADC_POSITIVE_MEASUREMENT] = adc[i].result_sum[ADC_POSITIVE_MEASUREMENT]/adc[i].result_count[ADC_POSITIVE_MEASUREMENT];
 
-		adc[i].result_sum[0] = 0;
-		adc[i].result_count[0] = 0;
+		adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] = 0;
+		adc[i].result_count[ADC_POSITIVE_MEASUREMENT] = 0;
 
 		// Return if ADC count counter > 0
 		if(adc[i].ignore_count > 0) {
@@ -336,41 +402,43 @@ void adc_check_count(const uint8_t i) {
 			return;
 		}
 
+		adc[i].result_index[ADC_POSITIVE_MEASUREMENT]++;
+
 		//uint32_t new_time = system_timer_get_ms();
 
-		if(i == 2) { // PP/PE
-			adc[i].result_mv[0] = adc[i].result[0]*3300/4095;
+		if(i == ADC_CHANNEL_VPP) { // PP/PE
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*3300/4095;
 
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
-			const uint32_t divisor = 5000*2 - adc[2].result_mv[0]*(1+2);
+			const uint32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
 			if(divisor == 0) {
 				adc_result.pp_pe_resistance = 0xFFFFFFFF;
 			} else {
-				adc_result.pp_pe_resistance = 1000*2*adc[2].result_mv[0]/divisor;
+				adc_result.pp_pe_resistance = 1000*2*adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]/divisor;
 				if(adc_result.pp_pe_resistance > 10000) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
 			}
-		} else if(i == 3) { // +12V rail
-			adc[i].result_mv[0] = adc[i].result[0]*4*3300/4095;
+		} else if(i == ADC_CHANNEL_V12P) { // +12V rail
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*4*3300/4095;
 		} else {
-			adc[i].result_mv[0] = (adc[i].result[0]*600*3300/4095-990*1000)/75;
-			if(i == 1) {
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = (adc[i].result[ADC_POSITIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
+			if(i == ADC_CHANNEL_VCP2) {
 				adc_result.resistance_counter++;
 
 				// resistance divider, 910 ohm on EVSE
 				// diode voltage drop 650mV (value is educated guess)
-				if(adc[0].result_mv[0] <= adc[1].result_mv[0]) {
+				if(adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] <= adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT]) {
 					adc_result.cp_pe_resistance = 0xFFFFFFFF;
 				} else {
-					const uint32_t divisor = adc[0].result_mv[0] - adc[1].result_mv[0];
-					adc_result.cp_pe_resistance = 910*(adc[1].result_mv[0] - ADC_DIODE_DROP)/divisor;
+					const uint32_t divisor = adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT];
+					adc_result.cp_pe_resistance = 910*(adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT] - ADC_DIODE_DROP)/divisor;
 					if(adc_result.cp_pe_resistance > 32000) {
 						adc_result.cp_pe_resistance = 0xFFFFFFFF;
 					}
 				}
 			}
-		};
+		}
 	}
 }
 

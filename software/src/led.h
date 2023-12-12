@@ -33,6 +33,25 @@
 
 #define LED_STANDBY_TIME (1000*60*15) // Standby after 15 minutes
 
+#define LED_HUE_RED 0
+#define LED_HUE_ORANGE 30
+#define LED_HUE_YELLOW 60
+#define LED_HUE_GRASS_GREEN 90
+#define LED_HUE_GREEN 120
+#define LED_HUE_SPRING_GREEN 150
+#define LED_HUE_CYAN 180
+#define LED_HUE_GREEN_BLUE 210
+#define LED_HUE_BLUE 240
+#define LED_HUE_VIOLET 270
+#define LED_HUE_MAGENTA 300
+#define LED_HUE_PURPLE 330
+
+#define LED_HUE_BOOTING  LED_HUE_MAGENTA
+#define LED_HUE_ERROR    LED_HUE_RED
+#define LED_HUE_STANDARD LED_HUE_BLUE
+#define LED_HUE_OK       LED_HUE_GREEN
+#define LED_HUE_WARNING  LED_HUE_ORANGE
+
 typedef enum {
 	LED_STATE_OFF,
 	LED_STATE_ON,
@@ -77,6 +96,17 @@ typedef struct {
 	uint32_t api_nag_time;
 
 	bool currently_in_wait_state;
+
+	uint16_t set_h;
+	uint8_t set_s;
+	uint8_t set_v;
+
+	uint16_t h;
+	uint8_t s;
+	uint8_t v;
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
 } LED;
 
 extern LED led;

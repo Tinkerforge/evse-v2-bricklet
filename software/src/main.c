@@ -27,24 +27,28 @@
 #include "bricklib2/bootloader/bootloader.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
+#include "bricklib2/warp/rs485.h"
+#include "bricklib2/warp/meter.h"
+#include "bricklib2/warp/contactor_check.h"
 #include "communication.h"
 
 #include "evse.h"
 #include "iec61851.h"
 #include "lock.h"
-#include "contactor_check.h"
 #include "led.h"
 #include "button.h"
 #include "adc.h"
 #include "dc_fault.h"
-#include "rs485.h"
-#include "sdm.h"
 #include "charging_slot.h"
+#include "hardware_version.h"
+#include "phase_control.h"
+#include "tmp1075n.h"
 
 int main(void) {
 	logging_init();
 	logd("Start EVSE Bricklet 2.0\n\r");
 
+	hardware_version_init();
 	communication_init();
 	evse_init();
 	charging_slot_init();
@@ -56,7 +60,9 @@ int main(void) {
 	adc_init();
 	dc_fault_init();
 	rs485_init();
-	sdm_init();
+	meter_init();
+	phase_control_init();
+	tmp1075n_init();
 
 	while(true) {
 		bootloader_tick();
@@ -69,7 +75,9 @@ int main(void) {
 		evse_tick();
 		dc_fault_tick();
 		rs485_tick();
-		sdm_tick();
+		meter_tick();
 		charging_slot_tick();
+		phase_control_tick();
+		tmp1075n_tick();
 	}
 }

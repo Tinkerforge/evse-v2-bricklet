@@ -1,7 +1,7 @@
-/* evse-v2-bricklet
- * Copyright (C) 2021 Olaf Lüke <olaf@tinkerforge.com>
+/* warp-energy-manager-bricklet
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * config_button.h: EVSE button config
+ * config_timer.h: Config for RS485 timer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,12 +19,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef CONFIG_BUTTON_H
-#define CONFIG_BUTTON_H
+#ifndef CONFIG_TIMER_H
+#define CONFIG_TIMER_H
 
-#include "xmc_gpio.h"
+#include "xmc_ccu4.h"
 
-// Button pin is same in EVSE V2 and V3
-#define EVSE_BUTTON_PIN  P0_12
+#include "hardware_version.h"
+
+#define TIMER_CCU      (hardware_version.is_v2 ? CCU41 : CCU40)
+#define TIMER_CCU_CC40 (hardware_version.is_v2 ? CCU41_CC40 : CCU40_CC40)
+#define TIMER_CCU_CC41 (hardware_version.is_v2 ? CCU41_CC41 : CCU40_CC41)
 
 #endif

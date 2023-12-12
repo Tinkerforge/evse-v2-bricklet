@@ -1,7 +1,7 @@
 /* evse-v2-bricklet
- * Copyright (C) 2017, 2021 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
  *
- * timer.h: Timer handling (originally from rs485-bricklet)
+ * hardware_version.h: Hardware version detection and support
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,20 +19,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef HARDWARE_VERSION_H
+#define HARDWARE_VERSION_H
 
 #include <stdint.h>
 #include <stdbool.h>
 
-#define TIMER_RESET() \
-  do {\
-    CCU41_CC41->TCCLR = CCU4_CC4_TCCLR_TCC_Msk;\
-    CCU41_CC41->TCSET = CCU4_CC4_TCSET_TRBS_Msk;\
-  } while(false)
+#include "xmc_gpio.h"
 
-bool timer_us_elapsed_since_last_timer_reset(const uint32_t us);
-void timer_init(void);
-void timer_tick(void);
+typedef struct {
+    bool is_v2;
+    bool is_v3;
+} HardwareVersion;
 
+typedef struct {
+    XMC_GPIO_PORT_t *const port;
+    uint8_t pin;
+} HardwareVersionPortPin;
+
+extern HardwareVersion hardware_version;
+
+void hardware_version_init(void);
+XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num);
+const uint8_t hardware_version_get_pin(const uint8_t pin_num);
 #endif

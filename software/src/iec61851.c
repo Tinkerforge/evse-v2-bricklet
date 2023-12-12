@@ -27,28 +27,42 @@
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/hal/ccu4_pwm/ccu4_pwm.h"
+#include "bricklib2/warp/contactor_check.h"
 #include "configs/config_evse.h"
 #include "adc.h"
 #include "iec61851.h"
 #include "lock.h"
 #include "evse.h"
-#include "contactor_check.h"
 #include "led.h"
 #include "button.h"
 #include "dc_fault.h"
 #include "communication.h"
 #include "charging_slot.h"
+#include "phase_control.h"
 
 IEC61851 iec61851;
 
+void iec61851_diode_error_reset(bool check_pending) {
+	iec61851.diode_error_counter = 0;
+	iec61851.diode_check_pending = check_pending;
+	iec61851.diode_ok_counter = 0;
+	iec61851.diode_vcp1_last_count = 0xFFFF;
+	iec61851.diode_vcp2_last_count = 0xFFFF;
+	iec61851.diode_vcp1_seen = 0;
+	iec61851.diode_vcp2_seen = 0;
+}
+
 void iec61851_set_state(IEC61851State state) {
 	if(state != iec61851.state) {
-		// If we change the state from an error state to something else we save the time
-		if(iec61851.state == IEC61851_STATE_EF) {
+		// If we change from an error state to something else we save the time
+		// If we then change to state C we wait at least 30 seconds
+		// -> Don't start charging immediately after error
+		if((iec61851.state == IEC61851_STATE_D) && (iec61851.last_error_time == 0)) {
 			iec61851.last_error_time = system_timer_get_ms();
 		}
-
-		// If we change to state C and we were in an error state before, we wait at least 30 seconds
+		if(iec61851.state == IEC61851_STATE_EF) { // User has to disconnect first for error state EF
+			iec61851.last_error_time = system_timer_get_ms();
+		}
 		if((state == IEC61851_STATE_C) && (iec61851.last_error_time != 0)) {
 			if(!system_timer_is_time_elapsed_ms(iec61851.last_error_time, 30*1000)) {
 				return;
@@ -56,7 +70,20 @@ void iec61851_set_state(IEC61851State state) {
 			iec61851.last_error_time = 0;
 		}
 
-		// If we change to state C and the charging timer was not started, we start it
+		// If we change from state C to something else we save the time
+		// If we then change back to state C we wait at least 5 seconds
+		// -> Don't start charging immediately after charging was stopped
+		if(iec61851.state == IEC61851_STATE_C) {
+			iec61851.last_state_c_end_time = system_timer_get_ms();
+		}
+		if((state == IEC61851_STATE_C) && (iec61851.last_state_c_end_time != 0)) {
+			if(!system_timer_is_time_elapsed_ms(iec61851.last_state_c_end_time, 5*1000)) {
+				return;
+			}
+			iec61851.last_state_c_end_time = 0;
+		}
+
+		// If we change to state C and the charging timer was not started, we start
 		if((state == IEC61851_STATE_C) && (evse.charging_time == 0)) {
 			evse.charging_time = system_timer_get_ms();
 		}
@@ -76,6 +103,11 @@ void iec61851_set_state(IEC61851State state) {
 
 			// Start new dc fault test after each charging
 			dc_fault.calibration_start = true;
+		}
+
+		// If we are in state A or in an error state, we will only allow to turn the contactor on after the next diode check.
+		if(state == IEC61851_STATE_A || state == IEC61851_STATE_D || state == IEC61851_STATE_EF) {
+			iec61851_diode_error_reset(true);
 		}
 
 		iec61851.state             = state;
@@ -148,6 +180,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
 				adc_ignore_results(2);
+				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 			}
 		}
@@ -156,6 +189,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		// If this does not happen and ev wakeup is enabled we disconnect CP.
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000)) {
 			if(evse.ev_wakeup_enabled) {
+				iec61851.currently_beeing_woken_up = true;
 				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 			}
 		}
@@ -204,7 +238,10 @@ void iec61851_state_ef(void) {
 }
 
 void iec61851_tick(void) {
-	if(dc_fault.state != DC_FAULT_NORMAL_CONDITION) {
+	if(hardware_version.is_v3 && (contactor_check.error & 1)) { // PE error should have highest priority
+		led_set_blinking(4);
+		iec61851_set_state(IEC61851_STATE_EF);
+	} else if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		led_set_blinking(3);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if(contactor_check.error != 0) {
@@ -220,26 +257,51 @@ void iec61851_tick(void) {
 	// * The CP contact is connected
 	// * We currently apply a PWM (i.e. max ma is not 0)
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
-	          ((adc[0].result_mv[1] > -10000) || (ABS(adc[0].result_mv[1] - adc[1].result_mv[1]) > 2000)) &&
+	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
 	          (evse_is_cp_connected()) &&
 	          (iec61851_get_max_ma() != 0)) {
 		// Wait for ADC CP/PE measurements to be valid
-		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
+		if((adc[ADC_CHANNEL_VCP1].ignore_count > 0) || (adc[ADC_CHANNEL_VCP2].ignore_count > 0)) {
 			return;
 		}
 
-		if(iec61851.diode_error_counter > 100) {
+		if((iec61851.state == IEC61851_STATE_B) || (iec61851.diode_error_counter >= 100)) {
+			// In state B set error counter to 100 immediately. We have to make sure that we don't activate the contactor, so we react immediately.
+			// If the diode error does not persist anymore the counter will be decreased to 0 and then the error will be cleared.
+			iec61851.diode_error_counter = 100;
 			led_set_blinking(5);
 			iec61851.state = IEC61851_STATE_B;
 			iec61851_state_b();
 		} else {
+			// In state C we wait for at least 100 ticks to make sure that this is not just some kind of false positive glitch.
 			iec61851.diode_error_counter++;
 		}
 	} else {
 		// Wait for ADC CP/PE measurements to be valid
-		if((adc[0].ignore_count > 0) || (adc[1].ignore_count > 0)) {
+		if((adc[ADC_CHANNEL_VCP1].ignore_count > 0) || (adc[ADC_CHANNEL_VCP2].ignore_count > 0)) {
 			return;
 		}
+
+		if((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) {
+			if(iec61851.diode_check_pending && (iec61851.diode_ok_counter > 100)) {
+				iec61851_diode_error_reset(false);
+			} else {
+				// Check if we have seen three different adc counts before we start the OK counter.
+				if((iec61851.diode_vcp1_seen < 3) || (iec61851.diode_vcp2_seen < 3)) {
+					if(iec61851.diode_vcp1_last_count != adc[ADC_CHANNEL_VCP1].result_index[ADC_NEGATIVE_MEASUREMENT]) {
+						iec61851.diode_vcp1_last_count = adc[ADC_CHANNEL_VCP1].result_index[ADC_NEGATIVE_MEASUREMENT];
+						iec61851.diode_vcp1_seen++;
+					}
+					if(iec61851.diode_vcp2_last_count != adc[ADC_CHANNEL_VCP2].result_index[ADC_NEGATIVE_MEASUREMENT]) {
+						iec61851.diode_vcp2_last_count = adc[ADC_CHANNEL_VCP2].result_index[ADC_NEGATIVE_MEASUREMENT];
+						iec61851.diode_vcp2_seen++;
+					}
+				} else {
+					iec61851.diode_ok_counter++;
+				}
+			}
+		}
+
 
 		// If we reach here the diode error was fixed and we can turn the blinking off again
 		if(iec61851.diode_error_counter > 0) {
@@ -249,6 +311,11 @@ void iec61851_tick(void) {
 			} else {
 				return;
 			}
+		}
+
+		if(phase_control.in_progress) {
+			phase_control_state_phase_change();
+			return;
 		}
 
 		// If the CP contact is disconnected we stay in the current IEC state, independend of the measured resistance
@@ -288,5 +355,6 @@ void iec61851_tick(void) {
 void iec61851_init(void) {
 	memset(&iec61851, 0, sizeof(IEC61851));
 	iec61851.last_state_change = system_timer_get_ms();
+	iec61851_diode_error_reset(true);
 }
 

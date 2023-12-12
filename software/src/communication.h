@@ -82,17 +82,19 @@ void communication_init(void);
 #define EVSE_V2_JUMPER_CONFIGURATION_UNCONFIGURED 8
 
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_NORMAL_CONDITION 0
-#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA_ERROR 1
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA_DC_ERROR 1
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_SYSTEM_ERROR 2
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_UNKNOWN_ERROR 3
 #define EVSE_V2_DC_FAULT_CURRENT_STATE_CALIBRATION_ERROR 4
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_20_MA_AC_ERROR 5
+#define EVSE_V2_DC_FAULT_CURRENT_STATE_6_MA_AC_AND_20_MA_AC_ERROR 6
 
 #define EVSE_V2_SHUTDOWN_INPUT_IGNORED 0
 #define EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN 1
 #define EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE 2
 
-#define EVSE_V2_OUTPUT_LOW 0
-#define EVSE_V2_OUTPUT_HIGH 1
+#define EVSE_V2_OUTPUT_CONNECTED_TO_GROUND 0
+#define EVSE_V2_OUTPUT_HIGH_IMPEDANCE 1
 
 #define EVSE_V2_BUTTON_CONFIGURATION_DEACTIVATED 0
 #define EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING 1
@@ -107,6 +109,10 @@ void communication_init(void);
 #define EVSE_V2_ENERGY_METER_TYPE_SDM72 1
 #define EVSE_V2_ENERGY_METER_TYPE_SDM630 2
 #define EVSE_V2_ENERGY_METER_TYPE_SDM72V2 3
+#define EVSE_V2_ENERGY_METER_TYPE_SDM72CTM 4
+#define EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2 5
+#define EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD 6
+#define EVSE_V2_ENERGY_METER_TYPE_DEM4A 7
 
 #define EVSE_V2_INPUT_UNCONFIGURED 0
 #define EVSE_V2_INPUT_ACTIVE_LOW_MAX_0A 1
@@ -181,6 +187,10 @@ void communication_init(void);
 #define FID_SET_BOOST_MODE 34
 #define FID_GET_BOOST_MODE 35
 #define FID_TRIGGER_DC_FAULT_TEST 36
+#define FID_SET_GP_OUTPUT 37
+#define FID_GET_TEMPERATURE 38
+#define FID_SET_PHASE_CONTROL 39
+#define FID_GET_PHASE_CONTROL 40
 
 
 typedef struct {
@@ -225,6 +235,7 @@ typedef struct {
 	uint8_t gpio[3];
 	uint32_t charging_time;
 	uint32_t time_since_state_change;
+	uint32_t time_since_dc_fault_check;
 	uint32_t uptime;
 } __attribute__((__packed__)) GetLowLevelState_Response;
 
@@ -303,8 +314,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	float power;
-	float energy_relative;
-	float energy_absolute;
+	float current[3];
 	uint8_t phases_active[1];
 	uint8_t phases_connected[1];
 } __attribute__((__packed__)) GetEnergyMeterValues_Response;
@@ -379,12 +389,18 @@ typedef struct {
 	TFPMessageHeader header;
 	int16_t indication;
 	uint16_t duration;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 } __attribute__((__packed__)) GetIndicatorLED_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	int16_t indication;
 	uint16_t duration;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 } __attribute__((__packed__)) SetIndicatorLED;
 
 typedef struct {
@@ -469,8 +485,7 @@ typedef struct {
 	uint8_t evse_version;
 	uint8_t energy_meter_type;
 	float power;
-	float energy_relative;
-	float energy_absolute;
+	float current[3];
 	uint8_t phases_active[1];
 	uint8_t phases_connected[1];
 	uint32_t error_count[6];
@@ -487,6 +502,9 @@ typedef struct {
 	uint8_t output_configuration;
 	int16_t indication;
 	uint16_t duration;
+	uint16_t color_h;
+	uint8_t color_s;
+	uint8_t color_v;
 	uint8_t button_configuration;
 	uint32_t button_press_time;
 	uint32_t button_release_time;
@@ -494,6 +512,10 @@ typedef struct {
 	bool ev_wakeup_enabled;
 	bool control_pilot_disconnect;
 	bool boost_mode_enabled;
+	int16_t temperature;
+	uint8_t phases_current;
+	uint8_t phases_requested;
+	uint8_t phases_status;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -535,6 +557,36 @@ typedef struct {
 	bool started;
 } __attribute__((__packed__)) TriggerDCFaultTest_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t gp_output;
+} __attribute__((__packed__)) SetGPOutput;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetTemperature;
+
+typedef struct {
+	TFPMessageHeader header;
+	int16_t temperature;
+} __attribute__((__packed__)) GetTemperature_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t phases;
+} __attribute__((__packed__)) SetPhaseControl;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetPhaseControl;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t phases_current;
+	uint8_t phases_requested;
+	uint8_t phases_status;
+} __attribute__((__packed__)) GetPhaseControl_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -573,6 +625,10 @@ BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressB
 BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data);
 BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response);
 BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response);
+BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data);
+BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetTemperature_Response *response);
+BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data);
+BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response);
 
 // Callbacks
 

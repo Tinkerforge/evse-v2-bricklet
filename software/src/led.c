@@ -26,6 +26,9 @@
 #include "bricklib2/logging/logging.h"
 
 #include "xmc_ccu4.h"
+#include "xmc_ccu8.h"
+
+#include "hardware_version.h"
 
 #include <string.h>
 
@@ -62,16 +65,60 @@ const uint16_t led_cie1931[256] = {
 	62268, 62912, 63561, 64215, 64873, 65535, 
 };
 
-#define LED_MAX_DUTY_CYCLE 6553
-#define LED_MIN_DUTY_CYLCE 0
+#define LED_MAX_DUTY_CYCLE 0xFFFF
+#define LED_MIN_DUTY_CYCLE 0
 
-#define LED_ON  LED_MIN_DUTY_CYLCE
-#define LED_OFF LED_MAX_DUTY_CYCLE
+#define LED_ON  LED_MAX_DUTY_CYCLE
+#define LED_OFF LED_MIN_DUTY_CYCLE
 
-void led_set_duty_cycle(const uint16_t compare_value) {
-	XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_LED_SLICE, compare_value);
-    XMC_CCU4_EnableShadowTransfer(EVSE_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)) |
-    		                                    (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)));
+
+void led_hsv_to_rgb(const uint16_t h, const uint8_t s, const uint8_t v, uint8_t *r, uint8_t *g, uint8_t *b) {
+    if(s == 0) {
+        *r = v;
+		*g = v;
+		*b = v;
+    } else {
+        const uint8_t i = h / 60;
+        const uint8_t p = (256*v - s*v) / 256;
+
+        if(i & 1) {
+            const int32_t q = (256*60*v - h*s*v + 60*s*v*i) / (256*60);
+            switch(i) {
+                case 1: *r = q; *g = v; *b = p; break;
+                case 3: *r = p; *g = q; *b = v; break;
+                case 5: *r = v; *g = p; *b = q; break;
+            }
+        } else {
+            const int32_t t = (256*60*v + h*s*v - 60*s*v*(i+1)) / (256*60);
+            switch(i) {
+                case 0: *r = v; *g = t; *b = p; break;
+                case 2: *r = p; *g = v; *b = t; break;
+                case 4: *r = t; *g = p; *b = v; break;
+            }
+        }
+    }
+}
+
+void led_update(const uint16_t h, const uint8_t s, const uint8_t v) {
+	led.h = h;
+	led.s = s;
+	led.v = v;
+	led_hsv_to_rgb(h, s, v, &led.r, &led.g, &led.b);
+
+	uint16_t compare_value_b = led_cie1931[led.b];
+	if(hardware_version.is_v2) {
+		XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, compare_value_b);
+    	XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) | (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
+	} else if(hardware_version.is_v3) {
+		uint16_t compare_value_r = led_cie1931[led.r];
+		uint16_t compare_value_g = led_cie1931[led.g];
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value_r);
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value_g);
+		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value_b);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SHADOW);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SHADOW);
+		XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SHADOW);
+	}
 }
 
 void led_reset_api_state(void) {
@@ -106,8 +153,8 @@ void led_set_breathing(void) {
 	// Otherwise start breathing from LED-on-condition
 	led.state           = LED_STATE_BREATHING;
 	led.breathing_time  = 0;
-	led.breathing_index = 0;
-	led.breathing_up    = true;
+	led.breathing_index = 255;
+	led.breathing_up    = false;
 }
 
 void led_set_blinking(const uint8_t num) {
@@ -127,7 +174,7 @@ void led_set_blinking(const uint8_t num) {
 	led.blink_on        = false;
 	led.blink_last_time = system_timer_get_ms();
 
-	led_set_duty_cycle(LED_OFF);
+	led_update(0, 0, 0);
 }
 
 // Called whenever there is activity
@@ -137,10 +184,11 @@ void led_set_on(const bool force) {
 	if(!force && (led.state == LED_STATE_API)) {
 		return;
 	}
-	
+
+	led_hsv_to_rgb(led.h, led.s, led.v, &led.r, &led.g, &led.b);
 	led.on_time = system_timer_get_ms();
 	led.state = LED_STATE_ON;
-	led_set_duty_cycle(LED_ON);
+	led_update(LED_HUE_STANDARD, 255, 255);
 }
 
 void led_set_off(void) {
@@ -150,12 +198,10 @@ void led_set_off(void) {
 	}
 
 	led.state = LED_STATE_OFF;
-	led_set_duty_cycle(LED_OFF);
+	led_update(0, 0, 0);
 }
 
-void led_init(void) {
-	memset(&led, 0, sizeof(LED));
-
+void led_init_v2(void) {
 	const XMC_CCU4_SLICE_COMPARE_CONFIG_t compare_config = {
 		.timer_mode          = XMC_CCU4_SLICE_TIMER_COUNT_MODE_EA,
 		.monoshot            = false,
@@ -167,7 +213,7 @@ void led_init(void) {
 		.prescaler_initval   = 0,
 		.float_limit         = 0,
 		.dither_limit        = 0,
-		.passive_level       = XMC_CCU4_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
+		.passive_level       = XMC_CCU4_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
 		.timer_concatenation = 0
 	};
 
@@ -177,38 +223,121 @@ void led_init(void) {
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
 
-    XMC_CCU4_Init(EVSE_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    XMC_CCU4_StartPrescaler(EVSE_LED_CCU);
-    XMC_CCU4_SLICE_CompareInit(EVSE_LED_SLICE, &compare_config);
+    XMC_CCU4_Init(EVSE_V2_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    XMC_CCU4_StartPrescaler(EVSE_V2_LED_CCU);
+    XMC_CCU4_SLICE_CompareInit(EVSE_V2_LED_SLICE, &compare_config);
 
     // Set the period and compare register values
-    XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
-    XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_LED_SLICE, 0);
+    XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_V2_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
+    XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, 0);
 
-    XMC_CCU4_EnableShadowTransfer(EVSE_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)) |
-    		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_LED_SLICE_NUMBER*4)));
+    XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) |
+    		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
 
-    XMC_GPIO_Init(EVSE_LED_PIN, &gpio_out_config);
+    XMC_GPIO_Init(EVSE_V2_LED_PIN, &gpio_out_config);
 
-    XMC_CCU4_EnableClock(EVSE_LED_CCU, EVSE_LED_SLICE_NUMBER);
-    XMC_CCU4_SLICE_StartTimer(EVSE_LED_SLICE);
+    XMC_CCU4_EnableClock(EVSE_V2_LED_CCU, EVSE_V2_LED_SLICE_NUMBER);
+    XMC_CCU4_SLICE_StartTimer(EVSE_V2_LED_SLICE);
+}
 
-	led_set_duty_cycle(LED_OFF);
+void led_init_v3(void) {
+	XMC_CCU8_SLICE_COMPARE_CONFIG_t compare_config = {
+		.timer_mode          = XMC_CCU8_SLICE_TIMER_COUNT_MODE_EA,
+		.monoshot            = false,
+		.shadow_xfer_clear   = 0,
+		.dither_timer_period = 0,
+		.dither_duty_cycle   = 0,
+		.prescaler_mode      = XMC_CCU8_SLICE_PRESCALER_MODE_NORMAL,
+		.prescaler_initval   = 0,
+		.float_limit         = 0,
+		.dither_limit        = 0,
+		.passive_level_out0  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out1  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out2  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.passive_level_out3  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_HIGH,
+		.timer_concatenation = 0
+	};
+
+	XMC_CCU8_Init(EVSE_V3_LED_R_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_Init(EVSE_V3_LED_G_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_Init(EVSE_V3_LED_B_CCU, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_R_CCU);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_G_CCU);
+	XMC_CCU8_StartPrescaler(EVSE_V3_LED_B_CCU);
+	compare_config.passive_level_out0 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_R_PASSIVE_LEVEL;
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_R_SLICE, &compare_config);
+	compare_config.passive_level_out0 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_G_PASSIVE_LEVEL;
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_G_SLICE, &compare_config);
+	compare_config.passive_level_out0 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out1 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out2 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	compare_config.passive_level_out3 = EVSE_V3_LED_B_PASSIVE_LEVEL;
+	XMC_CCU8_SLICE_CompareInit(EVSE_V3_LED_B_SLICE, &compare_config);
+
+	// Set the period and compare register values
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_R_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_G_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerPeriodMatch(EVSE_V3_LED_B_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0); // TODO: which compare channel?
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_G_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
+	XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_B_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
+
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SHADOW);
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SHADOW);
+	XMC_CCU8_EnableShadowTransfer(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SHADOW);
+
+	XMC_GPIO_CONFIG_t gpio_out_config = {
+		.mode                = EVSE_V3_LED_R_ALT,
+		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
+		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
+	};
+    XMC_GPIO_Init(EVSE_V3_LED_R_PIN, &gpio_out_config);
+	gpio_out_config.mode = EVSE_V3_LED_G_ALT;
+    XMC_GPIO_Init(EVSE_V3_LED_G_PIN, &gpio_out_config);
+	gpio_out_config.mode = EVSE_V3_LED_B_ALT;
+    XMC_GPIO_Init(EVSE_V3_LED_B_PIN, &gpio_out_config);
+
+	XMC_CCU8_EnableClock(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SLICE_NUMBER);
+	XMC_CCU8_EnableClock(EVSE_V3_LED_B_CCU, EVSE_V3_LED_B_SLICE_NUMBER);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_R_SLICE);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_G_SLICE);
+	XMC_CCU8_SLICE_StartTimer(EVSE_V3_LED_B_SLICE);
+}
+
+void led_init(void) {
+	memset(&led, 0, sizeof(LED));
+
+	led_hsv_to_rgb(led.h, led.s, led.v, &led.r, &led.g, &led.b);
+
+	if(hardware_version.is_v2) {
+		led_init_v2();
+	} else if(hardware_version.is_v3) {
+		led_init_v3();
+	}
+
+	led_update(0, 0, 0);
 	led_reset_api_state();
 
 	led.state = LED_STATE_FLICKER;
 }
 
 void led_tick_status_off(void) {
-	led_set_duty_cycle(LED_OFF);
+	led_update(0, 0, 0);
 }
 
 void led_tick_status_on(void) {
 	if(system_timer_is_time_elapsed_ms(led.on_time, LED_STANDBY_TIME)) {
 		led.state = LED_STATE_OFF;
-		led_set_duty_cycle(LED_OFF);
+		led_update(0, 0, 0);
 	} else {
-		led_set_duty_cycle(LED_ON);
+		led_update(LED_HUE_STANDARD, 255, 255);
 	}
 }
 
@@ -222,14 +351,15 @@ void led_tick_status_blinking(void) {
 	} else if(led.blink_on) {
 		if(system_timer_is_time_elapsed_ms(led.blink_last_time, LED_BLINK_DURATION_ON)) {
 			led.blink_last_time = system_timer_get_ms();
-			led_set_duty_cycle(LED_OFF);
+			led_update(0, 0, 0);
+
 			led.blink_on = false;
 			led.blink_count++;
 		}
 	} else {
 		if(system_timer_is_time_elapsed_ms(led.blink_last_time, LED_BLINK_DURATION_OFF)) {
 			led.blink_last_time = system_timer_get_ms();
-			led_set_duty_cycle(LED_ON);
+			led_update(hardware_version.is_v2 ? LED_HUE_STANDARD : LED_HUE_ERROR, 255, 255);
 			led.blink_on = true;
 		}
 	}
@@ -237,7 +367,11 @@ void led_tick_status_blinking(void) {
 
 void led_tick_status_flicker(void) {
 	if(system_timer_is_time_elapsed_ms(led.flicker_last_time, LED_FLICKER_DURATION)) {
-		led_set_duty_cycle(led.flicker_on ? LED_ON : LED_OFF);
+		if(led.flicker_on) {
+			led_update(hardware_version.is_v2 ? LED_HUE_STANDARD :LED_HUE_BOOTING, 255, 255);
+		} else {
+			led_update(0, 0, 0);
+		}
 		led.flicker_last_time = system_timer_get_ms();
 		led.flicker_on        = ! led.flicker_on;
 	}
@@ -262,12 +396,12 @@ void led_tick_status_breathing(void) {
 		led.breathing_up = false;
 	}
 
-	led_set_duty_cycle(6553 - led_cie1931[led.breathing_index]/10);
+	led_update(LED_HUE_STANDARD, 255, led.breathing_index);
 }
 
 void led_tick_status_api_ack(void) {
 	if((led.api_ack_counter < 3) && (system_timer_is_time_elapsed_ms(led.api_ack_time, 2))) {
-		led_set_duty_cycle(6553 - led_cie1931[led.api_ack_index]/10);
+		led_update(led.h, led.s, led.breathing_index);
 		led.api_ack_index++;
 		led.api_ack_time+=2;
 		if(led.api_ack_index == 0) {
@@ -283,7 +417,7 @@ void led_tick_status_api_ack(void) {
 
 void led_tick_status_api_nack(void) {
 	if((led.api_nack_counter < 1) && (system_timer_is_time_elapsed_ms(led.api_nack_time, 1))) {
-		led_set_duty_cycle(6553 - led_cie1931[255-led.api_nack_index]/10);
+		led_update(led.h, led.s, 255-led.api_nack_index);
 		led.api_nack_index++;
 		led.api_nack_time++;
 		if(led.api_nack_index == 0) {
@@ -299,14 +433,14 @@ void led_tick_status_api_nack(void) {
 
 void led_tick_status_api_nag(void) {
 	if((led.api_nag_counter == 0) && (system_timer_is_time_elapsed_ms(led.api_nag_time, 1))) {
-		led_set_duty_cycle(6553 - led_cie1931[led.api_nag_index]/10);
+		led_update(led.h, led.s, led.api_nag_index);
 		led.api_nag_index++;
 		led.api_nag_time++;
 		if(led.api_nag_index == 0) {
 			led.api_nag_counter++;
 		}
 	} else if((led.api_nag_counter == 1) && (system_timer_is_time_elapsed_ms(led.api_nag_time, 1))) {
-		led_set_duty_cycle(6553 - led_cie1931[255-led.api_nag_index]/10);
+		led_update(led.h, led.s, 255-led.api_nag_index);
 		led.api_nag_index++;
 		led.api_nag_time++;
 		if(led.api_nag_index == 0) {
@@ -324,7 +458,7 @@ void led_tick_status_api(void) {
 	led.currently_in_wait_state = false;
 
 	if((led.api_indication >= 0) && (led.api_indication <= 255)) {
-		led_set_duty_cycle(6553 - led_cie1931[led.api_indication]/10);
+		led_update(led.h, led.s, led.api_indication);
 	} else if(led.api_indication == 1001) {
 		led_tick_status_api_ack();
 	} else if(led.api_indication == 1002) {
@@ -337,7 +471,7 @@ void led_tick_status_api(void) {
 			// with last time set to now.
 			// This way we don't waste any time and the first blinking pattern already has
 			// the correct amount of blinks.
-			led_set_duty_cycle(LED_OFF);
+			led_update(0, 0, 0);
 			led.blink_num       = led.api_indication - 2000;
 			led.blink_count     = 0;
 			led.blink_on        = false;
@@ -354,6 +488,7 @@ void led_tick_status_api(void) {
 	}
 }
 
+// TODO: Always use HSV. Use V for dimming (instead of index) and then the cie1931 table for the resulting rgb value.
 void led_tick(void) {
 	if((led.state != LED_STATE_API) || (led.api_indication <= 2000) || (led.api_indication >= 2011)) {
 		led.blink_external  = -1;

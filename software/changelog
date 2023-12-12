@@ -88,6 +88,40 @@
 2023-04-14: 2.1.12 (0b09849)
 - Initialize meter values as NaN and return unkown meter until each value read once
 
-TBD: 2.1.13 (TBD)
+2023-06-21: 2.1.13 (60baea0)
 - Add blink led indicator code 2001-2010 for custom error code with 1-10 "blink amount"
 - Add automatic DC fault test after each charging session and at least every 24h
+- Make sure active cp disconnect can not be turned off again through API from external
+- Make sure meter type is only reconfigured once per complete read of register set
+- Add "time_since_dc_fault_check" parameter to "get_low_level_state" function
+- Reset timeout counter when meter is found for the first time (through bricklib)
+
+2023-08-21: 2.1.14 (61003a7)
+- Don't check for DC fault when contactor is turned off
+- Start immediate DC fault sensor re-calibration after dc fault reset (to go back to error state in case of a defective sensor)
+- Fix read of stored startup value of boost mode
+- Wait for at least 30 seconds until contactor is turned on again after state D
+- Wait for at least 5 seconds until contactor is turned on again after charging was stopped
+
+TBD: 2.2.0 (TBD)
+- First release with WARP3 support
+	Starting with this release the firmware will support EVSE V2 and EVSE V3
+- Add EVSE version detection (V2/V3)
+- Add support for RGB LED (WARP3)
+- Add support for phase control (WARP3)
+- Add API for temperature sensor (WARP3)
+- Add driver for TMP1075N temperature sensor (WARP3)
+- Improve diode detection
+- Use new unified meter implementation from bricklib2
+- Add support for DSZ15DZMOD meter from Eltako (through bricklib2)
+- Add support for DEM4A meter from YTL (through bricklib2)
+- Add support for X804 6mA fault current detection
+	This should now show 6mA error for X904 and X804 correctly
+- Add additional debug information to dc fault state
+	Note: Bits 0-2 are unchanged by this, but bits 3-5 are now used (were unused before)
+- Add DC fault sensor type detection
+- Add support for 20mA AC fault current detection
+	Note: This does not replace an AC RCD!
+- Add support for resetable relative import/export energy
+- Change GetEnergyMeterValues parameter (current instead of energy)
+	Note: The "fast read" values are now the same between Energy Manager and EVSE
