@@ -164,7 +164,7 @@ void dc_fault_calibration_tick(void) {
 		case 5: { // Wait 1s for 6x and 30x to go low again 
 		         // (datasheet says 2030 to 2100ms, we have 2200 in sum)
 			if(system_timer_is_time_elapsed_ms(dc_fault.calibration_time, 400)) {
-				dc_fault.calibration_check[2] = (!XMC_GPIO_GetInput(DC_FAULT_X6_PIN)) || (!XMC_GPIO_GetInput(DC_FAULT_X30_PIN));
+				dc_fault.calibration_check[2] = (!XMC_GPIO_GetInput(DC_FAULT_X6_PIN)) && (!XMC_GPIO_GetInput(DC_FAULT_X30_PIN));
 
 				if(dc_fault.calibration_check[0] && dc_fault.calibration_check[1] && dc_fault.calibration_check[2]) {
 					// DC faul test and calibration OK
