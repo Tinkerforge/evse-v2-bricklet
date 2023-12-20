@@ -401,7 +401,7 @@ void led_tick_status_breathing(void) {
 
 void led_tick_status_api_ack(void) {
 	if((led.api_ack_counter < 3) && (system_timer_is_time_elapsed_ms(led.api_ack_time, 2))) {
-		led_update(led.h, led.s, led.breathing_index);
+		led_update(led.h, led.s, led.api_ack_index);
 		led.api_ack_index++;
 		led.api_ack_time+=2;
 		if(led.api_ack_index == 0) {
