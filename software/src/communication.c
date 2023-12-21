@@ -549,7 +549,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 	}
 
 	// Otherwise we reset the current animation and start the new one
-	if((led.state == LED_STATE_OFF) || (led.state == LED_STATE_ON) || (led.state == LED_STATE_API)) {
+	if((led.state == LED_STATE_OFF) || (led.state == LED_STATE_ON) || (led.state == LED_STATE_API) || (led.state == LED_STATE_BREATHING)) {
 		response->status     = 0;
 	
 		led.api_ack_counter  = 0;

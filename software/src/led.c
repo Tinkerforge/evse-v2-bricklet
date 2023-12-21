@@ -145,9 +145,9 @@ void led_set_breathing(void) {
 		return;
 	}
 
-	// Breathing overwrites API configuration
+	// API has higher priority than breathing
 	if(led.state == LED_STATE_API) {
-		led_reset_api_state();
+		return;
 	}
 
 	// Otherwise start breathing from LED-on-condition
