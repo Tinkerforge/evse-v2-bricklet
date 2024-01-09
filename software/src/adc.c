@@ -89,20 +89,20 @@ ADC adc_v2[ADC_NUM] = {
 ADC adc_v3[ADC_NUM] = {
 	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
 		.port          = XMC_GPIO_PORT2,
-		.pin           = 4,
-		.result_reg    = 5,
-		.channel_num   = 1,
-		.channel_alias = 6,
+		.pin           = 5,
+		.result_reg    = 6,
+		.channel_num   = 7,
+		.channel_alias = -1,
 		.group_index   = 1,
 		.group         = VADC_G1,
 		.name          = "VCP1"
 	},
 	{ // Channel ADC_CHANNEL_VCP2  (w/ resistor)
 		.port          = XMC_GPIO_PORT2,
-		.pin           = 5,
-		.result_reg    = 6,
-		.channel_num   = 7,
-		.channel_alias = -1,
+		.pin           = 4,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 6,
 		.group_index   = 1,
 		.group         = VADC_G1,
 		.name          = "VCP2"
