@@ -108,7 +108,7 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 	response->error_state              = led.state == LED_STATE_BLINKING ? led.blink_num : 0;
 	response->lock_state               = lock.state;
 
-	if((iec61851.state == IEC61851_STATE_D) || (iec61851.state == IEC61851_STATE_EF)) {
+	if(response->error_state != 0) {
 		response->charger_state = EVSE_V2_CHARGER_STATE_ERROR;
 	} else if(iec61851.state == IEC61851_STATE_C) {
 		response->charger_state = EVSE_V2_CHARGER_STATE_CHARGING;
