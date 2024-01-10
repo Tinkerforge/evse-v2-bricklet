@@ -676,10 +676,6 @@ void evse_tick(void) {
 
 		// Return to make sure that the dc fault tick is called at least once before the iec61851 tick.
 		return;
-	}
-
-	else if((evse.config_jumper_current == EVSE_CONFIG_JUMPER_SOFTWARE) || (evse.config_jumper_current == EVSE_CONFIG_JUMPER_UNCONFIGURED)) {
-		led_set_blinking(2);
 	} else if(dc_fault.calibration_running) {
 		// TODO: Just do nothing here, right?
 		// LED flickering here would just be confusing, this is not an error state.

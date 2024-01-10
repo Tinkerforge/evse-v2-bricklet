@@ -247,7 +247,7 @@ void iec61851_tick(void) {
 	} else if(contactor_check.error != 0) {
 		led_set_blinking(4);
 		iec61851_set_state(IEC61851_STATE_EF);
-	} else if(evse.config_jumper_current == EVSE_CONFIG_JUMPER_UNCONFIGURED) {
+	} else if((evse.config_jumper_current == EVSE_CONFIG_JUMPER_SOFTWARE) || (evse.config_jumper_current == EVSE_CONFIG_JUMPER_UNCONFIGURED)) {
 		// We don't allow the jumper to be unconfigured
 		led_set_blinking(2);
 		iec61851_set_state(IEC61851_STATE_EF);
