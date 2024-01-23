@@ -128,5 +128,5 @@
 - LED API now has higher priority than breathing LED during charging
 - Slot is not blocked by default if extern control is enabled
 
-2023-01-23: 2.2.1 (TBD)
+2023-01-23: 2.2.1 (f6ae9be7)
 - Make sure that the diode check is only run if at least one negative PWM value has been measured
