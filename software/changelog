@@ -127,3 +127,6 @@
 	Note: The "fast read" values are now the same between Energy Manager and EVSE
 - LED API now has higher priority than breathing LED during charging
 - Slot is not blocked by default if extern control is enabled
+
+2023-01-23: 2.2.1 (TBD)
+- Make sure that the diode check is only run if at least one negative PWM value has been measured
