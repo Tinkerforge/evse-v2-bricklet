@@ -103,7 +103,7 @@
 - Wait for at least 30 seconds until contactor is turned on again after state D
 - Wait for at least 5 seconds until contactor is turned on again after charging was stopped
 
-TBD: 2.2.0 (TBD)
+2024-01-23: 2.2.0 (f8eaefaf)
 - First release with WARP3 support
 	Starting with this release the firmware will support EVSE V2 and EVSE V3
 - Add EVSE version detection (V2/V3)
@@ -126,3 +126,4 @@ TBD: 2.2.0 (TBD)
 - Change GetEnergyMeterValues parameter (current instead of energy)
 	Note: The "fast read" values are now the same between Energy Manager and EVSE
 - LED API now has higher priority than breathing LED during charging
+- Slot is not blocked by default if extern control is enabled
