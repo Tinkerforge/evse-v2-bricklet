@@ -130,3 +130,6 @@
 
 2023-01-23: 2.2.1 (f6ae9be7)
 - Make sure that the diode check is only run if at least one negative PWM value has been measured
+
+2023-XX-XX: 2.2.2 (TBD)
+- Fix bug in DC fault detection debounce

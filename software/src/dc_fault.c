@@ -84,6 +84,7 @@ void dc_fault_update_values(void) {
 
 	for(uint8_t i = 0; i < 3; i++) {
 		if(values[i]) {
+			values[i] = false;
 			if(t[i] != 0) {
 				// The dc fault pin has to be logic high for at least 50ms before we accept it as high
 				if(system_timer_is_time_elapsed_ms(t[i], 50)) {
