@@ -38,7 +38,7 @@
 #define EVSE_CONFIG_JUMPER_CURRENT_20A  4
 #define EVSE_CONFIG_JUMPER_CURRENT_25A  5
 #define EVSE_CONFIG_JUMPER_CURRENT_32A  6
-#define EVSE_CONFIG_JUMPER_SOFTWARE     7
+#define EVSE_CONFIG_JUMPER_RESERVED     7
 #define EVSE_CONFIG_JUMPER_UNCONFIGURED 8
 
 #define EVSE_CONFIG_PAGE                1
@@ -76,7 +76,6 @@ typedef struct {
     uint32_t startup_time;
 
 	uint8_t config_jumper_current;
-	uint16_t config_jumper_current_software;
 
 	bool has_lock_switch;
 	bool calibration_error;

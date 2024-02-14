@@ -133,3 +133,6 @@
 
 2023-09-02: 2.2.2 (707c55a2)
 - Fix bug in DC fault detection debounce
+
+2024-XX-XX: 2.2.3 (TBD)
+- Add support for EVSE V3 jumper configuration
