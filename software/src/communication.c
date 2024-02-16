@@ -227,10 +227,10 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 		                    (get_bit(port2, 8)   << 6) | // 14: PE Check
 		                    (get_bit(port2, 9)   << 7);  // 15: Config Jumper 1
 
-		response->gpio[2] = (get_bit(port4, 4)   << 6) | // 16: CP Disconnect
-		                    (get_bit(port4, 5)   << 7) | // 17: Config Jumper 0
-		                    (get_bit(port4, 6)   << 0) | // 18: Enable
-		                    (get_bit(port4, 7)   << 1);  // 19: Version Detection
+		response->gpio[2] = (get_bit(port4, 4)   << 0) | // 16: CP Disconnect
+		                    (get_bit(port4, 5)   << 1) | // 17: Config Jumper 0
+		                    (get_bit(port4, 6)   << 2) | // 18: Enable
+		                    (get_bit(port4, 7)   << 3);  // 19: Version Detection
 	}
 
 	if(evse.charging_time == 0) {
