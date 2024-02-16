@@ -86,20 +86,11 @@ class EVSEV3Tester:
 
 
     # Live = True
-    def set_contactor(self, contactor1, contactor2):
-        if contactor1:
-            self.iqr3.set_selected_value(2, True)
-            log('Contactor1 live')
-        else:
-            self.iqr3.set_selected_value(2, False)
-            log('Contactor1 off')
+    def set_contactor_fb(self, value):
+        log('Set contactor fb {0}'.format(value))
 
-        if contactor2:
-            self.iqr3.set_selected_value(3, True)
-            log('Contactor2 live')
-        else:
-            self.iqr3.set_selected_value(3, False)
-            log('Contactor2 off')
+        self.iqr3.set_selected_value(2, value)
+        self.iqr3.set_selected_value(3, value)
 
     def set_cp_pe_resistor(self, r2700, r880, r240):
         value = list(self.iqr1.get_value())
