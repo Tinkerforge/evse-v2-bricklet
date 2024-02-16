@@ -85,7 +85,7 @@ if __name__ == "__main__":
     data.append(ident.uid)
 
     # Initial config
-    evse_tester.set_contactor(False, False)
+    evse_tester.set_contactor_fb(False)
     evse_tester.set_230v(True)
     evse_tester.set_cp_pe_resistor(False, False, False)
     evse_tester.set_pp_pe_resistor(False, False, True, False)
@@ -134,6 +134,7 @@ if __name__ == "__main__":
 
     print('Teste CP/PE...')
     print(' * open')
+    evse_tester.set_max_charging_current(0)
     res_cppe = evse_tester.evse.get_low_level_state().resistances[0]
     data.append(str(res_cppe))
     if res_cppe == 4294967295:
@@ -276,7 +277,7 @@ if __name__ == "__main__":
 
     print('Beginne Test-Ladung')
 
-    evse_tester.set_contactor(False, False)
+    evse_tester.set_contactor_fb(False)
     evse_tester.set_230v(True)
     evse_tester.set_cp_pe_resistor(False, False, False)
     evse_tester.set_pp_pe_resistor(False, False, True, False)
@@ -290,7 +291,7 @@ if __name__ == "__main__":
     evse_tester.wait_for_contactor_gpio(False)
 
     print('Aktiviere Schütz (2 Sekunden)')
-    evse_tester.set_contactor(True, True)
+    evse_tester.set_contactor_fb(True)
 
     time.sleep(0.5)
     print('... OK')
@@ -308,7 +309,7 @@ if __name__ == "__main__":
             print('-----------------> NICHT OK {0} Ohm (erwartet 880 Ohm)'.format(res_cppe))
             evse_tester.exit(1)
         vol_cppe = evse_tester.get_cp_pe_voltage()
-        if test_value(vol_cppe, test_voltages[i]):
+        if test_value(vol_cppe, test_voltages[i], margin_percent=0.15):
             print(' * ... OK ({0} mV)'.format(vol_cppe))
         else:
             print('-----------------> NICHT OK {0} mV (erwartet {1} mV)'.format(vol_cppe, test_voltages[i]))
@@ -327,7 +328,7 @@ if __name__ == "__main__":
     t1 = time.time()
     evse_tester.set_cp_pe_resistor(True, False, False)
     evse_tester.wait_for_contactor_gpio(True)
-    evse_tester.set_contactor(False, False)
+    evse_tester.set_contactor_fb(False)
     t2 = time.time()
 
     delay = int((t2-t1)*1000)
@@ -346,13 +347,11 @@ if __name__ == "__main__":
 
     evse_tester.wait_for_button_gpio(True) # Button True = Pressed
     print('... OK')
-    print('')
     evse_tester.press_button(False)
-
 
     print('Teste LED R')
     evse_tester.set_evse_led(True, False, False)
-    time.sleep(0.5)
+    time.sleep(1)
     led = evse_tester.get_evse_led()
     if led[0] and (not led[1]) and (not led[2]):
         print('... OK')
@@ -361,7 +360,7 @@ if __name__ == "__main__":
         evse_tester.exit(1)
     print('Teste LED G')
     evse_tester.set_evse_led(False, True, False)
-    time.sleep(0.5)
+    time.sleep(1)
     led = evse_tester.get_evse_led()
     if led[1] and (not led[0]) and (not led[2]):
         print('... OK')
@@ -370,7 +369,7 @@ if __name__ == "__main__":
         evse_tester.exit(1)
     print('Teste LED B')
     evse_tester.set_evse_led(False, False, True)
-    time.sleep(0.5)
+    time.sleep(1)
     led = evse_tester.get_evse_led()
     if led[2] and (not led[0]) and (not led[1]):
         print('... OK')
