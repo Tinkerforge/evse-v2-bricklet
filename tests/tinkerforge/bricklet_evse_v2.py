@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #############################################################
-# This file was automatically generated on 2023-11-14.      #
+# This file was automatically generated on 2023-12-12.      #
 #                                                           #
 # Python Bindings Version 2.1.30                            #
 #                                                           #
@@ -27,12 +27,12 @@ GetLowLevelState = namedtuple('LowLevelState', ['led_state', 'cp_pwm_duty_cycle'
 GetChargingSlot = namedtuple('ChargingSlot', ['max_current', 'active', 'clear_on_disconnect'])
 GetAllChargingSlots = namedtuple('AllChargingSlots', ['max_current', 'active_and_clear_on_disconnect'])
 GetChargingSlotDefault = namedtuple('ChargingSlotDefault', ['max_current', 'active', 'clear_on_disconnect'])
-GetEnergyMeterValues = namedtuple('EnergyMeterValues', ['power', 'energy_relative', 'energy_absolute', 'phases_active', 'phases_connected'])
+GetEnergyMeterValues = namedtuple('EnergyMeterValues', ['power', 'current', 'phases_active', 'phases_connected'])
 GetAllEnergyMeterValuesLowLevel = namedtuple('AllEnergyMeterValuesLowLevel', ['values_chunk_offset', 'values_chunk_data'])
 GetGPIOConfiguration = namedtuple('GPIOConfiguration', ['shutdown_input_configuration', 'input_configuration', 'output_configuration'])
 GetIndicatorLED = namedtuple('IndicatorLED', ['indication', 'duration', 'color_h', 'color_s', 'color_v'])
 GetButtonState = namedtuple('ButtonState', ['button_press_time', 'button_release_time', 'button_pressed'])
-GetAllData1 = namedtuple('AllData1', ['iec61851_state', 'charger_state', 'contactor_state', 'contactor_error', 'allowed_charging_current', 'error_state', 'lock_state', 'dc_fault_current_state', 'jumper_configuration', 'has_lock_switch', 'evse_version', 'energy_meter_type', 'power', 'energy_relative', 'energy_absolute', 'phases_active', 'phases_connected', 'error_count'])
+GetAllData1 = namedtuple('AllData1', ['iec61851_state', 'charger_state', 'contactor_state', 'contactor_error', 'allowed_charging_current', 'error_state', 'lock_state', 'dc_fault_current_state', 'jumper_configuration', 'has_lock_switch', 'evse_version', 'energy_meter_type', 'power', 'current', 'phases_active', 'phases_connected', 'error_count'])
 GetAllData2 = namedtuple('AllData2', ['shutdown_input_configuration', 'input_configuration', 'output_configuration', 'indication', 'duration', 'color_h', 'color_s', 'color_v', 'button_configuration', 'button_press_time', 'button_release_time', 'button_pressed', 'ev_wakeup_enabled', 'control_pilot_disconnect', 'boost_mode_enabled', 'temperature', 'phases_current', 'phases_requested', 'phases_status'])
 GetPhaseControl = namedtuple('PhaseControl', ['phases_current', 'phases_requested', 'phases_status'])
 GetSPITFPErrorCount = namedtuple('SPITFPErrorCount', ['error_count_ack_checksum', 'error_count_message_checksum', 'error_count_frame', 'error_count_overflow'])
@@ -167,6 +167,7 @@ class BrickletEVSEV2(Device):
     ENERGY_METER_TYPE_SDM72CTM = 4
     ENERGY_METER_TYPE_SDM630MCTV2 = 5
     ENERGY_METER_TYPE_DSZ15DZMOD = 6
+    ENERGY_METER_TYPE_DEM4A = 7
     INPUT_UNCONFIGURED = 0
     INPUT_ACTIVE_LOW_MAX_0A = 1
     INPUT_ACTIVE_LOW_MAX_6A = 2
@@ -391,7 +392,7 @@ class BrickletEVSEV2(Device):
         """
         self.check_validity()
 
-        return GetEnergyMeterValues(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ENERGY_METER_VALUES, (), '', 22, 'f f f 3! 3!'))
+        return GetEnergyMeterValues(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ENERGY_METER_VALUES, (), '', 26, 'f 3f 3! 3!'))
 
     def get_all_energy_meter_values_low_level(self):
         r"""
@@ -558,7 +559,7 @@ class BrickletEVSEV2(Device):
         """
         self.check_validity()
 
-        return GetAllData1(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ALL_DATA_1, (), '', 59, 'B B B B H B B B B ! B B f f f 3! 3! 6I'))
+        return GetAllData1(*self.ipcon.send_request(self, BrickletEVSEV2.FUNCTION_GET_ALL_DATA_1, (), '', 63, 'B B B B H B B B B ! B B f 3f 3! 3! 6I'))
 
     def get_all_data_2(self):
         r"""
@@ -820,7 +821,7 @@ class BrickletEVSEV2(Device):
         r"""
         TBD
         """
-        values_length = 85
+        values_length = 88
 
         with self.stream_lock:
             ret = self.get_all_energy_meter_values_low_level()
