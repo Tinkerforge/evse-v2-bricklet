@@ -64,9 +64,9 @@ class EVSEV3Tester:
 
     def set_evse_led(self, r, g, b):
         ret = -1
-        if r:   ret = self.evse.set_indicator_led(255, 1000, 0, 100, 100)
-        elif g: ret = self.evse.set_indicator_led(255, 1000, 120, 100, 100)
-        elif b: ret = self.evse.set_indicator_led(255, 1000, 240, 100, 100)
+        if r:   ret = self.evse.set_indicator_led(255, 10000, 0, 255, 255)
+        elif g: ret = self.evse.set_indicator_led(255, 10000, 120, 255, 255)
+        elif b: ret = self.evse.set_indicator_led(255, 10000, 240, 255, 255)
         log("Set EVSE LED {0} {1} {2}, ret {3}".format(r, g, b, ret))
 
     def get_evse_led(self):
