@@ -163,13 +163,7 @@ class EVSEV3Tester:
         return (a, b, c, d)
     
     def get_cp_pe_voltage(self):
-        # Get high voltage of pwm
-        v = -1000000
-        i = 0
-        while i < 100:
-            v = max(self.idai.get_voltage(1), v)
-            i += 1
-        return v
+        return self.idai.get_voltage(1)
 
     def get_pp_pe_voltage(self):
         return self.idai.get_voltage(0)
