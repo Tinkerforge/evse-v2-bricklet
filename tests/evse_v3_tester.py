@@ -126,7 +126,7 @@ class EVSEV3Tester:
 
         while True:
             state = self.evse.get_low_level_state()
-            if state.gpio[9] == active:
+            if state.gpio[11] == active:
                 break
             time.sleep(0.01)
 
