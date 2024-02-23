@@ -308,10 +308,10 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 	}
 
 	const uint16_t current_cp_duty_cycle = evse_get_cp_pwm_duty_cycle();
-	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5);
+	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5f);
 
 	if(current_cp_duty_cycle != new_cp_duty_cycle) {
-		adc_enable_all(duty_cycle > 999.99);
+		adc_enable_all(duty_cycle > 999.99f);
 
 		// EVSE V2 uses CCU40, EVSE V3 uses CCU41
 		XMC_CCU4_SLICE_SetTimerCompareMatch(hardware_version.is_v2 ? CCU40_CC40 : CCU41_CC40, new_cp_duty_cycle);

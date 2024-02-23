@@ -147,13 +147,13 @@ float iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 
 	float duty_cycle;
 	if(ma <= 51000) {
-		duty_cycle = ma/60.0; // For 6A-51A: xA = %duty*0.6
+		duty_cycle = ma/60.0f; // For 6A-51A: xA = %duty*0.6
 	} else {
-		duty_cycle = ma/250.0 + 640; // For 51A-80A: xA= (%duty - 64)*2.5
+		duty_cycle = ma/250.0f + 640; // For 51A-80A: xA= (%duty - 64)*2.5
 	}
 
 	// The standard defines 8% as minimum and 100% as maximum
-	return BETWEEN(80.0, duty_cycle, 1000.0);
+	return BETWEEN(80.0f, duty_cycle, 1000.0f);
 }
 
 void iec61851_reset_ev_wakeup(void) {
