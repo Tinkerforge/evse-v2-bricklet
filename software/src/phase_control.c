@@ -117,9 +117,9 @@ void phase_control_state_phase_change(void) {
         }
 
         case 2: { // Contactor off
-            // Wait for 5s after PWM is set to 100% before we turn contactor off
             // According to IEC61851 the car can take 3s to react to PWM change from x% to 100%
-            if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 3000) || (adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B)) {
+            // We wait up to 3.1s after PWM is set to 100% before we turn contactor off
+            if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 3100) || (adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B)) {
                 // Disable contactor
                 evse_set_output(1000, false);
                 if(!contactor_active) {
