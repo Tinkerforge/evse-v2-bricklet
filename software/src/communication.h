@@ -1,5 +1,5 @@
 /* evse-v2-bricklet
- * Copyright (C) 2023 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2024 Olaf Lüke <olaf@tinkerforge.com>
  *
  * communication.h: TFP protocol message handling
  *
@@ -192,6 +192,7 @@ void communication_init(void);
 #define FID_SET_PHASE_CONTROL 39
 #define FID_GET_PHASE_CONTROL 40
 
+#define FID_CALLBACK_ENERGY_METER_VALUES 41
 
 typedef struct {
 	TFPMessageHeader header;
@@ -587,6 +588,14 @@ typedef struct {
 	uint8_t phases_status;
 } __attribute__((__packed__)) GetPhaseControl_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	float power;
+	float current[3];
+	uint8_t phases_active[1];
+	uint8_t phases_connected[1];
+} __attribute__((__packed__)) EnergyMeterValues_Callback;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -631,11 +640,12 @@ BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data);
 BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response);
 
 // Callbacks
-
+bool handle_energy_meter_values_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 0
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 1
 #define COMMUNICATION_CALLBACK_LIST_INIT \
+	handle_energy_meter_values_callback, \
 
 
 #endif

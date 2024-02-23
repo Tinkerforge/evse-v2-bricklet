@@ -814,10 +814,37 @@ BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, G
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+
+
+bool handle_energy_meter_values_callback(void) {
+	static bool is_buffered = false;
+	static EnergyMeterValues_Callback cb;
+
+	if(!is_buffered) {
+		if(meter.new_fast_value_callback) {
+			get_energy_meter_values(NULL, (GetEnergyMeterValues_Response*)&cb);
+			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EnergyMeterValues_Callback), FID_CALLBACK_ENERGY_METER_VALUES);
+			meter.new_fast_value_callback = false;
+		} else {
+			return false;
+		}
+	}
+
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EnergyMeterValues_Callback));
+		is_buffered = false;
+		return true;
+	} else {
+		is_buffered = true;
+	}
+
+	return false;
+}
+
 void communication_tick(void) {
-//	communication_callback_tick();
+	communication_callback_tick();
 }
 
 void communication_init(void) {
-//	communication_callback_init();
+	communication_callback_init();
 }
