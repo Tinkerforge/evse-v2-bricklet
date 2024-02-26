@@ -159,6 +159,7 @@ float iec61851_get_duty_cycle_for_ma(uint32_t ma) {
 void iec61851_reset_ev_wakeup(void) {
 	iec61851.state_b1b2_transition_time = 0;
 	iec61851.state_b1b2_transition_seen = false;
+	iec61851.currently_beeing_woken_up = false;
 }
 
 void iec61851_handle_ev_wakeup(uint32_t ma) {
@@ -174,9 +175,29 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 	}
 
 	// EV wakeup handling according to IEC61851-1 Annex A.5.3
+	// According to the standard we should do the wakeup only once and only for 4 seconds.
+	// In the wild we know of EVs that need 30s of wakeup... So we try it two times: First with 4 seconds and after that with 30 seconds.
 	if((iec61851.state_b1b2_transition_time != 0) && (!evse.control_pilot_disconnect)) {
+		// Wait for 30 seconds for the EV to wake up for second wakeup
+		if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
+			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
+				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
+				adc_ignore_results(2);
+				iec61851.currently_beeing_woken_up = false;
+				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+			}
+		}
+
+		// Wait for another 30 seconds for the second wakeup.
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000)) {
+			if(evse.ev_wakeup_enabled) {
+				iec61851.currently_beeing_woken_up = true;
+				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+			}
+		}
+
 		// Wait for 4 seconds for the EV to wake up
-		if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 34*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000)) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
 				adc_ignore_results(2);
