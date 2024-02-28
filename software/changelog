@@ -136,3 +136,6 @@
 
 2024-XX-XX: 2.2.3 (TBD)
 - Add support for EVSE V3 jumper configuration
+- Add support for auto-switch to 1-phase
+- Add 4300W on close/open as new shutdown input configurations
+- Change default shutdown input configuration for WARP3 to 4300W on close
