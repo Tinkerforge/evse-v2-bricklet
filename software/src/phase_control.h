@@ -32,6 +32,9 @@ typedef struct {
     bool in_progress;
     uint8_t progress_state;
     uint32_t progress_state_time;
+
+    uint32_t autoswitch_time;
+    bool autoswitch_done;
 } PhaseControl;
 
 extern PhaseControl phase_control;

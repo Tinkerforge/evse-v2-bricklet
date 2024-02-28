@@ -32,6 +32,7 @@
 #include "iec61851.h"
 #include "evse.h"
 #include "adc.h"
+#include "bricklib2/warp/meter.h"
 
 PhaseControl phase_control;
 
@@ -54,11 +55,53 @@ void phase_control_init(void) {
     XMC_GPIO_Init(EVSE_PHASE_SWITCH_PIN, &pin_config_output_low);
 }
 
+// Check for auto-switch conditions
+// We switch from 3-phase to 1-phase if the car is charging and only using one phase
+void phase_control_tick_check_autoswitch(void) {
+    // If a car is charging, it is configured to use 3-phase and a meter is available, we can auto-switch to 1-phase if the car is only using one phase
+    if((iec61851.state == IEC61851_STATE_C) && (phase_control.current == 3) && (phase_control.requested == 3) && meter.available && !phase_control.autoswitch_done) {
+        // If the car is charging already for at least two seconds
+        if(system_timer_is_time_elapsed_ms(iec61851.last_state_change, 2000)) {
+            // If the phase 1 uses more than 5A and phase 2 and 3 use less than 0.5A
+            if((meter_register_set.current[0].f > 5.0f) && (meter_register_set.current[1].f < 0.5f) && (meter_register_set.current[2].f < 0.5f)) {
+                if(phase_control.autoswitch_time == 0) {
+                    // If the autos-switch-timer was not yet started we start it
+                    phase_control.autoswitch_time = system_timer_get_ms();
+                } else if(system_timer_is_time_elapsed_ms(phase_control.autoswitch_time, 15000)) {
+                    // All autoswitch conditions have been met for 15 seconds -> switch to 1-phase
+                    phase_control.requested       = 1;
+                    phase_control.current         = 1;
+                    phase_control.autoswitch_time = 0;
+                    phase_control.autoswitch_done = true;
+                    XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
+                }
+            } else {
+                phase_control.autoswitch_time = 0;
+            }
+        }
+    // If no car is connected and an auto-switch occurred, we go back to the original phase-state
+    } else if((iec61851.state == IEC61851_STATE_A) && (phase_control.current == 1) && (phase_control.requested == 1) && phase_control.autoswitch_done) {
+        phase_control.requested       = 3;
+        phase_control.current         = 3;
+        phase_control.autoswitch_time = 0;
+        phase_control.autoswitch_done = false;
+        XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
+    // If the phase state was changed externally and the car is not charging anymore we have to reset autoswitch_done
+    } else if((iec61851.state == IEC61851_STATE_A) && phase_control.autoswitch_done) {
+        phase_control.autoswitch_time = 0;
+        phase_control.autoswitch_done = false;
+    } else {
+        phase_control.autoswitch_time = 0;
+    }
+}
+
 void phase_control_tick(void) {
     // No Phase Control in EVSE V2
     if(hardware_version.is_v2) {
         return;
     }
+
+    phase_control_tick_check_autoswitch();
 
     if(phase_control.current != phase_control.requested) {
         // Only switch phase if contactor is not active.
