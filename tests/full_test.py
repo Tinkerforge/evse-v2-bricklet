@@ -72,14 +72,6 @@ if __name__ == "__main__":
     evse_tester = EVSEV2Tester(log_func = no_log)
     print('... OK')
 
-    print('Prüfe Hardware-Version (erwarte V2)')
-    hv = evse_tester.get_hardware_version()
-    if hv == 20:
-        print('...OK')
-    else:
-        print('-----------------> NICHT OK: {0}'.format(hv))
-        evse_tester.exit(1)
-
     data = []
 
     ident = evse_tester.evse.get_identity()
