@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #############################################################
-# This file was automatically generated on 2024-02-23.      #
+# This file was automatically generated on 2024-03-05.      #
 #                                                           #
-# Python Bindings Version 2.1.30                            #
+# Python Bindings Version 2.1.31                            #
 #                                                           #
 # If you have a bugfix for this file and want to commit it, #
 # please fix the bug in the generator. You can find a link  #
@@ -152,6 +152,8 @@ class BrickletEVSEV2(Device):
     SHUTDOWN_INPUT_IGNORED = 0
     SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN = 1
     SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE = 2
+    SHUTDOWN_INPUT_4300_WATT_ON_OPEN = 3
+    SHUTDOWN_INPUT_4300_WATT_ON_CLOSE = 4
     OUTPUT_CONNECTED_TO_GROUND = 0
     OUTPUT_HIGH_IMPEDANCE = 1
     BUTTON_CONFIGURATION_DEACTIVATED = 0
