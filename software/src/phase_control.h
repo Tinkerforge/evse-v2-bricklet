@@ -29,6 +29,8 @@ typedef struct {
     uint8_t current;
     uint8_t requested;
 
+    uint8_t info; // 0 = normal, 1 = 1-phase forced by auto-switch
+
     bool in_progress;
     uint8_t progress_state;
     uint32_t progress_state_time;

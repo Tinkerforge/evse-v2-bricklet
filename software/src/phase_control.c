@@ -73,10 +73,12 @@ void phase_control_tick_check_autoswitch(void) {
                     phase_control.current         = 1;
                     phase_control.autoswitch_time = 0;
                     phase_control.autoswitch_done = true;
+                    phase_control.info            = 1;
                     XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
                 }
             } else {
                 phase_control.autoswitch_time = 0;
+                phase_control.info            = 0;
             }
         }
     // If no car is connected and an auto-switch occurred, we go back to the original phase-state
@@ -85,13 +87,16 @@ void phase_control_tick_check_autoswitch(void) {
         phase_control.current         = 3;
         phase_control.autoswitch_time = 0;
         phase_control.autoswitch_done = false;
+        phase_control.info            = 0;
         XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
     // If the phase state was changed externally and the car is not charging anymore we have to reset autoswitch_done
     } else if((iec61851.state == IEC61851_STATE_A) && phase_control.autoswitch_done) {
         phase_control.autoswitch_time = 0;
         phase_control.autoswitch_done = false;
+        phase_control.info            = 0;
     } else {
         phase_control.autoswitch_time = 0;
+        phase_control.info            = 0;
     }
 }
 

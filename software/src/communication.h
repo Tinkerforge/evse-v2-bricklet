@@ -518,7 +518,8 @@ typedef struct {
 	int16_t temperature;
 	uint8_t phases_current;
 	uint8_t phases_requested;
-	uint8_t phases_status;
+	uint8_t phases_state;
+	uint8_t phases_info;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -587,7 +588,8 @@ typedef struct {
 	TFPMessageHeader header;
 	uint8_t phases_current;
 	uint8_t phases_requested;
-	uint8_t phases_status;
+	uint8_t phases_state;
+	uint8_t phases_info;
 } __attribute__((__packed__)) GetPhaseControl_Response;
 
 typedef struct {

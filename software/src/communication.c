@@ -808,8 +808,8 @@ BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, G
 	response->header.length    = sizeof(GetPhaseControl_Response);
 	response->phases_current   = phase_control.current;
 	response->phases_requested = phase_control.requested;
-	response->phases_status    = phase_control.progress_state;
-
+	response->phases_state     = phase_control.progress_state;
+	response->phases_info      = phase_control.info;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
