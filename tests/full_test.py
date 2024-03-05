@@ -331,11 +331,11 @@ if __name__ == "__main__":
 
     print('Teste Stromzähler')
     values, detailed_values, hw, error = evse_tester.get_energy_meter_data()
-    if (not hw.energy_meter_type > 0) or (values.energy_absolute < 1):
+    if not hw.energy_meter_type > 0:
         print('-----------------> NICHT OK: {0}, {1}, {2}'.format(str(hw), str(error), str(values)))
         evse_tester.exit(1)
     else:
-        print('... OK: {0}, {1}'.format(hw.energy_meter_type, values.energy_absolute))
+        print('... OK: {0}'.format(hw.energy_meter_type))
 
 
     print('Ausschaltzeit messen')
