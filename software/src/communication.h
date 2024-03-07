@@ -193,8 +193,10 @@ void communication_init(void);
 #define FID_GET_TEMPERATURE 38
 #define FID_SET_PHASE_CONTROL 39
 #define FID_GET_PHASE_CONTROL 40
+#define FID_SET_PHASE_AUTO_SWITCH 41
+#define FID_GET_PHASE_AUTO_SWITCH 42
 
-#define FID_CALLBACK_ENERGY_METER_VALUES 41
+#define FID_CALLBACK_ENERGY_METER_VALUES 43
 
 typedef struct {
 	TFPMessageHeader header;
@@ -520,6 +522,7 @@ typedef struct {
 	uint8_t phases_requested;
 	uint8_t phases_state;
 	uint8_t phases_info;
+	bool phase_auto_switch_enabled;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -594,6 +597,20 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	bool phase_auto_switch_enabled;
+} __attribute__((__packed__)) SetPhaseAutoSwitch;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetPhaseAutoSwitch;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool phase_auto_switch_enabled;
+} __attribute__((__packed__)) GetPhaseAutoSwitch_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 	float power;
 	float current[3];
 	uint8_t phases_active[1];
@@ -642,6 +659,8 @@ BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data);
 BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetTemperature_Response *response);
 BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data);
 BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response);
+BootloaderHandleMessageResponse set_phase_auto_switch(const SetPhaseAutoSwitch *data);
+BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *data, GetPhaseAutoSwitch_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);

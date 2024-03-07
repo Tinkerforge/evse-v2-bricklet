@@ -42,6 +42,7 @@
 #include "button.h"
 #include "iec61851.h"
 #include "hardware_version.h"
+#include "phase_control.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -197,6 +198,12 @@ void evse_load_config(void) {
 		meter.relative_energy_export.data = page[EVSE_CONFIG_REL_EXPORT_POS];
 	}
 
+	if(page[EVSE_CONFIG_MAGIC5_POS] != EVSE_CONFIG_MAGIC5) {
+		phase_control.autoswitch_enabled = true;
+	} else {
+		phase_control.autoswitch_enabled = page[EVSE_CONFIG_AUTOSWITCH_POS];
+	}
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	if(slot_default->magic == EVSE_CONFIG_SLOT_MAGIC) {
@@ -261,6 +268,9 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_EV_WAKUEP_POS]       = evse.ev_wakeup_enabled;
 
 	page[EVSE_CONFIG_MAGIC4_POS]          = EVSE_CONFIG_MAGIC4;
+
+	page[EVSE_CONFIG_MAGIC5_POS]          = EVSE_CONFIG_MAGIC5;
+	page[EVSE_CONFIG_AUTOSWITCH_POS]      = phase_control.autoswitch_enabled;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

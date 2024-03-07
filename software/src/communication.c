@@ -94,6 +94,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_TEMPERATURE:                       return length != sizeof(GetTemperature)                   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_temperature(message, response);
 		case FID_SET_PHASE_CONTROL:                     return length != sizeof(SetPhaseControl)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_control(message);
 		case FID_GET_PHASE_CONTROL:                     return length != sizeof(GetPhaseControl)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_control(message, response);
+		case FID_SET_PHASE_AUTO_SWITCH:                 return length != sizeof(SetPhaseAutoSwitch)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_auto_switch(message);
+		case FID_GET_PHASE_AUTO_SWITCH:                 return length != sizeof(GetPhaseAutoSwitch)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_auto_switch(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -715,6 +717,9 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_phase_control(NULL, (GetPhaseControl_Response*)&parts);
 	memcpy(&response->phases_current, parts.data, sizeof(GetPhaseControl_Response) - sizeof(TFPMessageHeader));
 
+	get_phase_auto_switch(NULL, (GetPhaseAutoSwitch_Response*)&parts);
+	memcpy(&response->phase_auto_switch_enabled, parts.data, sizeof(GetPhaseAutoSwitch_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
@@ -814,6 +819,25 @@ BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, G
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_phase_auto_switch(const SetPhaseAutoSwitch *data) {
+	if(phase_control.autoswitch_enabled != data->phase_auto_switch_enabled) {
+		phase_control.autoswitch_enabled = data->phase_auto_switch_enabled;
+		evse_save_config();
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *data, GetPhaseAutoSwitch_Response *response) {
+	response->header.length = sizeof(GetPhaseAutoSwitch_Response);
+	if(hardware_version.is_v2) {
+		response->phase_auto_switch_enabled = false;
+	} else {
+		response->phase_auto_switch_enabled = phase_control.autoswitch_enabled;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
 
 
 bool handle_energy_meter_values_callback(void) {

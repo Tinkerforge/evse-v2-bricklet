@@ -37,6 +37,8 @@ typedef struct {
 
     uint32_t autoswitch_time;
     bool autoswitch_done;
+
+    bool autoswitch_enabled;
 } PhaseControl;
 
 extern PhaseControl phase_control;
