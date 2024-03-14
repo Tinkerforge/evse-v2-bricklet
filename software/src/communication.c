@@ -527,9 +527,9 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 			} else if(data->indication == 1002) {
 				led.h = LED_HUE_ERROR;
 			} else if(data->indication == 1003) {
-				led.h = LED_HUE_STANDARD;
+				led.h = LED_HUE_YELLOW;
 			} else if((data->indication > 2000) && (data->indication < 2011)) {
-				led.h = LED_HUE_ORANGE;
+				led.h = LED_HUE_ERROR;
 			} else {
 				led.h = LED_HUE_STANDARD;
 			}
