@@ -362,9 +362,9 @@ void led_tick_status_blinking(const bool is_external) {
 			if(hardware_version.is_v2) {
 				led_update(LED_HUE_STANDARD, 255, 255); // default v2
 			} else if(is_external && (led.v != 0)) {
-				led_update(led.h, led.s, led.v);        // custom v3 through API
+				led_update(led.set_h, led.set_s, led.set_v); // custom v3 through API
 			} else {
-				led_update(LED_HUE_RED, 255, 255);      // default v3
+				led_update(LED_HUE_RED, 255, 255); // default v3
 			}
 			led.blink_on = true;
 		}
