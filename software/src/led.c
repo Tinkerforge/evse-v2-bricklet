@@ -341,7 +341,7 @@ void led_tick_status_on(void) {
 	}
 }
 
-void led_tick_status_blinking(void) {
+void led_tick_status_blinking(const bool is_external) {
 	if(led.blink_count >= led.blink_num) {
 		if(system_timer_is_time_elapsed_ms(led.blink_last_time, LED_BLINK_DURATION_WAIT)) {
 			led.blink_last_time         = system_timer_get_ms();
@@ -359,7 +359,13 @@ void led_tick_status_blinking(void) {
 	} else {
 		if(system_timer_is_time_elapsed_ms(led.blink_last_time, LED_BLINK_DURATION_OFF)) {
 			led.blink_last_time = system_timer_get_ms();
-			led_update(hardware_version.is_v2 ? LED_HUE_STANDARD : LED_HUE_ERROR, 255, 255);
+			if(hardware_version.is_v2) {
+				led_update(LED_HUE_STANDARD, 255, 255); // default v2
+			} else if(is_external && (led.v != 0)) {
+				led_update(led.h, led.s, led.v);        // custom v3 through API
+			} else {
+				led_update(LED_HUE_RED, 255, 255);      // default v3
+			}
 			led.blink_on = true;
 		}
 	}
@@ -368,7 +374,7 @@ void led_tick_status_blinking(void) {
 void led_tick_status_flicker(void) {
 	if(system_timer_is_time_elapsed_ms(led.flicker_last_time, LED_FLICKER_DURATION)) {
 		if(led.flicker_on) {
-			led_update(hardware_version.is_v2 ? LED_HUE_STANDARD :LED_HUE_BOOTING, 255, 255);
+			led_update(hardware_version.is_v2 ? LED_HUE_STANDARD : LED_HUE_BOOTING, 255, 255);
 		} else {
 			led_update(0, 0, 0);
 		}
@@ -478,7 +484,7 @@ void led_tick_status_api(void) {
 			led.blink_last_time = system_timer_get_ms();
 			led.blink_external  = led.api_indication;
 		}
-		led_tick_status_blinking();
+		led_tick_status_blinking(true);
 	}
 
 	if(system_timer_is_time_elapsed_ms(led.api_start, led.api_duration) && !led.currently_in_wait_state) {
@@ -495,11 +501,11 @@ void led_tick(void) {
 	}
 
 	switch(led.state) {
-		case LED_STATE_OFF:       led_tick_status_off();       break;
-		case LED_STATE_ON:        led_tick_status_on();        break;
-		case LED_STATE_BLINKING:  led_tick_status_blinking();  break;
-		case LED_STATE_FLICKER:   led_tick_status_flicker();   break;
-		case LED_STATE_BREATHING: led_tick_status_breathing(); break;
-		case LED_STATE_API:       led_tick_status_api();       break;
+		case LED_STATE_OFF:       led_tick_status_off();            break;
+		case LED_STATE_ON:        led_tick_status_on();             break;
+		case LED_STATE_BLINKING:  led_tick_status_blinking(false);  break;
+		case LED_STATE_FLICKER:   led_tick_status_flicker();        break;
+		case LED_STATE_BREATHING: led_tick_status_breathing();      break;
+		case LED_STATE_API:       led_tick_status_api();            break;
 	}
 }
