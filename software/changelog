@@ -140,3 +140,4 @@
 - Add 4300W on close/open as new shutdown input configurations
 - Change default shutdown input configuration for WARP3 to 4300W on close
 - Add API to enable/disable phase autoswitch (this configuration is persistent on reboot)
+- Reset all error counter when new meter is found (through bricklib)
