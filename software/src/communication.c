@@ -96,6 +96,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PHASE_CONTROL:                     return length != sizeof(GetPhaseControl)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_control(message, response);
 		case FID_SET_PHASE_AUTO_SWITCH:                 return length != sizeof(SetPhaseAutoSwitch)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_auto_switch(message);
 		case FID_GET_PHASE_AUTO_SWITCH:                 return length != sizeof(GetPhaseAutoSwitch)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_auto_switch(message, response);
+		case FID_SET_PHASES_CONNECTED:                  return length != sizeof(SetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phases_connected(message);
+		case FID_GET_PHASES_CONNECTED:                  return length != sizeof(GetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phases_connected(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -720,6 +722,9 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_phase_auto_switch(NULL, (GetPhaseAutoSwitch_Response*)&parts);
 	memcpy(&response->phase_auto_switch_enabled, parts.data, sizeof(GetPhaseAutoSwitch_Response) - sizeof(TFPMessageHeader));
 
+	get_phases_connected(NULL, (GetPhasesConnected_Response*)&parts);
+	memcpy(&response->phases_connected, parts.data, sizeof(GetPhasesConnected_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
@@ -802,6 +807,11 @@ BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	// Ignore request if only one phase is connected
+	if(phase_control.phases_connected == 1) {
+		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	}
+
 	if(hardware_version.is_v3) {
 		phase_control.requested = data->phases;
 	}
@@ -811,6 +821,7 @@ BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data) {
 
 BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response) {
 	response->header.length    = sizeof(GetPhaseControl_Response);
+
 	response->phases_current   = phase_control.current;
 	response->phases_requested = phase_control.requested;
 	response->phases_state     = phase_control.progress_state;
@@ -835,6 +846,26 @@ BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *
 	} else {
 		response->phase_auto_switch_enabled = phase_control.autoswitch_enabled;
 	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *data) {
+	if((data->phases_connected != 1) && (data->phases_connected != 3)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(phase_control.phases_connected != data->phases_connected) {
+		phase_control.phases_connected = data->phases_connected;
+		evse_save_config();
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response) {
+	response->header.length    = sizeof(GetPhasesConnected_Response);
+	response->phases_connected = phase_control.phases_connected;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

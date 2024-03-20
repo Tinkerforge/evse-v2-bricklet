@@ -59,6 +59,7 @@
 #define EVSE_CONFIG_REL_EXPORT_POS      13
 #define EVSE_CONFIG_MAGIC5_POS          14
 #define EVSE_CONFIG_AUTOSWITCH_POS      15
+#define EVSE_CONFIG_PHASES_CON_POS      16
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {

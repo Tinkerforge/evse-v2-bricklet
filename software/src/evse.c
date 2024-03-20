@@ -200,8 +200,10 @@ void evse_load_config(void) {
 
 	if(page[EVSE_CONFIG_MAGIC5_POS] != EVSE_CONFIG_MAGIC5) {
 		phase_control.autoswitch_enabled = true;
+		phase_control.phases_connected   = 3;
 	} else {
 		phase_control.autoswitch_enabled = page[EVSE_CONFIG_AUTOSWITCH_POS];
+		phase_control.phases_connected   = (page[EVSE_CONFIG_PHASES_CON_POS] == 1) ? 1 : 3;
 	}
 
 	// Handle charging slot defaults
@@ -271,6 +273,7 @@ void evse_save_config(void) {
 
 	page[EVSE_CONFIG_MAGIC5_POS]          = EVSE_CONFIG_MAGIC5;
 	page[EVSE_CONFIG_AUTOSWITCH_POS]      = phase_control.autoswitch_enabled;
+	page[EVSE_CONFIG_PHASES_CON_POS]      = phase_control.phases_connected;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

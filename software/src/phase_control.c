@@ -38,11 +38,13 @@ PhaseControl phase_control;
 
 void phase_control_init(void) {
     const bool autoswitch_enabled_save = phase_control.autoswitch_enabled;
+    const bool phases_connected_save   = phase_control.phases_connected;
     memset(&phase_control, 0, sizeof(PhaseControl));
+    phase_control.phases_connected = phases_connected_save;
 
-    // Default 3-phase
-    phase_control.current = 3; 
-    phase_control.requested = 3;
+    // Default is 3-phase, but we only use 1-phase if only 1 phase is connected
+    phase_control.current   = phase_control.phases_connected;
+    phase_control.requested = phase_control.phases_connected;
 
     // No Phase Control and no Autoswitch in EVSE V2
     if(hardware_version.is_v2) {
@@ -63,6 +65,11 @@ void phase_control_init(void) {
 // Check for auto-switch conditions
 // We switch from 3-phase to 1-phase if the car is charging and only using one phase
 void phase_control_tick_check_autoswitch(void) {
+    // No autoswitch if only 1 phase is connected
+    if(phase_control.phases_connected == 1) {
+        return;
+    }
+
     if(!phase_control.autoswitch_enabled) {
         phase_control.autoswitch_time = 0;
         phase_control.autoswitch_done = true;
