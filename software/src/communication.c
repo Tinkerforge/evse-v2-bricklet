@@ -857,6 +857,12 @@ BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *d
 
 	if(phase_control.phases_connected != data->phases_connected) {
 		phase_control.phases_connected = data->phases_connected;
+
+		phase_control.requested = data->phases_connected;
+		if(hardware_version.is_v2) {
+			// In V2 set current directly to requested, since we can't switch the phases physically
+			phase_control.current = data->phases_connected;
+		}
 		evse_save_config();
 	}
 

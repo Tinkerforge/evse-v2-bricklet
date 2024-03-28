@@ -86,7 +86,7 @@ void charging_slot_tick(void) {
                (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN)) {
                 charging_slot.max_current[CHARGING_SLOT_INPUT0] = 0;
             } else {
-                if(hardware_version.is_v3 && phase_control.current == 1) {
+                if(phase_control.current == 1) {
                     charging_slot.max_current[CHARGING_SLOT_INPUT0] = 18690; // 1-phase 4.3kW with 230V and power factor 1 is 18.69A
                 } else {
                     charging_slot.max_current[CHARGING_SLOT_INPUT0] = 6230; // 3-phase 4.3kW with 230V and power factor 1 is 6.23A

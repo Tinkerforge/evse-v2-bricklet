@@ -38,7 +38,7 @@ PhaseControl phase_control;
 
 void phase_control_init(void) {
     const bool autoswitch_enabled_save = phase_control.autoswitch_enabled;
-    const bool phases_connected_save   = phase_control.phases_connected;
+    const uint8_t phases_connected_save   = phase_control.phases_connected;
     memset(&phase_control, 0, sizeof(PhaseControl));
     phase_control.phases_connected = phases_connected_save;
 
@@ -59,7 +59,16 @@ void phase_control_init(void) {
         .mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
         .output_level     = XMC_GPIO_OUTPUT_LEVEL_LOW
     };
-    XMC_GPIO_Init(EVSE_PHASE_SWITCH_PIN, &pin_config_output_low);
+    const XMC_GPIO_CONFIG_t pin_config_output_high = {
+        .mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
+        .output_level     = XMC_GPIO_OUTPUT_LEVEL_HIGH
+    };
+
+    if(phase_control.current == 1) {
+        XMC_GPIO_Init(EVSE_PHASE_SWITCH_PIN, &pin_config_output_high);
+    } else {
+        XMC_GPIO_Init(EVSE_PHASE_SWITCH_PIN, &pin_config_output_low);
+    }
 }
 
 // Check for auto-switch conditions
@@ -127,22 +136,24 @@ void phase_control_tick(void) {
 
     phase_control_tick_check_autoswitch();
 
-    if(phase_control.current != phase_control.requested) {
-        // Only switch phase if contactor is not active.
-        const bool contactor_inactive = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN); // Contactor pin is active low
-        const bool cp_disconnected = XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
-        if(contactor_inactive && cp_disconnected) {
-            if(phase_control.requested == 1) {
-                XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
-            } else {
-                XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
-            }
-            phase_control.current = phase_control.requested;
-        } else if(!phase_control.in_progress) {
-            phase_control.in_progress = true;
-            phase_control.progress_state = 0;
-        }
-    }
+	// Only switch phase if contactor is not active.
+	const bool contactor_inactive = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN); // Contactor pin is active low
+	const bool cp_disconnected = XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
+	if(contactor_inactive && cp_disconnected) {
+		if(phase_control.requested == 1) {
+			XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
+		} else {
+			XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
+		}
+		phase_control.current = phase_control.requested;
+	} else if(!phase_control.in_progress) {
+		if(phase_control.current != phase_control.requested) {
+			// If a different phase setting is requested we set in_progress to true.
+			// phase_control_state_phase_change will be called by the IE61851 state machine now.
+			phase_control.in_progress = true;
+			phase_control.progress_state = 0;
+		}
+	}
 }
 
 void phase_control_done(void) {

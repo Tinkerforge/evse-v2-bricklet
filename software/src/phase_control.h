@@ -39,7 +39,7 @@ typedef struct {
     bool autoswitch_done;
 
     bool autoswitch_enabled;
-    bool phases_connected;
+    uint8_t phases_connected;
 } PhaseControl;
 
 extern PhaseControl phase_control;
