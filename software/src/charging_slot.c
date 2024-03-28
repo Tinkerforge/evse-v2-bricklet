@@ -79,7 +79,7 @@ void charging_slot_tick(void) {
     if(evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_IGNORED) {
         charging_slot.active[CHARGING_SLOT_INPUT0]      = false;
         charging_slot.max_current[CHARGING_SLOT_INPUT0] = 32000;
-    } else { // SHUTDOWN_ON_CLOSE, SHUTDOWN_ON_OPEN, 4300_WATT_ON_OPEN, 4300_WATT_ON_CLOSE
+    } else { // SHUTDOWN_ON_CLOSE, SHUTDOWN_ON_OPEN, 4200_WATT_ON_OPEN, 4200_WATT_ON_CLOSE
         charging_slot.active[CHARGING_SLOT_INPUT0] = true;
         if(evse_is_shutdown()) {
             if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) ||
@@ -87,9 +87,9 @@ void charging_slot_tick(void) {
                 charging_slot.max_current[CHARGING_SLOT_INPUT0] = 0;
             } else {
                 if(phase_control.current == 1) {
-                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 18690; // 1-phase 4.3kW with 230V and power factor 1 is 18.69A
+                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 18000; // 1-phase 4.2kW is ca. 18A
                 } else {
-                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 6230; // 3-phase 4.3kW with 230V and power factor 1 is 6.23A
+                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 6000; // 3-phase 4.2kW is ca. 6A
                 }
             }
         } else {

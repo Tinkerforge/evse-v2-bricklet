@@ -165,7 +165,7 @@ void evse_load_config(void) {
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
 		evse.legacy_managed               = false;
 		meter.relative_energy_sum.f       = 0.0f;
-		evse.shutdown_input_configuration = hardware_version.is_v2 ? EVSE_V2_SHUTDOWN_INPUT_IGNORED : EVSE_V2_SHUTDOWN_INPUT_4300_WATT_ON_CLOSE;
+		evse.shutdown_input_configuration = hardware_version.is_v2 ? EVSE_V2_SHUTDOWN_INPUT_IGNORED : EVSE_V2_SHUTDOWN_INPUT_4200_WATT_ON_CLOSE;
 	} else {
 		evse.legacy_managed               = page[EVSE_CONFIG_MANAGED_POS];
 		meter.relative_energy_sum.data    = page[EVSE_CONFIG_REL_SUM_POS];
@@ -595,11 +595,11 @@ bool evse_is_shutdown(void) {
 	static bool change_time = 0;
 
 	bool new_return = false;
-	if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) || (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_4300_WATT_ON_CLOSE)) {
+	if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) || (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_4200_WATT_ON_CLOSE)) {
 		if(!XMC_GPIO_GetInput(EVSE_SHUTDOWN_PIN)) {
 			new_return = true;
 		}
-	} else if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN) || (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_4300_WATT_ON_OPEN)) {
+	} else if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN) || (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_4200_WATT_ON_OPEN)) {
 		if(XMC_GPIO_GetInput(EVSE_SHUTDOWN_PIN)) {
 			new_return = true;
 		}
