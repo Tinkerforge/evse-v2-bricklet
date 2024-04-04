@@ -62,7 +62,7 @@ def test_value(value, expected, margin_percent=0.1, margin_absolute=20):
 
     return (value*(1-margin_percent) - margin_absolute) < expected < (value*(1+margin_percent) + margin_absolute)
 
-if __name__ == "__main__":
+def main():
     test_log_pull()
     print('Schaltereinstellung auf 32A stellen (1=Off, 2=Off, 3=On, 4=On) !!!')
 
@@ -386,3 +386,6 @@ if __name__ == "__main__":
     test_log_commit_and_push(ident.uid)
 
     evse_tester.exit(0)
+
+if __name__ == "__main__":
+    main()
