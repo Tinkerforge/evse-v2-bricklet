@@ -142,3 +142,6 @@
 - Add API to enable/disable phase autoswitch (this configuration is persistent on reboot)
 - Reset all error counter when new meter is found (through bricklib)
 - Add API to configure connected phases (this configuration is persistent on reboot)
+
+2024-04-TBD: 2.2.4 (TBD)
+- Fix error bit in contactor check state. Now OK=0, error=1 (through bricklib)
