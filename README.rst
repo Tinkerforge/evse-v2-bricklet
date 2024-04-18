@@ -4,7 +4,11 @@ EVSE Bricklet 2.0
 This Bricklet together with the ESP32 Ethernet Brick and the NFC Bricklet
 form the hardware used in the WARP2 Charger.
 
-See https://www.warp-charger.com/warp2.html for more details.
+The Firmware for the EVSE Bricklet 2.0 is also used for the EVSE Bricklet 3.0:
+https://github.com/Tinkerforge/evse-v3-bricklet. The hardware version is
+run-time detected.
+
+See https://www.warp-charger.com/ for more details about WARP Charger.
 
 This repository contains the firmware source code and the hardware design
 files. The documentation generator configs can be found at
