@@ -124,7 +124,6 @@ void phase_control_tick_check_autoswitch(void) {
         phase_control.info            = 0;
     } else {
         phase_control.autoswitch_time = 0;
-        phase_control.info            = 0;
     }
 }
 
