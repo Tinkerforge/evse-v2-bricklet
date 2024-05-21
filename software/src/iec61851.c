@@ -278,7 +278,7 @@ void iec61851_tick(void) {
 	// * We see a negative voltage above -10V or a difference of >2V between with and without resistor
 	// * The CP contact is connected
 	// * We currently apply a PWM (i.e. max ma is not 0)
-	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && 
+	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) &&
 	          (adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) && (adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) &&
 	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
 	          (evse_is_cp_connected()) &&

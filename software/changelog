@@ -145,3 +145,4 @@
 
 2024-04-TBD: 2.2.4 (TBD)
 - Fix error bit in contactor check state. Now OK=0, error=1 (through bricklib)
+- Make sure charging is stopped when button is pressed while wallbox is in IEC61851 state B2 ans started when wallbox is in IEC61851 state B1 if configured accordingly

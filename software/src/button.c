@@ -98,16 +98,28 @@ void button_tick(void) {
 			button.state = BUTTON_STATE_PRESSED;
 			button.press_time = system_timer_get_ms();
 
-			if(iec61851.state == IEC61851_STATE_B) {
+			if((iec61851.state == IEC61851_STATE_B) && (charging_slot.max_current[CHARGING_SLOT_BUTTON] == 0)) { // B1
 				// If start charging through button pressed is enabled
 				if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
 					// Simulate start-charging press in web interface
 					charging_slot_start_charging_by_button();
-				
+
 					// In the case that we start the charging through a button press,
 					// we increase the button debounce to 2 seconds if the button is configured to also stop charging,
 					// to make sure to never start the charge and stop it again immediately.
 					if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
+						button.debounce_time = BUTTON_DEBOUNCE_LONG;
+					}
+				}
+			} else if(iec61851.state == IEC61851_STATE_B) { // B2
+				if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING) {
+					// Disallow charging bybutton charging slot
+					charging_slot_stop_charging_by_button();
+
+					// In the case that we stop the charging through a button press,
+					// we increase the button debounce to 2 seconds if the button is configured to also start charging,
+					// to make sure to never stop the charge and start it again immediately.
+					if(button.configuration & EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING) {
 						button.debounce_time = BUTTON_DEBOUNCE_LONG;
 					}
 				}
