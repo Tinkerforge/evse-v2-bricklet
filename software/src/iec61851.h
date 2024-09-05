@@ -81,6 +81,8 @@ typedef struct {
 	uint32_t state_b1b2_transition_seen;
 
 	bool currently_beeing_woken_up;
+
+	uint32_t time_in_b2;
 } IEC61851;
 
 extern IEC61851 iec61851;

@@ -162,6 +162,29 @@ void iec61851_reset_ev_wakeup(void) {
 	iec61851.currently_beeing_woken_up = false;
 }
 
+void iec61851_handle_time_in_b2(void) {
+	uint32_t ma = iec61851_get_max_ma();
+	if(iec61851.state == IEC61851_STATE_B) {
+		if(ma != 0) {
+			if(iec61851.time_in_b2 == 0) {
+				iec61851.time_in_b2 = system_timer_get_ms();
+			}
+		} else {
+			iec61851.time_in_b2 = 0;
+		}
+	} else {
+		iec61851.time_in_b2 = 0;
+	}
+
+	if(iec61851.time_in_b2 != 0) {
+		if(system_timer_is_time_elapsed_ms(iec61851.time_in_b2, 60*1000*3)) {
+			if(evse.charging_time == 0) {
+				evse.charging_time = system_timer_get_ms();
+			}
+		}
+	}
+}
+
 void iec61851_handle_ev_wakeup(uint32_t ma) {
 	// If we are in state b and we change from no PWM to PWM (0mA to >0mA)
 	// then we start the b1b2 transition timer.
@@ -365,6 +388,8 @@ void iec61851_tick(void) {
 			}
 		}
 	}
+
+	iec61851_handle_time_in_b2();
 
 	switch(iec61851.state) {
 		case IEC61851_STATE_A:  iec61851_state_a();  break;
