@@ -149,5 +149,5 @@
 - Make sure charging is stopped when button is pressed while wallbox is in IEC61851 state B2 and started when wallbox is in IEC61851 state B1 if configured accordingly
 - Fix bug that sets phase_control.info back to 0 after autoswitch
 
-2024-xx-xx: 2.2.5 (TBD)
+2024-09-05: 2.2.5 (cf25bd98)
 - Make sure charging time is zeroed when car does not wake up again after phase change
