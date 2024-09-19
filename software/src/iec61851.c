@@ -83,11 +83,6 @@ void iec61851_set_state(IEC61851State state) {
 			iec61851.last_state_c_end_time = 0;
 		}
 
-		// If we change to state C and the charging timer was not started, we start
-		if((state == IEC61851_STATE_C) && (evse.charging_time == 0)) {
-			evse.charging_time = system_timer_get_ms();
-		}
-
 		if((state == IEC61851_STATE_A ) || (state == IEC61851_STATE_B)) {
 			// Turn LED on with timer for standby if we have a state change to state A or B
 			led_set_on(false);
@@ -262,6 +257,11 @@ void iec61851_state_c(void) {
 	uint32_t ma = iec61851_get_max_ma();
 	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
 	led_set_breathing();
+
+	// If we change to state C and the charging timer was not started, we start
+	if(evse.charging_time == 0) {
+		evse.charging_time = system_timer_get_ms();
+	}
 
 	iec61851_reset_ev_wakeup();
 }

@@ -151,3 +151,6 @@
 
 2024-09-05: 2.2.5 (cf25bd98)
 - Make sure charging time is zeroed when car does not wake up again after phase change
+
+2024-09-19: 2.2.6 (TBD)
+- Make sure charging time is always started when IEC61851 state changes to C
