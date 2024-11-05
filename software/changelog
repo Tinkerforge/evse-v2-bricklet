@@ -154,3 +154,5 @@
 
 2024-09-19: 2.2.6 (db84418a)
 - Make sure charging time is always started when IEC61851 state changes to C
+
+2024-xx-xx: 2.2.7
