@@ -555,7 +555,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 	// Otherwise we reset the current animation and start the new one
 	if((led.state == LED_STATE_OFF) || (led.state == LED_STATE_ON) || (led.state == LED_STATE_API) || (led.state == LED_STATE_BREATHING)) {
 		response->status     = 0;
-	
+
 		led.api_ack_counter  = 0;
 		led.api_ack_index    = 0;
 		led.api_ack_time     = 0;
@@ -638,12 +638,15 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 	if(data->control_pilot_disconnect) {
 		// Only allow cp disconnect in state A or B.
 		if((iec61851.state == IEC61851_STATE_A) || (iec61851.state == IEC61851_STATE_B)) {
-			XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+			// Only if contactor is currently not active
+			if(XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) { // active low
+				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 
-			evse.control_pilot_disconnect = data->control_pilot_disconnect;
+				evse.control_pilot_disconnect = data->control_pilot_disconnect;
 
-			// Don't do EV wakeup if CP disconnect is controlled externally
-			iec61851_reset_ev_wakeup();
+				// Don't do EV wakeup if CP disconnect is controlled externally
+				iec61851_reset_ev_wakeup();
+			}
 		}
 	} else {
 		// If we are currently waking up the EV we don't allow CP disconnect to be turned off again from external
