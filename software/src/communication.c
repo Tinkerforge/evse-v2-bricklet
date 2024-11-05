@@ -122,7 +122,7 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 		} else {
 			response->charger_state = EVSE_V2_CHARGER_STATE_READY_TO_CHARGE;
 		}
-	} else { 
+	} else {
 		response->charger_state = EVSE_V2_CHARGER_STATE_NOT_CONNECTED;
 	}
 
@@ -136,7 +136,7 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	response->jumper_configuration  = evse.config_jumper_current;
 	response->has_lock_switch       = evse.has_lock_switch;
 	response->evse_version          = hardware_version.is_v2 ? 20 : 30;
-	
+
 	if(!meter.each_value_read_once) {
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
 	} else {
