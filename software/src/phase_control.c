@@ -253,9 +253,9 @@ void phase_control_state_phase_change(void) {
                 uint32_t ma = iec61851_get_max_ma();
                 evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
                 phase_control_done();
-            // If nobody wants to charge after 3 seconds we give up
+            // If nobody wants to charge after 10 seconds we give up
             // IEC61851 state will go to B through normal state machine
-            } else if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 3000)) {
+            } else if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 10*1000)) {
                 evse.charging_time = 0;
                 phase_control_done();
             }
