@@ -138,7 +138,7 @@ void phase_control_tick(void) {
 	// Only switch phase if contactor is not active.
 	const bool contactor_inactive = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN); // Contactor pin is active low
 	const bool cp_disconnected = XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
-	if(contactor_inactive && cp_disconnected) {
+	if(contactor_inactive && (cp_disconnected || iec61851.instant_phase_switch_allowed)) {
 		if(phase_control.requested == 1) {
 			XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
 		} else {
@@ -210,6 +210,10 @@ void phase_control_state_phase_change(void) {
                 XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
                 phase_control.progress_state = 4;
                 phase_control.progress_state_time = system_timer_get_ms();
+
+                // After CP disconnect it is as if the EV was disconnected, so can switch the phases
+                // now until the contactor is turned on again.
+                iec61851.instant_phase_switch_allowed = true;
             }
             break;
         }

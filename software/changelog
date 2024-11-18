@@ -159,3 +159,4 @@
 - Increase wait time between phase switch and CP reconnect from 2s to 4s
 - Increase wait time for charge-restart after phase change from 3s to 10s
 - If set_control_pilot_disconnect is called, only allow disconnect if contactor is not active (and iec61851 state is A or B)
+- Allow instant phase switch when car has not charged or cp was disconnected

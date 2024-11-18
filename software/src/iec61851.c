@@ -89,6 +89,10 @@ void iec61851_set_state(IEC61851State state) {
 		}
 
 		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
+			// If we change to state A, we know that no car is connected.
+			// As long as the contactor is not turned on we can arbitrarily switch phases now.
+			iec61851.instant_phase_switch_allowed = true;
+
 			// If state changed from any non-A state to state A we invalidate the managed current
 			// we have to handle the clear on disconnect slots
 			charging_slot_handle_disconnect();
@@ -221,6 +225,10 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 				adc_ignore_results(2);
 				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+
+				// After CP disconnect it is as if the EV was disconnected, so can switch the phases
+				// now until the contactor is turned on again.
+				iec61851.instant_phase_switch_allowed = true;
 			}
 		}
 

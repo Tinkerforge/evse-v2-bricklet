@@ -138,6 +138,9 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
 		if(contactor) {
+			// As soon as the contactor is tunred on, we are not allowed to switch phases anymore until the car is disconnected.
+			iec61851.instant_phase_switch_allowed = false;
+
 			XMC_GPIO_SetOutputLow(EVSE_CONTACTOR_PIN);
 		} else {
 			XMC_GPIO_SetOutputHigh(EVSE_CONTACTOR_PIN);
@@ -649,7 +652,7 @@ void evse_init(void) {
 
 	if(hardware_version.is_v2) {
 		evse_v2_init_cp_pwm();
-		// Support for lock switch motor and input pin only in EVSE V2 
+		// Support for lock switch motor and input pin only in EVSE V2
 		XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
 		XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,        &pin_config_output_low);
 		XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
