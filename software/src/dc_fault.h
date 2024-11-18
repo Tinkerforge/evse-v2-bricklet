@@ -26,36 +26,36 @@
 #include <stdint.h>
 
 typedef enum {
-    DC_FAULT_NORMAL_CONDITION = 0,
-    DC_FAULT_6MA_DC,
-    DC_FAULT_SYSTEM,
-    DC_FAULT_UNKOWN,
-    DC_FAULT_CALIBRATION,
-    DC_FAULT_20MA_AC,
-    DC_FAULT_6MA_DC_AND_20MA_AC
+	DC_FAULT_NORMAL_CONDITION = 0,
+	DC_FAULT_6MA_DC,
+	DC_FAULT_SYSTEM,
+	DC_FAULT_UNKOWN,
+	DC_FAULT_CALIBRATION,
+	DC_FAULT_20MA_AC,
+	DC_FAULT_6MA_DC_AND_20MA_AC
 } DCFaultState;
 
 typedef enum {
-    DC_FAULT_SENSOR_X904 = 0,
-    DC_FAULT_SENSOR_X804 = 1,
+	DC_FAULT_SENSOR_X904 = 0,
+	DC_FAULT_SENSOR_X804 = 1,
 } DCFaultSensorType;
 
 typedef struct {
-    DCFaultState state;
-    DCFaultSensorType sensor_type;
-    uint32_t last_fault_time;
-    uint32_t last_run_time;
+	DCFaultState state;
+	DCFaultSensorType sensor_type;
+	uint32_t last_fault_time;
+	uint32_t last_run_time;
 
-    bool x6;
-    bool x30;
-    bool error;
+	bool x6;
+	bool x30;
+	bool error;
 
-    bool     calibration_start;
-    bool     calibration_start_external;
-    bool     calibration_running;
-    uint8_t  calibration_state;
-    uint32_t calibration_time;
-    bool     calibration_check[3];
+	bool     calibration_start;
+	bool     calibration_start_external;
+	bool     calibration_running;
+	uint8_t  calibration_state;
+	uint32_t calibration_time;
+	bool     calibration_check[3];
 } DCFault;
 
 extern DCFault dc_fault;

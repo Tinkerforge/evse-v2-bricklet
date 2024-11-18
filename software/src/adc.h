@@ -42,9 +42,9 @@
 #define ADC_NEGATIVE_MEASUREMENT 1
 
 typedef struct {
-    // Pin
-    XMC_GPIO_PORT_t *port;
-    uint8_t pin;
+	// Pin
+	XMC_GPIO_PORT_t *port;
+	uint8_t pin;
 
 	// ADC config
 	uint8_t result_reg;
@@ -69,8 +69,8 @@ typedef struct {
 
 typedef struct {
 	uint8_t resistance_counter;
-    uint32_t cp_pe_resistance;
-    uint32_t pp_pe_resistance;
+	uint32_t cp_pe_resistance;
+	uint32_t pp_pe_resistance;
 	int32_t cp_pe_pwm_low_mv[2];
 	uint32_t cp_pe_pwm_low_count[2];
 	uint64_t cp_pe_pwm_low_sum[2];

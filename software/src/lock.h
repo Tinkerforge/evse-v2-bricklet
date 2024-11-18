@@ -26,22 +26,22 @@
 #include <stdbool.h>
 
 typedef enum {
-    LOCK_STATE_INIT,
-    LOCK_STATE_OPEN,
-    LOCK_STATE_CLOSING,
-    LOCK_STATE_CLOSE,
-    LOCK_STATE_OPENING,
-    LOCK_STATE_ERROR
+	LOCK_STATE_INIT,
+	LOCK_STATE_OPEN,
+	LOCK_STATE_CLOSING,
+	LOCK_STATE_CLOSE,
+	LOCK_STATE_OPENING,
+	LOCK_STATE_ERROR
 } LockState;
 
 typedef struct {
-    uint32_t last_duty_cycle_update;
-    uint16_t duty_cycle;
+	uint32_t last_duty_cycle_update;
+	uint16_t duty_cycle;
 
-    uint32_t last_input_switch_seen;
-    uint32_t lock_start;
+	uint32_t last_input_switch_seen;
+	uint32_t lock_start;
 
-    LockState state;
+	LockState state;
 } Lock;
 
 extern Lock lock;

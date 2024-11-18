@@ -162,8 +162,8 @@ void dc_fault_calibration_tick(void) {
 			}
 		}
 
-		case 5: { // Wait 1s for 6x and 30x to go low again 
-		         // (datasheet says 2030 to 2100ms, we have 3000 in sum)
+		case 5: { // Wait 1s for 6x and 30x to go low again
+			// (datasheet says 2030 to 2100ms, we have 3000 in sum)
 			if(system_timer_is_time_elapsed_ms(dc_fault.calibration_time, 1200)) {
 				dc_fault.calibration_check[2] = (!XMC_GPIO_GetInput(DC_FAULT_X6_PIN)) && (!XMC_GPIO_GetInput(DC_FAULT_X30_PIN));
 
@@ -196,7 +196,7 @@ void dc_fault_tick(void) {
 
 	if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
 		// In case of any dc fault error we don't run the dc fault code anymore.
-		// We never want to accidentially reset back to normal condition 
+		// We never want to accidentially reset back to normal condition
 		// (only the user of the wallbox should be able to do this).
 		return;
 	}
@@ -257,7 +257,7 @@ void dc_fault_tick(void) {
 		// Also ignore contactor check for a while when contactor changes state
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
-		// Contactor is normally only controlled in the iec61851 tick, 
+		// Contactor is normally only controlled in the iec61851 tick,
 		// but in case of dc fault condition we turn the contactor off
 		// no matter what state we are in or similar.
 		XMC_GPIO_SetOutputHigh(EVSE_CONTACTOR_PIN);

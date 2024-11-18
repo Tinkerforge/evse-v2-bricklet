@@ -73,30 +73,30 @@ const uint16_t led_cie1931[256] = {
 
 
 void led_hsv_to_rgb(const uint16_t h, const uint8_t s, const uint8_t v, uint8_t *r, uint8_t *g, uint8_t *b) {
-    if(s == 0) {
-        *r = v;
+	if(s == 0) {
+		*r = v;
 		*g = v;
 		*b = v;
-    } else {
-        const uint8_t i = h / 60;
-        const uint8_t p = (256*v - s*v) / 256;
+	} else {
+		const uint8_t i = h / 60;
+		const uint8_t p = (256*v - s*v) / 256;
 
-        if(i & 1) {
-            const int32_t q = (256*60*v - h*s*v + 60*s*v*i) / (256*60);
-            switch(i) {
-                case 1: *r = q; *g = v; *b = p; break;
-                case 3: *r = p; *g = q; *b = v; break;
-                case 5: *r = v; *g = p; *b = q; break;
-            }
-        } else {
-            const int32_t t = (256*60*v + h*s*v - 60*s*v*(i+1)) / (256*60);
-            switch(i) {
-                case 0: *r = v; *g = t; *b = p; break;
-                case 2: *r = p; *g = v; *b = t; break;
-                case 4: *r = t; *g = p; *b = v; break;
-            }
-        }
-    }
+		if(i & 1) {
+			const int32_t q = (256*60*v - h*s*v + 60*s*v*i) / (256*60);
+			switch(i) {
+				case 1: *r = q; *g = v; *b = p; break;
+				case 3: *r = p; *g = q; *b = v; break;
+				case 5: *r = v; *g = p; *b = q; break;
+			}
+		} else {
+			const int32_t t = (256*60*v + h*s*v - 60*s*v*(i+1)) / (256*60);
+			switch(i) {
+				case 0: *r = v; *g = t; *b = p; break;
+				case 2: *r = p; *g = v; *b = t; break;
+				case 4: *r = t; *g = p; *b = v; break;
+			}
+		}
+	}
 }
 
 void led_update(const uint16_t h, const uint8_t s, const uint8_t v) {
@@ -108,7 +108,7 @@ void led_update(const uint16_t h, const uint8_t s, const uint8_t v) {
 	uint16_t compare_value_b = led_cie1931[led.b];
 	if(hardware_version.is_v2) {
 		XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, compare_value_b);
-    	XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) | (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
+		XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) | (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
 	} else if(hardware_version.is_v3) {
 		uint16_t compare_value_r = led_cie1931[led.r];
 		uint16_t compare_value_g = led_cie1931[led.g];
@@ -223,21 +223,21 @@ void led_init_v2(void) {
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
 
-    XMC_CCU4_Init(EVSE_V2_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    XMC_CCU4_StartPrescaler(EVSE_V2_LED_CCU);
-    XMC_CCU4_SLICE_CompareInit(EVSE_V2_LED_SLICE, &compare_config);
+	XMC_CCU4_Init(EVSE_V2_LED_CCU, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+	XMC_CCU4_StartPrescaler(EVSE_V2_LED_CCU);
+	XMC_CCU4_SLICE_CompareInit(EVSE_V2_LED_SLICE, &compare_config);
 
-    // Set the period and compare register values
-    XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_V2_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
-    XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, 0);
+	// Set the period and compare register values
+	XMC_CCU4_SLICE_SetTimerPeriodMatch(EVSE_V2_LED_SLICE, LED_MAX_DUTY_CYCLE-1);
+	XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, 0);
 
-    XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) |
-    		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
+	XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) |
+										 (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
 
-    XMC_GPIO_Init(EVSE_V2_LED_PIN, &gpio_out_config);
+	XMC_GPIO_Init(EVSE_V2_LED_PIN, &gpio_out_config);
 
-    XMC_CCU4_EnableClock(EVSE_V2_LED_CCU, EVSE_V2_LED_SLICE_NUMBER);
-    XMC_CCU4_SLICE_StartTimer(EVSE_V2_LED_SLICE);
+	XMC_CCU4_EnableClock(EVSE_V2_LED_CCU, EVSE_V2_LED_SLICE_NUMBER);
+	XMC_CCU4_SLICE_StartTimer(EVSE_V2_LED_SLICE);
 }
 
 void led_init_v3(void) {
@@ -297,11 +297,11 @@ void led_init_v3(void) {
 		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
-    XMC_GPIO_Init(EVSE_V3_LED_R_PIN, &gpio_out_config);
+	XMC_GPIO_Init(EVSE_V3_LED_R_PIN, &gpio_out_config);
 	gpio_out_config.mode = EVSE_V3_LED_G_ALT;
-    XMC_GPIO_Init(EVSE_V3_LED_G_PIN, &gpio_out_config);
+	XMC_GPIO_Init(EVSE_V3_LED_G_PIN, &gpio_out_config);
 	gpio_out_config.mode = EVSE_V3_LED_B_ALT;
-    XMC_GPIO_Init(EVSE_V3_LED_B_PIN, &gpio_out_config);
+	XMC_GPIO_Init(EVSE_V3_LED_B_PIN, &gpio_out_config);
 
 	XMC_CCU8_EnableClock(EVSE_V3_LED_R_CCU, EVSE_V3_LED_R_SLICE_NUMBER);
 	XMC_CCU8_EnableClock(EVSE_V3_LED_G_CCU, EVSE_V3_LED_G_SLICE_NUMBER);

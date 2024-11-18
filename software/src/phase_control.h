@@ -26,20 +26,20 @@
 #include <stdbool.h>
 
 typedef struct {
-    uint8_t current;
-    uint8_t requested;
+	uint8_t current;
+	uint8_t requested;
 
-    uint8_t info; // 0 = normal, 1 = 1-phase forced by auto-switch
+	uint8_t info; // 0 = normal, 1 = 1-phase forced by auto-switch
 
-    bool in_progress;
-    uint8_t progress_state;
-    uint32_t progress_state_time;
+	bool in_progress;
+	uint8_t progress_state;
+	uint32_t progress_state_time;
 
-    uint32_t autoswitch_time;
-    bool autoswitch_done;
+	uint32_t autoswitch_time;
+	bool autoswitch_done;
 
-    bool autoswitch_enabled;
-    uint8_t phases_connected;
+	bool autoswitch_enabled;
+	uint8_t phases_connected;
 } PhaseControl;
 
 extern PhaseControl phase_control;

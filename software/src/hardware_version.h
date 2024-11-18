@@ -28,13 +28,13 @@
 #include "xmc_gpio.h"
 
 typedef struct {
-    bool is_v2;
-    bool is_v3;
+	bool is_v2;
+	bool is_v3;
 } HardwareVersion;
 
 typedef struct {
-    XMC_GPIO_PORT_t *const port;
-    uint8_t pin;
+	XMC_GPIO_PORT_t *const port;
+	uint8_t pin;
 } HardwareVersionPortPin;
 
 extern HardwareVersion hardware_version;

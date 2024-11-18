@@ -51,11 +51,11 @@
 #define IEC61851_PP_RESISTANCE_32A  150
 
 typedef enum {
-    IEC61851_STATE_A,  // Standby
-    IEC61851_STATE_B,  // Vehicle Detected
-    IEC61851_STATE_C,  // Ready (Charging)
-    IEC61851_STATE_D,  // Ready with ventilation
-    IEC61851_STATE_EF, // No Power / Error
+	IEC61851_STATE_A,  // Standby
+	IEC61851_STATE_B,  // Vehicle Detected
+	IEC61851_STATE_C,  // Ready (Charging)
+	IEC61851_STATE_D,  // Ready with ventilation
+	IEC61851_STATE_EF, // No Power / Error
 } IEC61851State;
 
 

@@ -35,7 +35,7 @@
 ChargingSlot charging_slot;
 
 const uint16_t charging_slot_input_config_max_current[] = {
-    32000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000
+	32000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000, 0, 6000, 8000, 10000, 13000, 16000, 20000, 25000
 };
 
 uint32_t charging_slot_get_ma_incoming_cable(void) {
@@ -53,104 +53,104 @@ uint32_t charging_slot_get_ma_incoming_cable(void) {
 }
 
 void charging_slot_init(void) {
-    // Incoming cable
-    charging_slot.max_current[CHARGING_SLOT_INCOMING_CABLE]         = charging_slot_get_ma_incoming_cable();
-    charging_slot.active[CHARGING_SLOT_INCOMING_CABLE]              = true;
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_INCOMING_CABLE] = false;
+	// Incoming cable
+	charging_slot.max_current[CHARGING_SLOT_INCOMING_CABLE]         = charging_slot_get_ma_incoming_cable();
+	charging_slot.active[CHARGING_SLOT_INCOMING_CABLE]              = true;
+	charging_slot.clear_on_disconnect[CHARGING_SLOT_INCOMING_CABLE] = false;
 
-    // Outgoing cable
-    charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE]         = iec61851_get_ma_from_pp_resistance();
-    charging_slot.active[CHARGING_SLOT_OUTGOING_CABLE]              = true;
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_OUTGOING_CABLE] = false;
+	// Outgoing cable
+	charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE]         = iec61851_get_ma_from_pp_resistance();
+	charging_slot.active[CHARGING_SLOT_OUTGOING_CABLE]              = true;
+	charging_slot.clear_on_disconnect[CHARGING_SLOT_OUTGOING_CABLE] = false;
 
-    for(uint8_t i = 0; i < CHARGING_SLOT_DEFAULT_NUM; i++) {
-        charging_slot.max_current[i+2]         = charging_slot.max_current_default[i];
-        charging_slot.active[i+2]              = charging_slot.active_default[i];
-        charging_slot.clear_on_disconnect[i+2] = charging_slot.clear_on_disconnect_default[i];
-    }
+	for(uint8_t i = 0; i < CHARGING_SLOT_DEFAULT_NUM; i++) {
+		charging_slot.max_current[i+2]         = charging_slot.max_current_default[i];
+		charging_slot.active[i+2]              = charging_slot.active_default[i];
+		charging_slot.clear_on_disconnect[i+2] = charging_slot.clear_on_disconnect_default[i];
+	}
 }
 
 void charging_slot_tick(void) {
-    // Handle pp resistance configuration
-    charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE] = iec61851_get_ma_from_pp_resistance();
+	// Handle pp resistance configuration
+	charging_slot.max_current[CHARGING_SLOT_OUTGOING_CABLE] = iec61851_get_ma_from_pp_resistance();
 
-    // Handle shutdown input configuration
-    charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
-    if(evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_IGNORED) {
-        charging_slot.active[CHARGING_SLOT_INPUT0]      = false;
-        charging_slot.max_current[CHARGING_SLOT_INPUT0] = 32000;
-    } else { // SHUTDOWN_ON_CLOSE, SHUTDOWN_ON_OPEN, 4200_WATT_ON_OPEN, 4200_WATT_ON_CLOSE
-        charging_slot.active[CHARGING_SLOT_INPUT0] = true;
-        if(evse_is_shutdown()) {
-            if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) ||
-               (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN)) {
-                charging_slot.max_current[CHARGING_SLOT_INPUT0] = 0;
-            } else {
-                if(phase_control.current == 1) {
-                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 18000; // 1-phase 4.2kW is ca. 18A
-                } else {
-                    charging_slot.max_current[CHARGING_SLOT_INPUT0] = 6000; // 3-phase 4.2kW is ca. 6A
-                }
-            }
-        } else {
-            charging_slot.max_current[CHARGING_SLOT_INPUT0] = 32000;
-        }
-    }
+	// Handle shutdown input configuration
+	charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT0] = false;
+	if(evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_IGNORED) {
+		charging_slot.active[CHARGING_SLOT_INPUT0]      = false;
+		charging_slot.max_current[CHARGING_SLOT_INPUT0] = 32000;
+	} else { // SHUTDOWN_ON_CLOSE, SHUTDOWN_ON_OPEN, 4200_WATT_ON_OPEN, 4200_WATT_ON_CLOSE
+		charging_slot.active[CHARGING_SLOT_INPUT0] = true;
+		if(evse_is_shutdown()) {
+			if((evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_CLOSE) ||
+			   (evse.shutdown_input_configuration == EVSE_V2_SHUTDOWN_INPUT_SHUTDOWN_ON_OPEN)) {
+				charging_slot.max_current[CHARGING_SLOT_INPUT0] = 0;
+			} else {
+				if(phase_control.current == 1) {
+					charging_slot.max_current[CHARGING_SLOT_INPUT0] = 18000; // 1-phase 4.2kW is ca. 18A
+				} else {
+					charging_slot.max_current[CHARGING_SLOT_INPUT0] = 6000; // 3-phase 4.2kW is ca. 6A
+				}
+			}
+		} else {
+			charging_slot.max_current[CHARGING_SLOT_INPUT0] = 32000;
+		}
+	}
 
-    // Handle general purpose input configuration
-    if(evse.input_configuration == EVSE_V2_INPUT_UNCONFIGURED) { // Explicitly uncofingured
-        charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
-        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
-        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
-    } else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_25A) { // Configured for max current
-        const bool input        = hardware_version.is_v2 ? XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN) : false;
-        const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A)) ||
-                                  ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A));
-        if(input_active) {
-            charging_slot.max_current[CHARGING_SLOT_INPUT1]     = charging_slot_input_config_max_current[evse.input_configuration];
-        } else {
-            charging_slot.max_current[CHARGING_SLOT_INPUT1]     = 32000;
-        }
+	// Handle general purpose input configuration
+	if(evse.input_configuration == EVSE_V2_INPUT_UNCONFIGURED) { // Explicitly uncofingured
+		charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
+		charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
+		charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
+	} else if(evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_HIGH_MAX_25A) { // Configured for max current
+		const bool input        = hardware_version.is_v2 ? XMC_GPIO_GetInput(EVSE_INPUT_GP_PIN) : false;
+		const bool input_active = (!input && (evse.input_configuration <= EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A)) ||
+								  ( input && (evse.input_configuration >  EVSE_V2_INPUT_ACTIVE_LOW_MAX_25A));
+		if(input_active) {
+			charging_slot.max_current[CHARGING_SLOT_INPUT1]     = charging_slot_input_config_max_current[evse.input_configuration];
+		} else {
+			charging_slot.max_current[CHARGING_SLOT_INPUT1]     = 32000;
+		}
 
-        charging_slot.active[CHARGING_SLOT_INPUT1]              = true;
-        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
-    } else { // Currently unsupported configuration
-        charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
-        charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
-        charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
-    }
+		charging_slot.active[CHARGING_SLOT_INPUT1]              = true;
+		charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
+	} else { // Currently unsupported configuration
+		charging_slot.active[CHARGING_SLOT_INPUT1]              = false;
+		charging_slot.max_current[CHARGING_SLOT_INPUT1]         = 32000;
+		charging_slot.clear_on_disconnect[CHARGING_SLOT_INPUT1] = false;
+	}
 }
 
 uint16_t charging_slot_get_max_current(void) {
-    uint16_t max_current = 0xFFFF;
+	uint16_t max_current = 0xFFFF;
 
-    for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
-        if(charging_slot.active[i]) {
-            max_current = MIN(max_current, charging_slot.max_current[i]);
-        }
-    }
+	for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
+		if(charging_slot.active[i]) {
+			max_current = MIN(max_current, charging_slot.max_current[i]);
+		}
+	}
 
-    if(max_current == 0xFFFF) {
-        return 0;
-    }
+	if(max_current == 0xFFFF) {
+		return 0;
+	}
 
-    return max_current;
+	return max_current;
 }
 
 void charging_slot_handle_disconnect(void) {
-    charging_slot_start_charging_by_button();
-    
-    for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
-        if(charging_slot.clear_on_disconnect[i]) {
-            charging_slot.max_current[i] = 0;
-        }
-    }
+	charging_slot_start_charging_by_button();
+
+	for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
+		if(charging_slot.clear_on_disconnect[i]) {
+			charging_slot.max_current[i] = 0;
+		}
+	}
 }
 
 void charging_slot_stop_charging_by_button(void) {
-    charging_slot.max_current[CHARGING_SLOT_BUTTON] = 0;
+	charging_slot.max_current[CHARGING_SLOT_BUTTON] = 0;
 }
 
 void charging_slot_start_charging_by_button(void) {
-    charging_slot.max_current[CHARGING_SLOT_BUTTON] = 32000;
+	charging_slot.max_current[CHARGING_SLOT_BUTTON] = 32000;
 }

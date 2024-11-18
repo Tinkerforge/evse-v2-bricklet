@@ -78,7 +78,7 @@ typedef struct {
 #define EVSE_STORAGE_PAGES              16
 
 typedef struct {
-    uint32_t startup_time;
+	uint32_t startup_time;
 
 	uint8_t config_jumper_current;
 
