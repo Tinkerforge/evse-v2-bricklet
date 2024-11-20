@@ -244,6 +244,13 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 }
 
 void iec61851_state_a(void) {
+	// Allow instant phase switch in state A, but only after we bootet and had a chance to check if a
+	// car was already connected during the boot.
+	if(iec61851.boot_time != 0 && system_timer_is_time_elapsed_ms(iec61851.boot_time, 5000)) {
+		iec61851.boot_time = 0;
+		iec61851.instant_phase_switch_allowed = true;
+	}
+
 	// Apply +12V to CP, disable contactor
 	evse_set_output(1000, false);
 
@@ -411,6 +418,11 @@ void iec61851_tick(void) {
 void iec61851_init(void) {
 	memset(&iec61851, 0, sizeof(IEC61851));
 	iec61851.last_state_change = system_timer_get_ms();
+	iec61851.boot_time = system_timer_get_ms();
+	if(iec61851.boot_time == 0) {
+		iec61851.boot_time = 1;
+	}
+
 	iec61851_diode_error_reset(true);
 }
 

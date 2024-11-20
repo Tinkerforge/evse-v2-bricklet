@@ -62,6 +62,7 @@ typedef enum {
 typedef struct {
 	IEC61851State state;
 	uint32_t last_state_change;
+	uint32_t boot_time;
 
 	uint8_t diode_error_counter;
 	uint8_t diode_ok_counter;
