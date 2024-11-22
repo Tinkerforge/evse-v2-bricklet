@@ -204,7 +204,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-				adc_ignore_results(2);
+				adc_ignore_results(4);
 				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 			}
@@ -222,7 +222,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000)) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-				adc_ignore_results(2);
+				adc_ignore_results(4);
 				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 
