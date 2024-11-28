@@ -228,7 +228,7 @@ void phase_control_state_phase_change(void) {
 
 		case 5: { // CP Connect
 			// Connect CP
-			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 4000)) {
+			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 5000)) {
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 				phase_control.progress_state = 6;
 				phase_control.progress_state_time = system_timer_get_ms();
