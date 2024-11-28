@@ -155,7 +155,7 @@
 2024-09-19: 2.2.6 (db84418a)
 - Make sure charging time is always started when IEC61851 state changes to C
 
-2024-11-28: 2.2.7
+2024-11-28: 2.2.7 (f246a0c6)
 - Increase wait time between phase switch and CP reconnect from 2s to 5s
 - Increase wait time for charge-restart after phase change from 3s to 10s
 - If set_control_pilot_disconnect is called, only allow disconnect if contactor is not active (and iec61851 state is A or B)
