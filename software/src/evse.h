@@ -94,8 +94,7 @@ typedef struct {
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 
-	uint32_t charging_time;
-
+	bool car_stopped_charging;
 	bool ev_wakeup_enabled;
 	bool control_pilot_disconnect;
 

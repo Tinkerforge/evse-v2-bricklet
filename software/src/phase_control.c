@@ -260,7 +260,6 @@ void phase_control_state_phase_change(void) {
 			// If nobody wants to charge after 10 seconds we give up
 			// IEC61851 state will go to B through normal state machine
 			} else if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 10*1000)) {
-				evse.charging_time = 0;
 				phase_control_done();
 			}
 		}

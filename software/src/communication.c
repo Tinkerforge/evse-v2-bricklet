@@ -237,11 +237,7 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 		                    (get_bit(port4, 7)   << 3);  // 19: Version Detection
 	}
 
-	if(evse.charging_time == 0) {
-		response->charging_time = 0;
-	} else {
-		response->charging_time = system_timer_get_ms() - evse.charging_time;
-	}
+	response->car_stopped_charging = evse.car_stopped_charging;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
