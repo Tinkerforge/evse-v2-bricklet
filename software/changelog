@@ -163,3 +163,4 @@
 
 TBD; 2.2.8 (TBD):
 - Remove "charging time" and add "car stopped charging"
+- Set external charging slot to enabled with 32A on first boot of 2.2.8
