@@ -161,6 +161,6 @@
 - If set_control_pilot_disconnect is called, only allow disconnect if contactor is not active (and iec61851 state is A or B)
 - Allow instant phase switch when car has not charged or cp was disconnected
 
-TBD; 2.2.8 (TBD):
+2024-12-05: 2.2.8 (1c1e89b1)
 - Remove "charging time" and add "car stopped charging"
 - Set external charging slot to enabled with 32A on first boot of 2.2.8
