@@ -128,7 +128,22 @@ void phase_control_tick_check_autoswitch(void) {
 }
 
 void phase_control_tick(void) {
-	// No Phase Control in EVSE V2
+	// Check if phase control is configured to 3-phase while meter only has 1-phase connected.
+	// In this case we switch the phase control to 1-phase too.
+	// The change is not saved to EEPROM, so it will be reset on next boot and if L2/L3 is connected again
+	// this will be detected and the phase control will use 3-phase as default again.
+	if(phase_control.phases_connected == 3) {
+		if(meter.available && meter.phases_connected[0] && !meter.phases_connected[1] && !meter.phases_connected[2]) {
+			phase_control.phases_connected = 1;
+			phase_control.requested = 1;
+			if(hardware_version.is_v2) {
+				// In V2 set current directly to requested, since we can't switch the phases physically
+				phase_control.current = 1;
+			}
+		}
+	}
+
+	// No additional phase control in EVSE V2
 	if(hardware_version.is_v2) {
 		return;
 	}
