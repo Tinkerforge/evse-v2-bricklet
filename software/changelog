@@ -165,5 +165,5 @@
 - Remove "charging time" and add "car stopped charging"
 - Set external charging slot to enabled with 32A on first boot of 2.2.8
 
-2025-02-05: 2.2.9 (TBD)
+2025-02-05: 2.2.9 (dad9a274)
 - If meter is available and only 1 phase is connected to the meter, use this information in phase control
