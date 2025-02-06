@@ -168,5 +168,5 @@
 2025-02-05: 2.2.9 (dad9a274)
 - If meter is available and only 1 phase is connected to the meter, use this information in phase control
 
-2025-02-06: 2.2.10 (TBD)
+2025-02-06: 2.2.10 (815e3638)
 - Fix bug in detection of phases connected to meter
