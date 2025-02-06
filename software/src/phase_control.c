@@ -133,12 +133,19 @@ void phase_control_tick(void) {
 	// The change is not saved to EEPROM, so it will be reset on next boot and if L2/L3 is connected again
 	// this will be detected and the phase control will use 3-phase as default again.
 	if(phase_control.phases_connected == 3) {
-		if(meter.available && meter.phases_connected[0] && !meter.phases_connected[1] && !meter.phases_connected[2]) {
-			phase_control.phases_connected = 1;
-			phase_control.requested = 1;
-			if(hardware_version.is_v2) {
-				// In V2 set current directly to requested, since we can't switch the phases physically
-				phase_control.current = 1;
+		if(meter.each_value_read_once && meter.phases_connected[0] && !meter.phases_connected[1] && !meter.phases_connected[2]) {
+			if(phase_control.meter_phase_check_time == 0) {
+				phase_control.meter_phase_check_time = system_timer_get_ms();
+			} else {
+				if(system_timer_is_time_elapsed_ms(phase_control.meter_phase_check_time, 10*1000)) {
+					phase_control.meter_phase_check_time = 0;
+					phase_control.phases_connected = 1;
+					phase_control.requested = 1;
+					if(hardware_version.is_v2) {
+						// In V2 set current directly to requested, since we can't switch the phases physically
+						phase_control.current = 1;
+					}
+				}
 			}
 		}
 	}

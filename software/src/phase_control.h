@@ -40,6 +40,8 @@ typedef struct {
 
 	bool autoswitch_enabled;
 	uint8_t phases_connected;
+
+	uint32_t meter_phase_check_time;
 } PhaseControl;
 
 extern PhaseControl phase_control;
