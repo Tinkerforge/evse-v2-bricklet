@@ -839,12 +839,8 @@ BootloaderHandleMessageResponse set_phase_auto_switch(const SetPhaseAutoSwitch *
 }
 
 BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *data, GetPhaseAutoSwitch_Response *response) {
-	response->header.length = sizeof(GetPhaseAutoSwitch_Response);
-	if(hardware_version.is_v2) {
-		response->phase_auto_switch_enabled = false;
-	} else {
-		response->phase_auto_switch_enabled = phase_control.autoswitch_enabled;
-	}
+	response->header.length             = sizeof(GetPhaseAutoSwitch_Response);
+	response->phase_auto_switch_enabled = phase_control.autoswitch_enabled;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

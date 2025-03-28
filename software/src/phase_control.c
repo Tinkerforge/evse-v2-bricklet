@@ -46,13 +46,6 @@ void phase_control_init(void) {
 	phase_control.current   = phase_control.phases_connected;
 	phase_control.requested = phase_control.phases_connected;
 
-	// No Phase Control and no Autoswitch in EVSE V2
-	if(hardware_version.is_v2) {
-		phase_control.autoswitch_enabled = false;
-		return;
-	}
-
-	// In EVSE V3 use auto switch according to persistent value from EEPROM
 	phase_control.autoswitch_enabled = autoswitch_enabled_save;
 
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
@@ -74,11 +67,6 @@ void phase_control_init(void) {
 // Check for auto-switch conditions
 // We switch from 3-phase to 1-phase if the car is charging and only using one phase
 void phase_control_tick_check_autoswitch(void) {
-	// No autoswitch if only 1 phase is connected
-	if(phase_control.phases_connected == 1) {
-		return;
-	}
-
 	if(!phase_control.autoswitch_enabled) {
 		phase_control.autoswitch_time = 0;
 		phase_control.autoswitch_done = true;
@@ -102,7 +90,34 @@ void phase_control_tick_check_autoswitch(void) {
 					phase_control.autoswitch_time = 0;
 					phase_control.autoswitch_done = true;
 					phase_control.info            = 1;
-					XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
+					if(hardware_version.is_v3) {
+						XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
+					}
+				}
+			} else {
+				phase_control.autoswitch_time = 0;
+				phase_control.info            = 0;
+			}
+		}
+	// If a car is charging on WARP2, it is configured to use 1-phase and a meter is available, we can auto-switch to 3-phase if the car is using three phase
+	} else if(hardware_version.is_v2 && (iec61851.state == IEC61851_STATE_C) && (phase_control.current == 1) && (phase_control.requested == 1) && meter.available && phase_control.autoswitch_done) {
+		// If the car is charging already for at least two seconds
+		if(system_timer_is_time_elapsed_ms(iec61851.last_state_change, 2000)) {
+			// If the phase 1 uses more than 5A and phase 2 and 3 use less than 0.5A
+			const uint8_t phases_active = ((meter_register_set.current[0].f >= 0.5f) ? 1: 0) +
+										  ((meter_register_set.current[1].f >= 0.5f) ? 1: 0) +
+										  ((meter_register_set.current[2].f >= 0.5f) ? 1: 0);
+			if(phases_active > 1) {
+				if(phase_control.autoswitch_time == 0) {
+					// If the autos-switch-timer was not yet started we start it
+					phase_control.autoswitch_time = system_timer_get_ms();
+				} else if(system_timer_is_time_elapsed_ms(phase_control.autoswitch_time, 15000)) {
+					// All autoswitch conditions have been met for 15 seconds -> switch back to 3-phase
+					phase_control.requested       = 3;
+					phase_control.current         = 3;
+					phase_control.autoswitch_time = 0;
+					phase_control.autoswitch_done = false;
+					phase_control.info            = 2;
 				}
 			} else {
 				phase_control.autoswitch_time = 0;
@@ -116,7 +131,9 @@ void phase_control_tick_check_autoswitch(void) {
 		phase_control.autoswitch_time = 0;
 		phase_control.autoswitch_done = false;
 		phase_control.info            = 0;
-		XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
+		if(hardware_version.is_v3) {
+			XMC_GPIO_SetOutputLow(EVSE_PHASE_SWITCH_PIN);
+		}
 	// If the phase state was changed externally and the car is not charging anymore we have to reset autoswitch_done
 	} else if((iec61851.state == IEC61851_STATE_A) && phase_control.autoswitch_done) {
 		phase_control.autoswitch_time = 0;
@@ -150,12 +167,13 @@ void phase_control_tick(void) {
 		}
 	}
 
+	phase_control_tick_check_autoswitch();
+
 	// No additional phase control in EVSE V2
 	if(hardware_version.is_v2) {
 		return;
 	}
 
-	phase_control_tick_check_autoswitch();
 
 	// Only switch phase if contactor is not active.
 	const bool contactor_inactive = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN); // Contactor pin is active low

@@ -170,3 +170,6 @@
 
 2025-02-06: 2.2.10 (815e3638)
 - Fix bug in detection of phases connected to meter
+
+2025-XX-XX: 2.2.11 (TBD)
+- Add support for autoswitch for EVSE V2
