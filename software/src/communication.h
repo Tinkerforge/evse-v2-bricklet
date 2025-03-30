@@ -1,5 +1,5 @@
 /* evse-v2-bricklet
- * Copyright (C) 2024 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2025 Olaf Lüke <olaf@tinkerforge.com>
  *
  * communication.h: TFP protocol message handling
  *
@@ -134,6 +134,9 @@ void communication_init(void);
 #define EVSE_V2_INPUT_ACTIVE_HIGH_MAX_20A 15
 #define EVSE_V2_INPUT_ACTIVE_HIGH_MAX_25A 16
 
+#define EVSE_V2_CHARGING_PROTOCOL_IEC61851 0
+#define EVSE_V2_CHARGING_PROTOCOL_ISO15118 1
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -197,6 +200,8 @@ void communication_init(void);
 #define FID_GET_PHASE_AUTO_SWITCH 42
 #define FID_SET_PHASES_CONNECTED 43
 #define FID_GET_PHASES_CONNECTED 44
+#define FID_SET_CHARGING_PROTOCOL 46
+#define FID_GET_CHARGING_PROTOCOL 47
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 
@@ -634,6 +639,22 @@ typedef struct {
 	uint8_t phases_connected[1];
 } __attribute__((__packed__)) EnergyMeterValues_Callback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t charging_protocol;
+	uint16_t cp_duty_cycle;
+} __attribute__((__packed__)) SetChargingProtocol;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetChargingProtocol;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t charging_protocol;
+	uint16_t cp_duty_cycle;
+} __attribute__((__packed__)) GetChargingProtocol_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -680,6 +701,8 @@ BootloaderHandleMessageResponse set_phase_auto_switch(const SetPhaseAutoSwitch *
 BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *data, GetPhaseAutoSwitch_Response *response);
 BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *data);
 BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response);
+BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data);
+BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);

@@ -429,7 +429,7 @@ void evse_init_jumper(void) {
 		} else {
 			evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
 		}
-	} else { // V3
+	} else { // v3 or v4
 		if(pin0 == 'h' && pin1 == 'h') {
 			evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_32A;
 		} else if(pin0 == 'o' && pin1 == 'h') {
@@ -673,7 +673,7 @@ void evse_init(void) {
 		XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
 //		ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
 //		ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
-	} else if(hardware_version.is_v3) {
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		evse_v3_init_cp_pwm();
 	}
 

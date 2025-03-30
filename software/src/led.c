@@ -109,7 +109,7 @@ void led_update(const uint16_t h, const uint8_t s, const uint8_t v) {
 	if(hardware_version.is_v2) {
 		XMC_CCU4_SLICE_SetTimerCompareMatch(EVSE_V2_LED_SLICE, compare_value_b);
 		XMC_CCU4_EnableShadowTransfer(EVSE_V2_LED_CCU, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)) | (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (EVSE_V2_LED_SLICE_NUMBER*4)));
-	} else if(hardware_version.is_v3) {
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		uint16_t compare_value_r = led_cie1931[led.r];
 		uint16_t compare_value_g = led_cie1931[led.g];
 		XMC_CCU8_SLICE_SetTimerCompareMatch(EVSE_V3_LED_R_SLICE, XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value_r);
@@ -318,7 +318,7 @@ void led_init(void) {
 
 	if(hardware_version.is_v2) {
 		led_init_v2();
-	} else if(hardware_version.is_v3) {
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		led_init_v3();
 	}
 

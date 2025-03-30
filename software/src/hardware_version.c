@@ -27,6 +27,8 @@
 #include "configs/config_dc_fault.h"
 #include "configs/config_evse.h"
 
+#include "bricklib2/hal/system_timer/system_timer.h"
+
 #include "xmc_gpio.h"
 
 static const HardwareVersionPortPin hardware_version_v2[] = {
@@ -66,21 +68,46 @@ HardwareVersion hardware_version;
 void hardware_version_init(void) {
 	memset(&hardware_version, 0, sizeof(HardwareVersion));
 
-	const XMC_GPIO_CONFIG_t pin_config_input = {
-		.mode             = XMC_GPIO_MODE_INPUT_PULL_UP,
+	const XMC_GPIO_CONFIG_t pin_config_input_down = {
+		.mode             = XMC_GPIO_MODE_INPUT_PULL_DOWN,
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
-	XMC_GPIO_Init(HARDWARE_VERSION_DETECTION, &pin_config_input);
+	const XMC_GPIO_CONFIG_t pin_config_input_up = {
+		.mode             = XMC_GPIO_MODE_INPUT_PULL_DOWN,
+		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
+	};
 
-	hardware_version.is_v2 =  XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION); // EVSE V2 = version detection pin high
-	hardware_version.is_v3 = !XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION); // EVSE V3 = version detection pin low
+	XMC_GPIO_Init(HARDWARE_VERSION_DETECTION, &pin_config_input_down);
+	system_timer_sleep_ms(50);
+
+	// v2 = floating
+	if(!XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION)) {
+		hardware_version.is_v2 = true;
+		hardware_version.is_v3 = false;
+		hardware_version.is_v4 = false;
+	}
+
+	XMC_GPIO_Init(HARDWARE_VERSION_DETECTION, &pin_config_input_up);
+	system_timer_sleep_ms(50);
+
+	// v3 = pull low
+	if(!XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION)) {
+		hardware_version.is_v2 = false;
+		hardware_version.is_v3 = true;
+		hardware_version.is_v4 = false;
+	} else { // v4 = pull high
+		hardware_version.is_v2 = false;
+		hardware_version.is_v3 = false;
+		hardware_version.is_v4 = true;
+	}
 }
 
 XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num) {
 	if(hardware_version.is_v2) {
 		return hardware_version_v2[pin_num].port;
-	} else if(hardware_version.is_v3) {
+	// V3 and V4 have same hardware layout
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		return hardware_version_v3[pin_num].port;
 	}
 
@@ -90,7 +117,8 @@ XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num) {
 const uint8_t hardware_version_get_pin(const uint8_t pin_num) {
 	if(hardware_version.is_v2) {
 		return hardware_version_v2[pin_num].pin;
-	} else if(hardware_version.is_v3) {
+	// V3 and V4 have same hardware layout
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		return hardware_version_v3[pin_num].pin;
 	}
 

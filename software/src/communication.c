@@ -98,6 +98,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PHASE_AUTO_SWITCH:                 return length != sizeof(GetPhaseAutoSwitch)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_auto_switch(message, response);
 		case FID_SET_PHASES_CONNECTED:                  return length != sizeof(SetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phases_connected(message);
 		case FID_GET_PHASES_CONNECTED:                  return length != sizeof(GetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phases_connected(message, response);
+		case FID_SET_CHARGING_PROTOCOL:                 return length != sizeof(SetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_protocol(message);
+		case FID_GET_CHARGING_PROTOCOL:                 return length != sizeof(GetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_charging_protocol(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -135,7 +137,7 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 	response->header.length         = sizeof(GetHardwareConfiguration_Response);
 	response->jumper_configuration  = evse.config_jumper_current;
 	response->has_lock_switch       = evse.has_lock_switch;
-	response->evse_version          = hardware_version.is_v2 ? 20 : 30;
+	response->evse_version          = hardware_version.is_v2 ? 20 : (hardware_version.is_v3 ? 30 : (hardware_version.is_v4 ? 40 : 0));
 
 	if(!meter.each_value_read_once) {
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
@@ -212,7 +214,7 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 		                    (get_bit(port4, 4)  << 1) | // 17: DC X6
 		                    (get_bit(port4, 5)  << 2) | // 18: DC X30
 		                    (get_bit(port4, 6)  << 3);  // 19: LED
-	} else {
+	} else { // v3 or v4
 		response->gpio[0] = (get_bit(port0, 0)   << 0) | //  0: DC X30
 		                    (get_bit(port0, 1)   << 1) | //  1: DC X6
 		                    (get_bit(port0, 3)   << 2) | //  2: DC Error
@@ -516,7 +518,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 		led.h = LED_HUE_BLUE;
 		led.s = 255;
 		led.v = 255;
-	} else if(hardware_version.is_v3) {
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		if(data->color_v == 0) {
 			led.s = 255;
 			led.v = 255;
@@ -794,7 +796,7 @@ BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetT
 	response->header.length = sizeof(GetTemperature_Response);
 	if(hardware_version.is_v2) {
 		response->temperature = 0;
-	} else {
+	} else { // v3 or v4
 		response->temperature = tmp1075n.temperature;
 	}
 
@@ -811,7 +813,7 @@ BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	if(hardware_version.is_v3) {
+	if(hardware_version.is_v3 || hardware_version.is_v4) {
 		phase_control.requested = data->phases;
 	}
 
@@ -867,6 +869,28 @@ BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *d
 BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response) {
 	response->header.length    = sizeof(GetPhasesConnected_Response);
 	response->phases_connected = phase_control.phases_connected;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data) {
+	if(hardware_version.is_v4) {
+		iec61851.iso15118_active        = data->charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118;
+		iec61851.iso15118_cp_duty_cycle = data->cp_duty_cycle;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response) {
+	response->header.length = sizeof(GetChargingProtocol_Response);
+	if(hardware_version.is_v4 && iec61851.iso15118_active) {
+		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_ISO15118;
+		response->cp_duty_cycle     = iec61851.iso15118_cp_duty_cycle;
+	} else {
+		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_IEC61851;
+		response->cp_duty_cycle     = evse_get_cp_duty_cycle();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

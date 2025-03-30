@@ -256,9 +256,14 @@ void iec61851_state_a(void) {
 }
 
 void iec61851_state_b(void) {
-	// Apply 1kHz square wave to CP with appropriate duty cycle, disable contactor
 	uint32_t ma = iec61851_get_max_ma();
-	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
+
+	// Apply 1kHz square wave to CP with appropriate duty cycle, disable contactor
+	if(hardware_version.is_v4 && iec61851.iso15118_active) {
+		evse_set_output(iec61851.iso15118_cp_duty_cycle, false);
+	} else {
+		evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
+	}
 
 	// If EV wakeup function is enabled, we handle the actual wakeup state machine in state B
 	// (when EV is connected but not charging)
@@ -268,7 +273,12 @@ void iec61851_state_b(void) {
 void iec61851_state_c(void) {
 	// Apply 1kHz square wave to CP with appropriate duty cycle, enable contactor
 	uint32_t ma = iec61851_get_max_ma();
-	evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
+	if(hardware_version.is_v4 && iec61851.iso15118_active) {
+		evse_set_output(iec61851.iso15118_cp_duty_cycle, true);
+	} else {
+		evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
+	}
+
 	led_set_breathing();
 
 	evse.car_stopped_charging = false;
@@ -292,7 +302,7 @@ void iec61851_state_ef(void) {
 }
 
 void iec61851_tick(void) {
-	if(hardware_version.is_v3 && (contactor_check.error & 1)) { // PE error should have highest priority
+	if((hardware_version.is_v3 || hardware_version.is_v4) && (contactor_check.error & 1)) { // PE error should have highest priority
 		led_set_blinking(4);
 		iec61851_set_state(IEC61851_STATE_EF);
 	} else if((dc_fault.state & 0b111) != DC_FAULT_NORMAL_CONDITION) {
@@ -311,7 +321,8 @@ void iec61851_tick(void) {
 	// * We see a negative voltage above -10V or a difference of >2V between with and without resistor
 	// * The CP contact is connected
 	// * We currently apply a PWM (i.e. max ma is not 0)
-	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) &&
+	// TODO: What do we need to check here when ISO15118 is active?
+	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && (!iec61851.iso15118_active) &&
 	          (adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) && (adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) &&
 	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
 	          (evse_is_cp_connected()) &&

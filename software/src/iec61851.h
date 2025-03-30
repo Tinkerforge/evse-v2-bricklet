@@ -85,6 +85,9 @@ typedef struct {
 	bool instant_phase_switch_allowed;
 
 	uint32_t time_in_b2;
+
+	bool iso15118_active;
+	uint16_t iso15118_cp_duty_cycle;
 } IEC61851;
 
 extern IEC61851 iec61851;
@@ -96,5 +99,6 @@ uint32_t iec61851_get_ma_from_pp_resistance(void);
 uint32_t iec61851_get_max_ma(void);
 float iec61851_get_duty_cycle_for_ma(uint32_t ma);
 void iec61851_reset_ev_wakeup(void);
+void iec61851_set_state(IEC61851State state);
 
 #endif

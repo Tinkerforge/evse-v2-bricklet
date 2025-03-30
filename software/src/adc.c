@@ -164,7 +164,8 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 void adc_init_adc(void) {
 	if(hardware_version.is_v2) {
 		adc = adc_v2;
-	} else if(hardware_version.is_v3) {
+	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
+		// V3 and V4 have same hardware layout
 		adc = adc_v3;
 	}
 

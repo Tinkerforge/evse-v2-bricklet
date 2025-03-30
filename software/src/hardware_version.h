@@ -26,10 +26,10 @@
 #include <stdbool.h>
 
 #include "xmc_gpio.h"
-
 typedef struct {
 	bool is_v2;
 	bool is_v3;
+	bool is_v4;
 } HardwareVersion;
 
 typedef struct {
