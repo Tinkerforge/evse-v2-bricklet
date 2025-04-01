@@ -74,29 +74,30 @@ void hardware_version_init(void) {
 	};
 
 	const XMC_GPIO_CONFIG_t pin_config_input_up = {
-		.mode             = XMC_GPIO_MODE_INPUT_PULL_DOWN,
+		.mode             = XMC_GPIO_MODE_INPUT_PULL_UP,
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
 	XMC_GPIO_Init(HARDWARE_VERSION_DETECTION, &pin_config_input_down);
 	system_timer_sleep_ms(50);
-
-	// v2 = floating
-	if(!XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION)) {
-		hardware_version.is_v2 = true;
-		hardware_version.is_v3 = false;
-		hardware_version.is_v4 = false;
-	}
+	const bool pull_down = XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION);
 
 	XMC_GPIO_Init(HARDWARE_VERSION_DETECTION, &pin_config_input_up);
 	system_timer_sleep_ms(50);
+	const bool pull_up = XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION);
 
+	// V2 = floating
+	if (pull_up && !pull_down) {
+		hardware_version.is_v2 = true;
+		hardware_version.is_v3 = false;
+		hardware_version.is_v4 = false;
 	// v3 = pull low
-	if(!XMC_GPIO_GetInput(HARDWARE_VERSION_DETECTION)) {
+	} else if(!pull_up && !pull_down) {
 		hardware_version.is_v2 = false;
 		hardware_version.is_v3 = true;
 		hardware_version.is_v4 = false;
-	} else { // v4 = pull high
+	// v4 = pull high
+	} else if(pull_up && pull_down) {
 		hardware_version.is_v2 = false;
 		hardware_version.is_v3 = false;
 		hardware_version.is_v4 = true;
