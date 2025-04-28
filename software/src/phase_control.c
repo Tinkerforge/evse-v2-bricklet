@@ -83,8 +83,8 @@ void phase_control_tick_check_autoswitch(void) {
 				if(phase_control.autoswitch_time == 0) {
 					// If the autos-switch-timer was not yet started we start it
 					phase_control.autoswitch_time = system_timer_get_ms();
-				} else if(system_timer_is_time_elapsed_ms(phase_control.autoswitch_time, 15000)) {
-					// All autoswitch conditions have been met for 15 seconds -> switch to 1-phase
+				} else if(system_timer_is_time_elapsed_ms(phase_control.autoswitch_time, 30000)) {
+					// All autoswitch conditions have been met for 30 seconds -> switch to 1-phase
 					phase_control.requested       = 1;
 					phase_control.current         = 1;
 					phase_control.autoswitch_time = 0;
