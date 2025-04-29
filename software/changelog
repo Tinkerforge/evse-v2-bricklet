@@ -171,7 +171,7 @@
 2025-02-06: 2.2.10 (815e3638)
 - Fix bug in detection of phases connected to meter
 
-2025-04-28: 2.2.12 (ecf64244)
+2025-04-28: 2.2.11 (ecf64244)
 - Add support for autoswitch for EVSE V2
 - Add initial support for hardware version 4
 - Use 30s wait time for autoswitch
