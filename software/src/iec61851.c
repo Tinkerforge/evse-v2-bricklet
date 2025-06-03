@@ -54,6 +54,13 @@ void iec61851_diode_error_reset(bool check_pending) {
 
 void iec61851_set_state(IEC61851State state) {
 	if(state != iec61851.state) {
+		// We are in state C and the EV wants to change to state B and the last duty cycle change was less than 500ms ago.
+		// In this case we wait for 500ms before we change the state, since hybrid BMWs sometimes erroneously apply
+		// a resistance of 2700 Ohm to CP after a change of duty cycle.
+		if((iec61851.state == IEC61851_STATE_C) && (state == IEC61851_STATE_B) && !system_timer_is_time_elapsed_ms(evse.last_duty_cycle_change_time, 500)) {
+			return;
+		}
+
 		// If we change from an error state to something else we save the time
 		// If we then change to state C we wait at least 30 seconds
 		// -> Don't start charging immediately after error

@@ -175,3 +175,6 @@
 - Add support for autoswitch for EVSE V2
 - Add initial support for hardware version 4
 - Use 30s wait time for autoswitch
+
+2025-XX-XX: 2.2.12 (TBD)
+- Add support for 500ms wait time for C->B state change after duty cycle change (fixes problems with hybrid BMWs)

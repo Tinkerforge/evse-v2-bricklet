@@ -330,7 +330,10 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 	if(((last_duty_cycle == 0) || (last_duty_cycle == 1000)) && ((duty_cycle > 0) && (duty_cycle < 1000))) {
 		iec61851.state_b1b2_transition_seen = true;
 	}
-	last_duty_cycle = duty_cycle;
+	if (last_duty_cycle != duty_cycle) {
+		evse.last_duty_cycle_change_time = system_timer_get_ms();
+		last_duty_cycle = duty_cycle;
+	}
 
 	// According to IEC 61841-1 table A2 the duty cycle is allowed to be off by up to 5us.
 	// If boost mode is enabled we add 4us to the duty cycle. This means that we are still within the standard.
@@ -702,6 +705,7 @@ void evse_init(void) {
 	evse.car_stopped_charging = false;
 	evse.communication_watchdog_time = 0;
 	evse.contactor_turn_off_time = 0;
+	evse.last_duty_cycle_change_time = 0;
 }
 
 void evse_tick_debug(void) {
