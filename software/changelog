@@ -179,3 +179,4 @@
 2025-XX-XX: 2.2.12 (TBD)
 - Add support for 500ms wait time for C->B state change after duty cycle change (fixes problems with hybrid BMWs)
 - Add support for longer phase switch wait time in case of EV charger hang-up (possible fix for problems seen with Polestar chargers)
+- Improve contactor check timer initialization. Fixes false positve on very first check
