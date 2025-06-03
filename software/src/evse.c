@@ -96,12 +96,12 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 				if(evse.contactor_turn_off_time == 0) {
 					evse.contactor_turn_off_time = system_timer_get_ms();
 					return;
-				} else if(system_timer_is_time_elapsed_ms(evse.contactor_turn_off_time, 3*1000)) {
-					// The car has to respond within 3 seconds (see IEC 61851-1 standard table A.6 sequence 10.1),
-					// thus after 3 seconds we turn the contactor off, even if the car has not yet responded yet.
-					// In this case there may be some kind of communication error between wallbox and car and it
-					// is better to turn the contactor off, even if still under load.
+				} else if(system_timer_is_time_elapsed_ms(evse.contactor_turn_off_time, 6*1000)) {
+					// The car has to respond within 3 seconds (see IEC 61851-1 standard table A.6 sequence 10.1).
+					// But according to Table A.6 sequence 10.2 the EVSE shall wait 6 seconds to turn the contactor off
+					// if the EV does not respond to the change in CP signal. So we wait for 6 seconds here.
 					evse.contactor_turn_off_time = 0;
+					evse.contactor_maybe_switched_under_load = true;
 				} else {
 					return;
 				}
@@ -140,6 +140,9 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		if(contactor) {
 			// As soon as the contactor is tunred on, we are not allowed to switch phases anymore until the car is disconnected.
 			iec61851.instant_phase_switch_allowed = false;
+
+			// Reset the "maybe switched under load" flag
+			evse.contactor_maybe_switched_under_load = true;
 
 			XMC_GPIO_SetOutputLow(EVSE_CONTACTOR_PIN);
 		} else {

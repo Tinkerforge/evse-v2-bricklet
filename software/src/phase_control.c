@@ -235,7 +235,7 @@ void phase_control_state_phase_change(void) {
 
 		case 2: { // Contactor off
 			// According to IEC61851 the car can take 3s to react to PWM change from x% to 100%
-			// This is checked by the evse_set_output function, it will delay for 3s if a car is still charging
+			// This is checked by the evse_set_output function, it will delay for 6s if a car is still charging
 			evse_set_output(1000, false); // Disable contactor
 			if(!contactor_active) {
 				phase_control.progress_state = 3;
@@ -267,8 +267,21 @@ void phase_control_state_phase_change(void) {
 		}
 
 		case 5: { // CP Connect
+			// Normally we wait for 5 seconds before reconnecting the CP. That means that we simulate
+			// an unplug of the type 2 connector and a re-plug-in after 5 seconds.
+			// The IEC61851 does not specify a time for this, but 5 seconds seems reasonable.
+			// However, if the contactor was switched under load, we fear that the EV may not have noticed
+			// that we wanted to stop charging. In this case we wait for a full minute to absolutely make sure
+			// that the EV notices what is going on.
+			//
+			// Note that this only happens if the EV does not respond to the CP signal change within 6 seconds
+			// while the standard specifies that the EV needs to respond within 3 seconds.
+			// So this should only happen if the EV charger has some kind of hang-up
+			// (we have seen this hang-up with Polestar chargers).
+			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? 60000 : 5000;
+
 			// Connect CP
-			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 5000)) {
+			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, wait_ms_before_reconnect)) {
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 				phase_control.progress_state = 6;
 				phase_control.progress_state_time = system_timer_get_ms();

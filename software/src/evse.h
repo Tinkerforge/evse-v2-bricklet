@@ -108,6 +108,8 @@ typedef struct {
 	uint8_t storage[EVSE_STORAGE_PAGES][64];
 
 	uint32_t last_duty_cycle_change_time;
+
+	bool contactor_maybe_switched_under_load;
 } EVSE;
 
 extern EVSE evse;
