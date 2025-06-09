@@ -143,15 +143,16 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 		response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE;
 	} else {
 		switch(meter.type) {
-			case METER_TYPE_UNKNOWN:     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
-			case METER_TYPE_UNSUPPORTED: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
-			case METER_TYPE_SDM630:      response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630; break;
-			case METER_TYPE_SDM72V2:     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72V2; break;
-			case METER_TYPE_SDM72CTM:    response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72CTM; break;
-			case METER_TYPE_SDM630MCTV2: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2; break;
-			case METER_TYPE_DSZ15DZMOD:  response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD; break;
-			case METER_TYPE_DEM4A:       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DEM4A; break;
-			default:                     response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+			case METER_TYPE_UNKNOWN:       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+			case METER_TYPE_UNSUPPORTED:   response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
+			case METER_TYPE_SDM630:        response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630; break;
+			case METER_TYPE_SDM72V2:       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72V2; break;
+			case METER_TYPE_SDM72CTM:      response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM72CTM; break;
+			case METER_TYPE_SDM630MCTV2:   response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_SDM630MCTV2; break;
+			case METER_TYPE_DSZ15DZMOD:    response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DSZ15DZMOD; break;
+			case METER_TYPE_DEM4A:         response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DEM4A; break;
+			case METER_TYPE_DMED341MID7ER: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DMED341MID7ER; break;
+			default:                       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
 		}
 	}
 
