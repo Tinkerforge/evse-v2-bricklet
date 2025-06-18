@@ -182,3 +182,5 @@
 - Improve contactor check timer initialization. Fixes false positve on very first check
 - Add support for DMED341MID7ER meter
 - Disable set_control_pilot_disconnect API completely if phase control in progress (they could interact during ESP32 bootup/restart)
+- Add support for third and fourth ev-wakeup attempt (by changing to state F instead of state E)
+	Note: This is only used if the ev does not wake up with the normal ev-wakeup mechanism as defined in the informal A.5.3 of IEC 61851-1:2017

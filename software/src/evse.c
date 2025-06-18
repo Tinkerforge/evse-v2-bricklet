@@ -321,7 +321,7 @@ uint16_t evse_get_cp_pwm_duty_cycle(void) {
 
 uint16_t evse_get_cp_duty_cycle(void) {
 	uint16_t duty_cycle = (uint16_t)((48000 - evse_get_cp_pwm_duty_cycle())/48.0 + 0.5);
-	if((duty_cycle >= EVSE_BOOST_MODE_US) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
+	if((duty_cycle >= EVSE_BOOST_MODE_US) && (duty_cycle != 1000) && (duty_cycle != 0) && evse.boost_mode_enabled) {
 		return duty_cycle - EVSE_BOOST_MODE_US;
 	}
 
@@ -330,7 +330,7 @@ uint16_t evse_get_cp_duty_cycle(void) {
 
 void evse_set_cp_duty_cycle(const float duty_cycle) {
 	static float last_duty_cycle = FLT_MAX;
-	if(((last_duty_cycle == 0) || (last_duty_cycle == 1000)) && ((duty_cycle > 0) && (duty_cycle < 1000))) {
+	if(((last_duty_cycle == 1000)) && ((duty_cycle > 0) && (duty_cycle < 1000))) {
 		iec61851.state_b1b2_transition_seen = true;
 	}
 	if (last_duty_cycle != duty_cycle) {

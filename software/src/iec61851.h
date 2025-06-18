@@ -88,6 +88,9 @@ typedef struct {
 
 	bool iso15118_active;
 	uint16_t iso15118_cp_duty_cycle;
+
+	bool force_state_f;
+	uint32_t force_state_f_time;
 } IEC61851;
 
 extern IEC61851 iec61851;
