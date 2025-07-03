@@ -176,7 +176,7 @@
 - Add initial support for hardware version 4
 - Use 30s wait time for autoswitch
 
-2025-XX-XX: 2.2.12 (TBD)
+2025-06-03: 2.2.12 (9272abf0)
 - Add support for 500ms wait time for C->B state change after duty cycle change (fixes problems with hybrid BMWs)
 - Add support for longer phase switch wait time in case of EV charger hang-up (possible fix for problems seen with Polestar chargers)
 - Improve contactor check timer initialization. Fixes false positve on very first check
