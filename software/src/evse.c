@@ -142,7 +142,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 			iec61851.instant_phase_switch_allowed = false;
 
 			// Reset the "maybe switched under load" flag
-			evse.contactor_maybe_switched_under_load = true;
+			evse.contactor_maybe_switched_under_load = false;
 
 			XMC_GPIO_SetOutputLow(EVSE_CONTACTOR_PIN);
 		} else {

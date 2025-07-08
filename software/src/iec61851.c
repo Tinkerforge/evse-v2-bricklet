@@ -101,6 +101,9 @@ void iec61851_set_state(IEC61851State state) {
 			// As long as the contactor is not turned on we can arbitrarily switch phases now.
 			iec61851.instant_phase_switch_allowed = true;
 
+			// Reset the "maybe switched under load" flag
+			evse.contactor_maybe_switched_under_load = true;
+
 			// If state changed from any non-A state to state A we invalidate the managed current
 			// we have to handle the clear on disconnect slots
 			charging_slot_handle_disconnect();
