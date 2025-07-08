@@ -185,5 +185,5 @@
 - Add support for third and fourth ev-wakeup attempt (by changing to state F instead of state E)
 	Note: This is only used if the ev does not wake up with the normal ev-wakeup mechanism as defined in the informal A.5.3 of IEC 61851-1:2017
 
-2025-07-08: 2.2.13 (TBD)
+2025-07-08: 2.2.13 (3b715ab0)
 - Fix "maybe switch under load" flag reset
