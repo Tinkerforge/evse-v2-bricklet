@@ -338,7 +338,7 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 		last_duty_cycle = duty_cycle;
 	}
 
-	// According to IEC 61841-1 table A2 the duty cycle is allowed to be off by up to 5us.
+	// According to IEC 61851-1 table A.2 the duty cycle is allowed to be off by up to 5us.
 	// If boost mode is enabled we add 4us to the duty cycle. This means that we are still within the standard.
 	uint16_t adc_boost = 0;
 	if((duty_cycle != 0) && (duty_cycle != 1000) && evse.boost_mode_enabled) {
