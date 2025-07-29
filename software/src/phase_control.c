@@ -306,7 +306,7 @@ void phase_control_state_phase_change(void) {
 		}
 
 		case 7: { // Wait for car to apply 880 Ohm again
-			if((adc_result.cp_pe_resistance < IEC61851_CP_RESISTANCE_STATE_B) && (adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C)) {
+			if((adc_result.cp_pe_resistance < iec61851_get_cp_resistance_threshold(IEC61851_STATE_B)) && (adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_C))) {
 				uint32_t ma = iec61851_get_max_ma();
 				evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
 				phase_control_done();

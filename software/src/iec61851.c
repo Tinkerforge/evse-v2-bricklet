@@ -42,6 +42,67 @@
 
 IEC61851 iec61851;
 
+// Resistance between CP/PE
+// inf  Ohm -> no ev present
+// 2700 Ohm -> ev present
+//  880 Ohm -> ev charging
+//  240 Ohm -> ev charging with ventilation
+// ==>
+// > 10000 -> State A
+// >  1790 -> State B
+// >  300 -> State C
+// >  150 -> State D
+// <  150 -> State E/F
+// #define IEC61851_CP_RESISTANCE_STATE_A 10000
+// #define IEC61851_CP_RESISTANCE_STATE_B  1790
+// #define IEC61851_CP_RESISTANCE_STATE_C   300
+// #define IEC61851_CP_RESISTANCE_STATE_D   150
+
+// CP resistance for state A, B, C, D and E/F with 10% hysteresis between states.
+// This hysteresis is made to conform to the IEC 61851-1 A.4.11 "Optional hysteresis test"
+const uint16_t cp_resistance_state[5][4] = {
+	// State A (ev not connected) transition to
+	{
+		9000,  // state A (10000 -10%)
+		1790,  // state B
+		300,   // state C
+		150    // state D
+	},
+	// State B (ev connected) transition to
+	{
+		11000, // state A (10000 +10%)
+		1611,  // state B (1790  -10%)
+		300,   // state C
+		150    // state D
+	},
+	// State C (ev wants charge) transition to
+	{
+		10000, // state A
+		1969,  // state B (1790  +10%)
+		270,   // state C (300   -10%)
+		150    // state D
+	},
+	// State D (ev wants ventilation (not supported)) transition to
+	{
+		10000, // state A
+		1790,  // state B
+		330,   // state C (300   +10%)
+		135    // state D (150   -10%)
+	},
+	// State E/F transition to (ev is in error state)
+	{
+		10000, // state A
+		1790,  // state B
+		300,   // state C
+		165    // state D (150   +10%)
+	}
+};
+
+// Returns the resistance threshold for the given state that will be transitioned to
+uint16_t iec61851_get_cp_resistance_threshold(IEC61851State transition_to_state) {
+	return cp_resistance_state[iec61851.state][transition_to_state];
+}
+
 void iec61851_diode_error_reset(bool check_pending) {
 	iec61851.diode_error_counter = 0;
 	iec61851.diode_check_pending = check_pending;
@@ -208,7 +269,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		const bool use_state_f = (iec61851.force_state_f_time == 0) || system_timer_is_time_elapsed_ms(iec61851.force_state_f_time, 1000*60*60);
 
 		// Wait for 30 seconds for the EV to wake up for fourth wakeup (state F)
-		if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
+		if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
 			if(iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = false;
 				iec61851.force_state_f = false;
@@ -216,7 +277,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for another 30 seconds for fourth wakeup (state F)
-		else if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000)) {
+		else if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000)) {
 			if(!iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = true;
 				iec61851.force_state_f = true;
@@ -224,7 +285,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for 30 seconds for the EV to wake up for third wakeup (state F)
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000)) {
 			if(iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = false;
 				iec61851.force_state_f = false;
@@ -232,7 +293,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for another 4 seconds for third wakeup (state F)
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000)) {
 			if(!iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = true;
 				iec61851.force_state_f = true;
@@ -240,17 +301,17 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for 30 seconds for the EV to wake up for second wakeup
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000)) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-				adc_ignore_results(4);
+				adc_ignore_results(8);
 				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 			}
 		}
 
 		// Wait for another 30 seconds for the second wakeup.
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000 + 30*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000)) {
 			if(evse.ev_wakeup_enabled) {
 				iec61851.currently_beeing_woken_up = true;
 				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
@@ -258,7 +319,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for 4 seconds for the EV to wake up
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000 + 4*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000)) {
 			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
 				adc_ignore_results(8);
@@ -273,7 +334,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for 30 seconds for the EV to change resistance and IEC61851 state change to C
 		// If this does not happen and ev wakeup is enabled we disconnect CP.
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 30*1000)) {
+		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000)) {
 			if(evse.ev_wakeup_enabled) {
 				iec61851.currently_beeing_woken_up = true;
 				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
@@ -438,17 +499,17 @@ void iec61851_tick(void) {
 		// After CP contact was disconnected and is connected again, we wait for 500ms to make sure that ADC measurement is working again.
 		if(evse_is_cp_connected() && ((iec61851.wait_after_cp_disconnect == 0) || system_timer_is_time_elapsed_ms(iec61851.wait_after_cp_disconnect, 500))) {
 			iec61851.wait_after_cp_disconnect = 0;
-			if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_A) {
+			if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_A)) {
 				iec61851_set_state(IEC61851_STATE_A);
-			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_B) {
+			} else if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_B)) {
 				iec61851_set_state(IEC61851_STATE_B);
-			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_C) {
+			} else if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_C)) {
 				if(charging_slot_get_max_current() == 0) {
 					iec61851_set_state(IEC61851_STATE_B);
 				} else {
 					iec61851_set_state(IEC61851_STATE_C);
 				}
-			} else if(adc_result.cp_pe_resistance > IEC61851_CP_RESISTANCE_STATE_D) {
+			} else if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_D)) {
 				led_set_blinking(5);
 				iec61851_set_state(IEC61851_STATE_D);
 			} else {

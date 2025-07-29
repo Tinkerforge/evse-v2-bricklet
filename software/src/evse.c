@@ -93,7 +93,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 			//       PWM value, resistance or similar.
 			//       This function is only called in non-emergency cases.
 
-			if(adc_result.cp_pe_resistance <= IEC61851_CP_RESISTANCE_STATE_B) {
+			if(adc_result.cp_pe_resistance <= iec61851_get_cp_resistance_threshold(IEC61851_STATE_B)) {
 				if(evse.contactor_turn_off_time == 0) {
 					evse.contactor_turn_off_time = system_timer_get_ms();
 					return;

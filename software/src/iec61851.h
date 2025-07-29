@@ -25,22 +25,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Resistance between CP/PE
-// inf  Ohm -> no car present
-// 2700 Ohm -> car present
-//  880 Ohm -> car charging
-//  240 Ohm -> car charging with ventilation
-// ==>
-// > 10000 -> State A
-// >  1790 -> State B
-// >  560 -> State C
-// >  150 -> State D
-// <  150 -> State E/F
-#define IEC61851_CP_RESISTANCE_STATE_A 10000
-#define IEC61851_CP_RESISTANCE_STATE_B  1790
-#define IEC61851_CP_RESISTANCE_STATE_C   300
-#define IEC61851_CP_RESISTANCE_STATE_D   150
-
 // Resistance between PP/PE
 // 1000..2200 Ohm => 13A
 // 330..1000 Ohm  => 20A
@@ -51,11 +35,11 @@
 #define IEC61851_PP_RESISTANCE_32A  150
 
 typedef enum {
-	IEC61851_STATE_A,  // Standby
-	IEC61851_STATE_B,  // Vehicle Detected
-	IEC61851_STATE_C,  // Ready (Charging)
-	IEC61851_STATE_D,  // Ready with ventilation
-	IEC61851_STATE_EF, // No Power / Error
+	IEC61851_STATE_A  = 0, // Standby
+	IEC61851_STATE_B  = 1, // Vehicle Detected
+	IEC61851_STATE_C  = 2, // Ready (Charging)
+	IEC61851_STATE_D  = 3, // Ready with ventilation
+	IEC61851_STATE_EF = 4, // No Power / Error
 } IEC61851State;
 
 
@@ -103,5 +87,6 @@ uint32_t iec61851_get_max_ma(void);
 float iec61851_get_duty_cycle_for_ma(uint32_t ma);
 void iec61851_reset_ev_wakeup(void);
 void iec61851_set_state(IEC61851State state);
+uint16_t iec61851_get_cp_resistance_threshold(IEC61851State transition_to_state);
 
 #endif
