@@ -267,9 +267,9 @@ void phase_control_state_phase_change(void) {
 		}
 
 		case 5: { // CP Connect
-			// Normally we wait for 5 seconds before reconnecting the CP. That means that we simulate
-			// an unplug of the type 2 connector and a re-plug-in after 5 seconds.
-			// The IEC61851 does not specify a time for this, but 5 seconds seems reasonable.
+			// Normally we wait for 15 seconds before reconnecting the CP. That means that we simulate
+			// an unplug of the type 2 connector and a re-plug-in after 15 seconds.
+			// The IEC61851 does not specify a time for this, but 15 seconds seems reasonable.
 			// However, if the contactor was switched under load, we fear that the EV may not have noticed
 			// that we wanted to stop charging. In this case we wait for a full minute to absolutely make sure
 			// that the EV notices what is going on.
@@ -278,7 +278,7 @@ void phase_control_state_phase_change(void) {
 			// while the standard specifies that the EV needs to respond within 3 seconds.
 			// So this should only happen if the EV charger has some kind of hang-up
 			// (we have seen this hang-up with Polestar chargers).
-			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? 60000 : 5000;
+			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? 60000 : 15000;
 
 			// Connect CP
 			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, wait_ms_before_reconnect)) {
