@@ -68,7 +68,7 @@ typedef struct {
 } ADC;
 
 typedef struct {
-	uint8_t resistance_counter;
+	uint32_t resistance_counter;
 	uint32_t cp_pe_resistance;
 	uint32_t pp_pe_resistance;
 	int32_t cp_pe_pwm_low_mv[2];

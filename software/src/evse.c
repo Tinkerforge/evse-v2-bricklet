@@ -64,7 +64,8 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ev
 
 
 void evse_set_output(const float cp_duty_cycle, const bool contactor) {
-	static int16_t last_resistance_counter = -2;
+	static uint32_t last_resistance_counter_on_off = 0;
+	static uint32_t last_resistance_counter_off_on = 0;
 	evse_set_cp_duty_cycle(cp_duty_cycle);
 
 	// If the contactor is to be enabled and the lock is currently
@@ -111,22 +112,50 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		}
 
 		if(contactor) {
+			// Reset on->off counter
+			last_resistance_counter_on_off = 0;
+
 			// If we are asked to turn the contactor on, we first wait for the diode check to finish
 			if(iec61851.diode_check_pending) {
 				return;
 			}
 
-			// If we are asked to turn the contactor on, we want to see at least two adc measurements in a row
-			// that supports this conclusion.
+			// If we are asked to turn the contactor on, we want to see at least 500ms worth of adc measurements
+			// in a row that supports this conclusion.
 			// To do this the ADC code increaes a counter every time a new CP/PE resistance is saved.
-			// We expect to see two consecutive measurements, otherwise we don't turn the contactor on.
-			// This is a generic method to ignore glitches that persist for only one adc measurement
-			if(((last_resistance_counter+1) & 0xFF) != adc_result.resistance_counter) {
-				last_resistance_counter = adc_result.resistance_counter;
+			// We expect to see 20 consecutive measurements, otherwise we don't turn the contactor on.
+			// This is a generic method to ignore glitches that persist for only a few adc measurements.
+			// According to IEC 61851-1 standard table A.6 sequence 4, the EVSE is allowed to take 3s for the transation,
+			// so there is we are not acutally in a rush here.
+			// Additionally, the new iX3 seems to have a feature where it applies the 880 Ohm resistance for about 250ms
+			// before immediately going back to 2700 Ohm after a change from 1-phase to 3-phase.
+			// We think the BMW tries to to wake up the ISO15118 stack of the EVSE according to
+			// IEC 61851-1 table A.6 sequence 11 "EV signal to the EV supply equipment".
+			// We don't want to turn the contactor on/off in this case...
+			if(last_resistance_counter_off_on == 0) {
+				last_resistance_counter_off_on = adc_result.resistance_counter;
 				return;
+			} else if((uint32_t)(adc_result.resistance_counter - last_resistance_counter_off_on) < 19) { // 19 here is correct, one measurement was alredy done when we reach here
+				// We have seen the resistance that results in a off -> on transtion for less than 20 measurements (500ms).
+				return;
+			} else {
+				last_resistance_counter_off_on = 0;
 			}
 		} else {
-			last_resistance_counter = -2;
+			// Reset off->on counter
+			last_resistance_counter_off_on = 0;
+
+			// When we turn the contactor off, we need to react in a maximum of 100ms as defined in
+			// IEC 61851-1 standard table A.6 sequence 8.1.
+			if(last_resistance_counter_on_off == 0) {
+				last_resistance_counter_on_off = adc_result.resistance_counter;
+				return;
+			} else if((uint32_t)(adc_result.resistance_counter - last_resistance_counter_on_off) < 2) { // 2 here is correct, one measurement was alredy done when we reach here
+				// We have seen the resistance that results in a off -> on transtion for less than 3 measurements (75ms).
+				return;
+			} else {
+				last_resistance_counter_on_off = 0;
+			}
 		}
 
 		// Ignore all ADC measurements for a while if the contactor is
