@@ -380,7 +380,7 @@ void adc_check_result(const uint8_t i) {
 
 void adc_check_count(const uint8_t i) {
 	if(i <= ADC_CHANNEL_VCP2) {
-		if(adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] >= 50) {
+		if(adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] >= 25) {
 			adc[i].result_mv[ADC_NEGATIVE_MEASUREMENT]    = (adc[i].result[ADC_NEGATIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
 
 			adc[i].result[ADC_NEGATIVE_MEASUREMENT]       = adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]/adc[i].result_count[ADC_NEGATIVE_MEASUREMENT];
@@ -391,7 +391,7 @@ void adc_check_count(const uint8_t i) {
 		}
 	}
 
-	if(adc[i].result_count[ADC_POSITIVE_MEASUREMENT] >= 50) {
+	if(adc[i].result_count[ADC_POSITIVE_MEASUREMENT] >= 25) {
 		adc[i].result[ADC_POSITIVE_MEASUREMENT] = adc[i].result_sum[ADC_POSITIVE_MEASUREMENT]/adc[i].result_count[ADC_POSITIVE_MEASUREMENT];
 
 		adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] = 0;
