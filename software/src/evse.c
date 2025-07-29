@@ -161,7 +161,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		// Ignore all ADC measurements for a while if the contactor is
 		// switched on or off, to be sure that the resulting EMI spike does
 		// not give us a wrong measurement.
-		adc_ignore_results(4);
+		adc_ignore_results(8);
 
 		// Also ignore contactor check for a while when contactor changes state
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
