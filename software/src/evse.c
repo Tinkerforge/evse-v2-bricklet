@@ -167,7 +167,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 		contactor_check.invalid_counter = MAX(5, contactor_check.invalid_counter);
 
 		if(contactor) {
-			// As soon as the contactor is tunred on, we are not allowed to switch phases anymore until the car is disconnected.
+			// As soon as the contactor is turned on, we are not allowed to switch phases anymore until the car is disconnected.
 			iec61851.instant_phase_switch_allowed = false;
 
 			// Reset the "maybe switched under load" flag
@@ -285,8 +285,8 @@ void evse_load_config(void) {
 	logd(" * legacy managed    %d\n\r", evse.legacy_managed);
 	logd(" * relener           %d %d %d\n\r", meter.relative_energy_sum.data, meter.relative_energy_import.data, meter.relative_energy_export.data);
 	logd(" * shutdown input    %d\n\r", evse.shutdown_input_configuration);
-	logd(" * slot current      %d %d %d %d %d %d %d %d", charging_slot.max_current_default[0], charging_slot.max_current_default[1], charging_slot.max_current_default[2], charging_slot.max_current_default[3], charging_slot.max_current_default[4], charging_slot.max_current_default[5], charging_slot.max_current_default[6], charging_slot.max_current_default[7]);
-	logd(" * slot active/clear %d %d %d %d %d %d %d %d", charging_slot.clear_on_disconnect_default[0], charging_slot.clear_on_disconnect_default[1], charging_slot.clear_on_disconnect_default[2], charging_slot.clear_on_disconnect_default[3], charging_slot.clear_on_disconnect_default[4], charging_slot.clear_on_disconnect_default[5], charging_slot.clear_on_disconnect_default[6], charging_slot.clear_on_disconnect_default[7]);
+	logd(" * slot current      %d %d %d %d %d %d %d %d\n\r", charging_slot.max_current_default[0], charging_slot.max_current_default[1], charging_slot.max_current_default[2], charging_slot.max_current_default[3], charging_slot.max_current_default[4], charging_slot.max_current_default[5], charging_slot.max_current_default[6], charging_slot.max_current_default[7]);
+	logd(" * slot active/clear %d %d %d %d %d %d %d %d\n\r", charging_slot.clear_on_disconnect_default[0], charging_slot.clear_on_disconnect_default[1], charging_slot.clear_on_disconnect_default[2], charging_slot.clear_on_disconnect_default[3], charging_slot.clear_on_disconnect_default[4], charging_slot.clear_on_disconnect_default[5], charging_slot.clear_on_disconnect_default[6], charging_slot.clear_on_disconnect_default[7]);
 }
 
 void evse_save_config(void) {
