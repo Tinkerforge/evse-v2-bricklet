@@ -171,6 +171,10 @@ void iec61851_set_state(IEC61851State state) {
 			iec61851_diode_error_reset(true);
 		}
 
+		if((iec61851.state == IEC61851_STATE_A) && state == IEC61851_STATE_B) {
+			iec61851.force_state_f_time = system_timer_get_ms();
+		}
+
 		iec61851.state             = state;
 		iec61851.last_state_change = system_timer_get_ms();
 	}
@@ -243,7 +247,8 @@ void iec61851_handle_time_in_b2(void) {
 	}
 
 	if(iec61851.time_in_b2 != 0) {
-		if(system_timer_is_time_elapsed_ms(iec61851.time_in_b2, 60*1000*3)) {
+		const bool use_state_f = (iec61851.force_state_f_time != 0) && system_timer_is_time_elapsed_ms(iec61851.force_state_f_time, 1000*60*60);
+		if(system_timer_is_time_elapsed_ms(iec61851.time_in_b2, use_state_f ? 60*1000*5 : 60*1000*3)) {
 			evse.car_stopped_charging = true;
 		}
 	}
@@ -266,7 +271,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 	// In the wild we know of EVs that need 30s of wakeup... So we try it two times: First with 4 seconds and after that with 30 seconds.
 	if((iec61851.state_b1b2_transition_time != 0) && (!evse.control_pilot_disconnect)) {
 		// Only consider to use state F for ev-wakeup if last state C is at least 1 hour ago
-		const bool use_state_f = (iec61851.force_state_f_time == 0) || system_timer_is_time_elapsed_ms(iec61851.force_state_f_time, 1000*60*60);
+		const bool use_state_f = (iec61851.force_state_f_time != 0) && system_timer_is_time_elapsed_ms(iec61851.force_state_f_time, 1000*60*60);
 
 		// Wait for 30 seconds for the EV to wake up for fourth wakeup (state F)
 		if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
@@ -278,9 +283,11 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for another 30 seconds for fourth wakeup (state F)
 		else if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000)) {
-			if(!iec61851.force_state_f) {
-				iec61851.currently_beeing_woken_up = true;
-				iec61851.force_state_f = true;
+			if(evse.ev_wakeup_enabled) {
+				if(!iec61851.force_state_f) {
+					iec61851.currently_beeing_woken_up = true;
+					iec61851.force_state_f = true;
+				}
 			}
 		}
 
@@ -294,9 +301,14 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for another 4 seconds for third wakeup (state F)
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000)) {
-			if(!iec61851.force_state_f) {
-				iec61851.currently_beeing_woken_up = true;
-				iec61851.force_state_f = true;
+			if(evse.ev_wakeup_enabled) {
+				if(!iec61851.force_state_f) {
+					iec61851.currently_beeing_woken_up = true;
+					iec61851.force_state_f = true;
+				} else {
+					// Reset the transition time to avoid further state F wakeup attempts
+					iec61851.state_b1b2_transition_time = 0;
+				}
 			}
 		}
 
@@ -344,9 +356,6 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 }
 
 void iec61851_state_a(void) {
-	// Reset force_state_f_time. I.e. if we were in state A, we allow wakeup with state F.
-	iec61851.force_state_f_time = 0;
-
 	// Allow instant phase switch in state A, but only after we bootet and had a chance to check if a
 	// car was already connected during the boot.
 	if(iec61851.boot_time != 0 && system_timer_is_time_elapsed_ms(iec61851.boot_time, 5000)) {
