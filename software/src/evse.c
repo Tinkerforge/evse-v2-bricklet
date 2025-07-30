@@ -81,7 +81,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 #endif
 
 	if(((bool)!XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) != contactor) {
-		if(((cp_duty_cycle == 0) || (cp_duty_cycle == 1000)) && (!contactor)) {
+		if(((cp_duty_cycle == 0) || (cp_duty_cycle == 1000)) && (!contactor) && (last_resistance_counter_off_on == 0) && (last_resistance_counter_on_off == 0)) {
 			// If the duty cycle is set to either 0% or 100% PWM and the contactor is supposed to be turned off,
 			// it is possible that the WARP Charger wants to turn off the charging session while the car
 			// still wants to charge. In this case we wait until the car actually stops charging and
@@ -119,7 +119,6 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 			if(iec61851.diode_check_pending) {
 				return;
 			}
-
 			// If we are asked to turn the contactor on, we want to see at least 500ms worth of adc measurements
 			// in a row that supports this conclusion.
 			// To do this the ADC code increaes a counter every time a new CP/PE resistance is saved.
@@ -157,7 +156,6 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 				last_resistance_counter_on_off = 0;
 			}
 		}
-
 		// Ignore all ADC measurements for a while if the contactor is
 		// switched on or off, to be sure that the resulting EMI spike does
 		// not give us a wrong measurement.
