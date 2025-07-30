@@ -332,7 +332,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 			}
 		}
 
-		// Wait for 30 seconds for the EV to change resistance and IEC61851 state change to C
+		// Wait for 90 seconds for the EV to change resistance and IEC61851 state change to C
 		// If this does not happen and ev wakeup is enabled we disconnect CP.
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000)) {
 			if(evse.ev_wakeup_enabled) {
