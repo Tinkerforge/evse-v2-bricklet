@@ -292,7 +292,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for 30 seconds for the EV to wake up for third wakeup (state F)
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000)) {
+		else if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000)) {
 			if(iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = false;
 				iec61851.force_state_f = false;
@@ -300,7 +300,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		}
 
 		// Wait for another 4 seconds for third wakeup (state F)
-		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000)) {
+		else if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000)) {
 			if(evse.ev_wakeup_enabled) {
 				if(!iec61851.force_state_f) {
 					iec61851.currently_beeing_woken_up = true;
