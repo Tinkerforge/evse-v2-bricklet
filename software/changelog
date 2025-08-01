@@ -187,3 +187,16 @@
 
 2025-07-08: 2.2.13 (3b715ab0)
 - Fix "maybe switch under load" flag reset
+
+2025-08-XX: 2.2.14 (TBD)
+- Remove all "higher level" special handling for Polestar and BMW
+	- This is now done properly as part of the adc measurement / contactor handling state machines
+- Improve "state f for ev wakeup" handling (and integrate the "car stopped charging" flag)
+- Ignore ADC results for 550ms after PWM change (to skip the reproducible PHEV BMW glitches after PWM change)
+	- We still react instantly if PWM changes to 0 or 1000 to stop charging
+- Add resistance hysteresis for state transition (we are now conform to IEC 61851-1 A.4.11 "Optional hysteresis test")
+- Change default cp disconnect time for phase switching to 15s (the old default of 5s is not enough for Polestar EVs)
+- Improve IEC 61851 state B to C transition. We now force a stable resistance between CP/PE for 500ms (to skip BMW iX3 EV glitches)
+- Improve IEC 61851 state C to B transition. We now force a stable resistance between CP/PE for 75ms instead of 50ms
+	- For this we needed to change ADC integration time from 50ms to 25ms
+	- According to IEC 61851-1 A.6 sequence 8.1 we have to react within 100ms, so we can't increase this any further
