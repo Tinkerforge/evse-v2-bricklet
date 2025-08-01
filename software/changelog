@@ -200,3 +200,4 @@
 - Improve IEC 61851 state C to B transition. We now force a stable resistance between CP/PE for 75ms instead of 50ms
 	- For this we needed to change ADC integration time from 50ms to 25ms
 	- According to IEC 61851-1 A.6 sequence 8.1 we have to react within 100ms, so we can't increase this any further
+- Increase time before we try EV wakeup from 30s to 90s (some VW EVs will wakeup by themself, but need longer then 30s)
