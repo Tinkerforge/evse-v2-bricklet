@@ -29,6 +29,8 @@
 #include "bricklib2/utility/util_definitions.h"
 #include "hardware_version.h"
 
+#include "iec61851.h"
+
 #define ADC_DIODE_DROP 650
 
 ADC *adc;
@@ -388,6 +390,14 @@ void adc_check_count(const uint8_t i) {
 			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] = 0;
 
 			adc[i].result_index[ADC_NEGATIVE_MEASUREMENT]++;
+
+			// If we force -12V we handle the ignore count here since there are no positive measurements
+			if(iec61851.force_state_f) {
+				if(adc[i].ignore_count > 0) {
+					adc[i].ignore_count--;
+					return;
+				}
+			}
 		}
 	}
 
