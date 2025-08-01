@@ -278,6 +278,8 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 			if(iec61851.force_state_f) {
 				iec61851.currently_beeing_woken_up = false;
 				iec61851.force_state_f = false;
+			} else {
+				iec61851.state_b1b2_transition_time = 0;
 			}
 		}
 
@@ -305,9 +307,6 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 				if(!iec61851.force_state_f) {
 					iec61851.currently_beeing_woken_up = true;
 					iec61851.force_state_f = true;
-				} else {
-					// Reset the transition time to avoid further state F wakeup attempts
-					iec61851.state_b1b2_transition_time = 0;
 				}
 			}
 		}
@@ -319,6 +318,9 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 				adc_ignore_results(8);
 				iec61851.currently_beeing_woken_up = false;
 				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+				if(!use_state_f) {
+					iec61851.state_b1b2_transition_time = 0;
+				}
 			}
 		}
 
