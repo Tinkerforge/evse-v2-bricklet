@@ -188,7 +188,7 @@
 2025-07-08: 2.2.13 (3b715ab0)
 - Fix "maybe switch under load" flag reset
 
-2025-08-XX: 2.2.14 (TBD)
+2025-08-04: 2.2.14 (371dd5dd)
 - Remove all "higher level" special handling for Polestar and BMW
 	- This is now done properly as part of the adc measurement / contactor handling state machines
 - Improve "state f for ev wakeup" handling (and integrate the "car stopped charging" flag)
