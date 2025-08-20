@@ -724,7 +724,6 @@ void evse_init(void) {
 	}
 
 	evse_init_jumper();
-	evse_init_lock_switch();
 
 	evse.startup_time = system_timer_get_ms();
 	evse.factory_reset_time = 0;
