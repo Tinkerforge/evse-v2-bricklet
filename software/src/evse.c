@@ -384,7 +384,7 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 	if(current_cp_duty_cycle != new_cp_duty_cycle) {
 		adc_enable_all(duty_cycle > 999.99f);
 
-		// EVSE V2 uses CCU40, EVSE V3 uses CCU41
+		// EVSE V2 uses CCU40, EVSE V3 and V4 uses CCU41
 		XMC_CCU4_SLICE_SetTimerCompareMatch(hardware_version.is_v2 ? CCU40_CC40 : CCU41_CC40, new_cp_duty_cycle);
 		XMC_CCU4_EnableShadowTransfer(hardware_version.is_v2 ? CCU40 : CCU41, XMC_CCU4_SHADOW_TRANSFER_SLICE_0 | XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0);
 	}
@@ -623,7 +623,7 @@ void evse_v3_init_cp_pwm(void) {
 	XMC_CCU4_EnableClock(CCU41, 1);
 	XMC_CCU4_EnableClock(CCU41, 2);
 
-	// Start CCU40 slice 0, 1 and 2 in sync.
+	// Start CCU41 slice 0, 1 and 2 in sync.
 	XMC_CCU4_SLICE_ConfigureEvent(CCU41_CC40, XMC_CCU4_SLICE_EVENT_1, &event_config);
 	XMC_CCU4_SLICE_ConfigureEvent(CCU41_CC41, XMC_CCU4_SLICE_EVENT_1, &event_config);
 	XMC_CCU4_SLICE_ConfigureEvent(CCU41_CC42, XMC_CCU4_SLICE_EVENT_1, &event_config);
@@ -644,7 +644,7 @@ void evse_v3_init_cp_pwm(void) {
 
 	// Interrupt for debugging, uncomment if needed
 //	NVIC_SetPriority(30, 1);
-//	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU40_SR2_IRQ30);
+//	XMC_SCU_SetInterruptControl(30, XMC_SCU_IRQCTRL_CCU41_SR2_IRQ30);
 //	NVIC_EnableIRQ(30);
 }
 
@@ -699,9 +699,8 @@ void evse_init(void) {
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
-	XMC_GPIO_Init(EVSE_CONTACTOR_PIN, &pin_config_output_high);
+	XMC_GPIO_Init(EVSE_CONTACTOR_PIN,     &pin_config_output_high);
 	XMC_GPIO_Init(EVSE_CP_DISCONNECT_PIN, &pin_config_output_low);
-
 	XMC_GPIO_Init(EVSE_SHUTDOWN_PIN,      &pin_config_input);
 
 	if(hardware_version.is_v2) {
