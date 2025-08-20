@@ -42,7 +42,6 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/tmp1075n.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
-	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/timer.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/modbus.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter.c"

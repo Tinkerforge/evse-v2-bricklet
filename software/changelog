@@ -201,3 +201,6 @@
 	- For this we needed to change ADC integration time from 50ms to 25ms
 	- According to IEC 61851-1 A.6 sequence 8.1 we have to react within 100ms, so we can't increase this any further
 - Increase time before we try EV wakeup from 30s to 90s (some VW EVs will wakeup by themself, but need longer then 30s)
+
+TBD: 2.2.15 (TBD)
+- Remove ccu4 dependency for modbus timer
