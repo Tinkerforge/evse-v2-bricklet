@@ -25,13 +25,6 @@
 #include "xmc_gpio.h"
 #include "hardware_version.h"
 
-// Lock motor is EVSE V2 only
-#define EVSE_MOTOR_ENABLE_SLICE_NUMBER 3 // TODO!
-#define EVSE_MOTOR_ENABLE_PIN          P1_5
-#define EVSE_MOTOR_PHASE_PIN           P1_6
-#define EVSE_MOTOR_FAULT_PIN           P0_1
-#define EVSE_MOTOR_INPUT_SWITCH_PIN    P1_1
-
 #define EVSE_CP_PWM_SLICE_NUMBER          0
 
 #define EVSE_CP_PWM_PIN_NUM               4

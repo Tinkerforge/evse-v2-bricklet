@@ -28,7 +28,6 @@
 #include "iec61851.h"
 
 #define EVSE_CP_PWM_PERIOD    48000 // 1kHz
-#define EVSE_MOTOR_PWM_PERIOD 4800  // 10kHz
 #define EVSE_BOOST_MODE_US    4     // 1 us = 0.06A
 
 #define EVSE_CONFIG_JUMPER_CURRENT_6A   0

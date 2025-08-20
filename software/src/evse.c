@@ -706,12 +706,7 @@ void evse_init(void) {
 
 	if(hardware_version.is_v2) {
 		evse_v2_init_cp_pwm();
-		// Support for lock switch motor and input pin only in EVSE V2
-		XMC_GPIO_Init(EVSE_INPUT_GP_PIN,           &pin_config_input);
-		XMC_GPIO_Init(EVSE_MOTOR_PHASE_PIN,        &pin_config_output_low);
-		XMC_GPIO_Init(EVSE_MOTOR_INPUT_SWITCH_PIN, &pin_config_input);
-//		ccu4_pwm_init(EVSE_MOTOR_ENABLE_PIN, EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD-1); // 10 kHz
-//		ccu4_pwm_set_duty_cycle(EVSE_MOTOR_ENABLE_SLICE_NUMBER, EVSE_MOTOR_PWM_PERIOD);
+		XMC_GPIO_Init(EVSE_INPUT_GP_PIN, &pin_config_input);
 	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
 		evse_v3_init_cp_pwm();
 	}
