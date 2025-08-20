@@ -390,11 +390,6 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 	}
 }
 
-// TODO: For now we don't support lock switch
-void evse_init_lock_switch(void) {
-	evse.has_lock_switch = false;
-}
-
 // Check pin header for max current
 void evse_init_jumper(void) {
 	const XMC_GPIO_CONFIG_t pin_config_input_tristate = {
@@ -715,6 +710,7 @@ void evse_init(void) {
 	evse.control_pilot_disconnect = false;
 	evse.boost_mode_enabled = false;
 	evse.ev_wakeup_enabled = true;
+	evse.has_lock_switch = false;
 
 	evse_load_config();
 

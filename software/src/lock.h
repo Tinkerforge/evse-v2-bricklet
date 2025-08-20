@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define EVSE_LOCK_PWM_PERIOD 4800  // 10kHz
+
 typedef enum {
 	LOCK_STATE_INIT,
 	LOCK_STATE_OPEN,
@@ -35,11 +37,10 @@ typedef enum {
 } LockState;
 
 typedef struct {
+	uint32_t closed_time;
+	uint32_t opened_time;
 	uint32_t last_duty_cycle_update;
 	uint16_t duty_cycle;
-
-	uint32_t last_input_switch_seen;
-	uint32_t lock_start;
 
 	LockState state;
 } Lock;

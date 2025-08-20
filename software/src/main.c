@@ -67,7 +67,7 @@ int main(void) {
 	while(true) {
 		bootloader_tick();
 		communication_tick();
-//		lock_tick();
+		lock_tick();
 		contactor_check_tick();
 		led_tick();
 		button_tick();

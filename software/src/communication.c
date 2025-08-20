@@ -238,6 +238,11 @@ BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data
 		                    (get_bit(port4, 5)   << 1) | // 17: Config Jumper 0
 		                    (get_bit(port4, 6)   << 2) | // 18: Enable
 		                    (get_bit(port4, 7)   << 3);  // 19: Version Detection
+		if(hardware_version.is_v4) {
+			response->gpio[2] |= (get_bit(port1, 1)   << 4) |  // 20: Lock In1
+			                     (get_bit(port0, 2)   << 5) |  // 21: Lock In2
+			                     (get_bit(port0, 9)   << 6);   // 22: Lock Feedback
+		}
 	}
 
 	response->car_stopped_charging = evse.car_stopped_charging;
