@@ -121,7 +121,7 @@ void evse_set_output(const float cp_duty_cycle, const bool contactor) {
 			}
 			// If we are asked to turn the contactor on, we want to see at least 500ms worth of adc measurements
 			// in a row that supports this conclusion.
-			// To do this the ADC code increaes a counter every time a new CP/PE resistance is saved.
+			// To do this the ADC code increases a counter every time a new CP/PE resistance is saved.
 			// We expect to see 20 consecutive measurements, otherwise we don't turn the contactor on.
 			// This is a generic method to ignore glitches that persist for only a few adc measurements.
 			// According to IEC 61851-1 standard table A.6 sequence 4, the EVSE is allowed to take 3s for the transation,
