@@ -177,7 +177,7 @@ void phase_control_tick(void) {
 
 	// Only switch phase if contactor is not active.
 	const bool contactor_inactive = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN); // Contactor pin is active low
-	const bool cp_disconnected = XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
+	const bool cp_disconnected = !evse_is_cp_connected();
 	if(contactor_inactive && (cp_disconnected || iec61851.instant_phase_switch_allowed)) {
 		if(phase_control.requested == 1) {
 			XMC_GPIO_SetOutputHigh(EVSE_PHASE_SWITCH_PIN);
@@ -204,7 +204,7 @@ void phase_control_done(void) {
 // Special phase changing state that is handled similar to the normal IEC61851 states
 void phase_control_state_phase_change(void) {
 	const bool contactor_active = !XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);
-	const bool cp_connected = !XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
+	const bool cp_connected = evse_is_cp_connected();
 	const uint16_t duty_cycle = evse_get_cp_duty_cycle();
 
 	// First call of this functions, lets find out where we are
@@ -247,7 +247,7 @@ void phase_control_state_phase_change(void) {
 		case 3: { // CP disconnect
 			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, 100)) {
 				// Disconnect CP
-				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_disconnect();
 				phase_control.progress_state = 4;
 				phase_control.progress_state_time = system_timer_get_ms();
 
@@ -282,7 +282,7 @@ void phase_control_state_phase_change(void) {
 
 			// Connect CP
 			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, wait_ms_before_reconnect)) {
-				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_connect();
 				phase_control.progress_state = 6;
 				phase_control.progress_state_time = system_timer_get_ms();
 			}

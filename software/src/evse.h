@@ -98,6 +98,8 @@ typedef struct {
 	bool ev_wakeup_enabled;
 	bool control_pilot_disconnect;
 
+	uint32_t cp_reconnect_time;
+
 	uint32_t communication_watchdog_time;
 
 	uint32_t contactor_turn_off_time;
@@ -113,6 +115,8 @@ typedef struct {
 
 extern EVSE evse;
 
+void evse_cp_connect();
+void evse_cp_disconnect();
 bool evse_is_cp_connected(void);
 bool evse_is_shutdown(void);
 void evse_save_config(void);

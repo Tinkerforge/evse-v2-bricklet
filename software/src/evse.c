@@ -674,7 +674,29 @@ bool evse_is_shutdown(void) {
 	return new_return;
 }
 
+void evse_cp_connect() {
+	if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
+		evse.cp_reconnect_time = system_timer_get_ms();
+		// Don't allow 0, since we use it as flag for "re-connect time handled"
+		if(evse.cp_reconnect_time == 0) {
+			evse.cp_reconnect_time = UINT32_MAX;
+		}
+	}
+	XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+}
+
+void evse_cp_disconnect() {
+	XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+}
+
 bool evse_is_cp_connected(void) {
+	// Add 75ms after cp is re-connected to make sure that at least one adc measurement has gone through
+	if((evse.cp_reconnect_time != 0) && !system_timer_is_time_elapsed_ms(evse.cp_reconnect_time, 75)) {
+		adc_ignore_results(1);
+		return false;
+	}
+	evse.cp_reconnect_time = 0;
+
 	return !XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN);
 }
 
@@ -711,6 +733,7 @@ void evse_init(void) {
 	evse.boost_mode_enabled = false;
 	evse.ev_wakeup_enabled = true;
 	evse.has_lock_switch = false;
+	evse.cp_reconnect_time = 0;
 
 	evse_load_config();
 

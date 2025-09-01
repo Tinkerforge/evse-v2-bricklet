@@ -59,10 +59,7 @@ typedef struct {
 	uint32_t last_error_time;
 	uint32_t last_state_c_end_time;
 
-	uint32_t wait_after_cp_disconnect;
-
 	uint32_t state_b1b2_transition_time;
-
 	uint32_t state_b1b2_transition_seen;
 
 	bool currently_beeing_woken_up;

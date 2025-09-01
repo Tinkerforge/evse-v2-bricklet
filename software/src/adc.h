@@ -75,6 +75,8 @@ typedef struct {
 	uint32_t cp_pe_pwm_low_count[2];
 	uint64_t cp_pe_pwm_low_sum[2];
 	int64_t cp_pe_pwm_low_result[2];
+
+	bool cp_pe_is_ignored;
 } ADCResult;
 
 extern ADC *adc;

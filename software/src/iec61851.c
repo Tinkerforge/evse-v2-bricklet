@@ -313,11 +313,9 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for 30 seconds for the EV to wake up for second wakeup
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000)) {
-			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
-				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-				adc_ignore_results(8);
+			if(evse_is_cp_connected()) {
 				iec61851.currently_beeing_woken_up = false;
-				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_connect();
 				if(!use_state_f) {
 					iec61851.state_b1b2_transition_time = 0;
 				}
@@ -328,17 +326,15 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000)) {
 			if(evse.ev_wakeup_enabled) {
 				iec61851.currently_beeing_woken_up = true;
-				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_disconnect();
 			}
 		}
 
 		// Wait for 4 seconds for the EV to wake up
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000)) {
-			if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
-				iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-				adc_ignore_results(8);
+			if(evse_is_cp_connected()) {
 				iec61851.currently_beeing_woken_up = false;
-				XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_connect();
 
 				// After CP disconnect it is as if the EV was disconnected, so can switch the phases
 				// now until the contactor is turned on again.
@@ -351,7 +347,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000)) {
 			if(evse.ev_wakeup_enabled) {
 				iec61851.currently_beeing_woken_up = true;
-				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_disconnect();
 			}
 		}
 	}

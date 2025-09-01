@@ -645,7 +645,7 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 		if(((iec61851.state == IEC61851_STATE_A) || (iec61851.state == IEC61851_STATE_B)) && (phase_control.progress_state == 0)) {
 			// Only if contactor is currently not active
 			if(XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) { // active low
-				XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
+				evse_cp_disconnect();
 
 				evse.control_pilot_disconnect = data->control_pilot_disconnect;
 
@@ -656,9 +656,7 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 	} else {
 		// If we are currently waking up the EV we don't allow CP disconnect to be turned off again from external
 		if(!iec61851.currently_beeing_woken_up && (phase_control.progress_state == 0)) {
-			iec61851.wait_after_cp_disconnect = system_timer_get_ms();
-			adc_ignore_results(4);
-			XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
+			evse_cp_connect();
 
 			evse.control_pilot_disconnect = data->control_pilot_disconnect;
 		}
