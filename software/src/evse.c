@@ -364,7 +364,7 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 		// Ignore ADC results for ~550ms after PWM change
 		// We have seen in several hybrid BMW cars that they have a 2700 ohm resistance glitch on
 		// the CP line after about 500ms after a change of the duty cycle....
-		if((duty_cycle != 1000) && (duty_cycle != 0)) {
+		if((duty_cycle != 1000) && (duty_cycle != 0) && (last_duty_cycle != 1000) && (last_duty_cycle != 0)) {
 			adc_ignore_results(22);
 		}
 		evse.last_duty_cycle_change_time = system_timer_get_ms();
