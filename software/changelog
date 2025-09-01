@@ -206,3 +206,4 @@ TBD: 2.2.15 (TBD)
 - Remove ccu4 dependency for modbus timer
 - Add support for lock (EVSE V4 only)
 - Add support for meter DSZ16DZE
+- Fix CP disconnect race condition that resulted in erroneous charger state

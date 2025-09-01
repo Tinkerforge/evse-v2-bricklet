@@ -395,6 +395,9 @@ void adc_check_count(const uint8_t i) {
 			if(iec61851.force_state_f) {
 				if(adc[i].ignore_count > 0) {
 					adc[i].ignore_count--;
+					if(i == ADC_CHANNEL_VCP2) {
+						adc_result.cp_pe_is_ignored = true;
+					}
 					return;
 				}
 			}
@@ -410,6 +413,9 @@ void adc_check_count(const uint8_t i) {
 		// Return if ADC count counter > 0
 		if(adc[i].ignore_count > 0) {
 			adc[i].ignore_count--;
+			if(i == ADC_CHANNEL_VCP2) {
+				adc_result.cp_pe_is_ignored = true;
+			}
 			return;
 		}
 
@@ -435,6 +441,7 @@ void adc_check_count(const uint8_t i) {
 		} else {
 			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = (adc[i].result[ADC_POSITIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
 			if(i == ADC_CHANNEL_VCP2) {
+				adc_result.cp_pe_is_ignored = false;
 				adc_result.resistance_counter++;
 
 				// resistance divider, 910 ohm on EVSE
