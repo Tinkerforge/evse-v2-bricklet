@@ -502,8 +502,9 @@ void iec61851_tick(void) {
 			return;
 		}
 
-		// If the CP contact is disconnected we stay in the current IEC state, independend of the measured resistance
-		// After CP contact was disconnected and is connected again, we wait for 500ms to make sure that ADC measurement is working again.
+		// If the CP contact is disconnected or the adc measurement is
+		// currently not yielding CP/PE resistance, we stay in the current IEC state.
+		// The evse_is_cp_connected function will add an apropriate delay after re-connect.
 		if(!adc_result.cp_pe_is_ignored && evse_is_cp_connected()) {
 			if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_A)) {
 				iec61851_set_state(IEC61851_STATE_A);
