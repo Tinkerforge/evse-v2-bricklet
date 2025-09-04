@@ -313,7 +313,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for 30 seconds for the EV to wake up for second wakeup
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000)) {
-			if(evse_is_cp_connected()) {
+			if(!evse_is_cp_connected()) {
 				iec61851.currently_beeing_woken_up = false;
 				evse_cp_connect();
 				if(!use_state_f) {
@@ -332,7 +332,7 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 
 		// Wait for 4 seconds for the EV to wake up
 		else if(system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000)) {
-			if(evse_is_cp_connected()) {
+			if(!evse_is_cp_connected()) {
 				iec61851.currently_beeing_woken_up = false;
 				evse_cp_connect();
 
