@@ -209,5 +209,5 @@
 - Fix CP disconnect race condition that resulted in erroneous charger state
 - Improve unnecessarily long wait time after cp re-connect
 
-2025-09-09: 2.2.16 (TBD)
+2025-09-09: 2.2.16 (35406dd7)
 - Improve CP disconnect
