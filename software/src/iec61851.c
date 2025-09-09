@@ -273,6 +273,12 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		// Only consider to use state F for ev-wakeup if last state C is at least 1 hour ago
 		const bool use_state_f = (iec61851.force_state_f_time != 0) && system_timer_is_time_elapsed_ms(iec61851.force_state_f_time, 1000*60*60);
 
+		// "use_state_f" for some reason changes to false while force_state_f is true, we need to set it back to false.
+		// Otherwise we might stay in force_state_f forever.
+		if(!use_state_f) {
+			iec61851.force_state_f = false;
+		}
+
 		// Wait for 30 seconds for the EV to wake up for fourth wakeup (state F)
 		if(use_state_f && system_timer_is_time_elapsed_ms(iec61851.state_b1b2_transition_time, 90*1000 + 4*1000 + 30*1000 + 30*1000 + 30*1000 + 4*1000 + 30*1000 + 30*1000)) {
 			if(iec61851.force_state_f) {
@@ -350,6 +356,9 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 				evse_cp_disconnect();
 			}
 		}
+	} else {
+		// Make sure we can't get stuck in "force_state_f" state
+		iec61851.force_state_f = false;
 	}
 }
 
@@ -442,7 +451,7 @@ void iec61851_tick(void) {
 	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && (!iec61851.iso15118_active) &&
 	          (adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) && (adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) &&
 	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
-	          (!adc_result.cp_pe_is_ignored && evse_is_cp_connected()) &&
+	          (!iec61851.force_state_f && !adc_result.cp_pe_is_ignored && evse_is_cp_connected()) &&
 	          (iec61851_get_max_ma() != 0)) {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[ADC_CHANNEL_VCP1].ignore_count > 0) || (adc[ADC_CHANNEL_VCP2].ignore_count > 0)) {
@@ -505,7 +514,7 @@ void iec61851_tick(void) {
 		// If the CP contact is disconnected or the adc measurement is
 		// currently not yielding CP/PE resistance, we stay in the current IEC state.
 		// The evse_is_cp_connected function will add an apropriate delay after re-connect.
-		if(!adc_result.cp_pe_is_ignored && evse_is_cp_connected()) {
+		if(!iec61851.force_state_f && !adc_result.cp_pe_is_ignored && evse_is_cp_connected()) {
 			if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_A)) {
 				iec61851_set_state(IEC61851_STATE_A);
 			} else if(adc_result.cp_pe_resistance > iec61851_get_cp_resistance_threshold(IEC61851_STATE_B)) {

@@ -681,6 +681,7 @@ void evse_cp_connect() {
 		if(evse.cp_reconnect_time == 0) {
 			evse.cp_reconnect_time = UINT32_MAX;
 		}
+		adc_ignore_results(1);
 	}
 	XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 }
@@ -692,7 +693,6 @@ void evse_cp_disconnect() {
 bool evse_is_cp_connected(void) {
 	// Add 75ms after cp is re-connected to make sure that at least one adc measurement has gone through
 	if((evse.cp_reconnect_time != 0) && !system_timer_is_time_elapsed_ms(evse.cp_reconnect_time, 75)) {
-		adc_ignore_results(1);
 		return false;
 	}
 	evse.cp_reconnect_time = 0;

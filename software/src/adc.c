@@ -393,11 +393,15 @@ void adc_check_count(const uint8_t i) {
 
 			// If we force -12V we handle the ignore count here since there are no positive measurements
 			if(iec61851.force_state_f) {
+				if(i == ADC_CHANNEL_VCP2) {
+					// Reset positive measurement counter and sum to make sure
+					// that we get 25 new measurements after we stop forcing -12V
+					adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] = 0;
+					adc[i].result_count[ADC_POSITIVE_MEASUREMENT] = 0;
+					adc_result.cp_pe_is_ignored = true;
+				}
 				if(adc[i].ignore_count > 0) {
 					adc[i].ignore_count--;
-					if(i == ADC_CHANNEL_VCP2) {
-						adc_result.cp_pe_is_ignored = true;
-					}
 					return;
 				}
 			}
