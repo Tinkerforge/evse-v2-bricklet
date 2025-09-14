@@ -153,6 +153,7 @@ BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConf
 			case METER_TYPE_DEM4A:         response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DEM4A; break;
 			case METER_TYPE_DMED341MID7ER: response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DMED341MID7ER; break;
 			case METER_TYPE_DSZ16DZE:      response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_DSZ16DZE; break;
+			case METER_TYPE_WM3M4C:        response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_WM3M4C; break;
 			default:                       response->energy_meter_type = EVSE_V2_ENERGY_METER_TYPE_NOT_AVAILABLE; break;
 		}
 	}

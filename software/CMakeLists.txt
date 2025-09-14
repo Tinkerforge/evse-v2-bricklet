@@ -45,6 +45,10 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/modbus.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter_eltako.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter_eastron.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter_iskra.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/meter_generic.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/uartbb/uartbb.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/hal/system_timer/system_timer.c"
