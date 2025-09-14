@@ -383,7 +383,12 @@ void adc_check_result(const uint8_t i) {
 void adc_check_count(const uint8_t i) {
 	if(i <= ADC_CHANNEL_VCP2) {
 		if(adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] >= 25) {
-			adc[i].result_mv[ADC_NEGATIVE_MEASUREMENT]    = (adc[i].result[ADC_NEGATIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
+			// We want:
+			// result_mv = (result*600*3300/4095-990*1000)/75
+			// Simplified to avoid overflow:
+			// result_mv = (result*1980000/4095-990000)/75
+			// result_mv = (result*1760/273-13200)
+			adc[i].result_mv[ADC_NEGATIVE_MEASUREMENT]    = (adc[i].result[ADC_NEGATIVE_MEASUREMENT]*1760/273-13200);
 
 			adc[i].result[ADC_NEGATIVE_MEASUREMENT]       = adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]/adc[i].result_count[ADC_NEGATIVE_MEASUREMENT];
 			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]   = 0;
@@ -428,7 +433,11 @@ void adc_check_count(const uint8_t i) {
 		//uint32_t new_time = system_timer_get_ms();
 
 		if(i == ADC_CHANNEL_VPP) { // PP/PE
-			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*3300/4095;
+			// We want:
+			// result_mv = result*3300/4095
+			// Simplified to avoid overflow:
+			// result_mv = result*220/273
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*220/273;
 
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
 			const uint32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
@@ -441,9 +450,18 @@ void adc_check_count(const uint8_t i) {
 				}
 			}
 		} else if(i == ADC_CHANNEL_V12P) { // +12V rail
-			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*4*3300/4095;
+			// We want:
+			// result_mv = result*4*3300/4095
+			// Simplified to avoid overflow:
+			// result_mv = result*880/273
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*880/273;
 		} else {
-			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = (adc[i].result[ADC_POSITIVE_MEASUREMENT]*600*3300/4095-990*1000)/75;
+			// We want:
+			// result_mv = (result*600*3300/4095-990*1000)/75
+			// Simplified to avoid overflow:
+			// result_mv = (result*1980000/4095-990000)/75
+			// result_mv = (result*1760/273-13200)
+			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = (adc[i].result[ADC_POSITIVE_MEASUREMENT]*1760/273-13200);
 			if(i == ADC_CHANNEL_VCP2) {
 				adc_result.cp_pe_is_ignored = false;
 				adc_result.resistance_counter++;
