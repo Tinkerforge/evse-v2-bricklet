@@ -71,10 +71,6 @@ typedef struct {
 	uint32_t resistance_counter;
 	uint32_t cp_pe_resistance;
 	uint32_t pp_pe_resistance;
-	int32_t cp_pe_pwm_low_mv[2];
-	uint32_t cp_pe_pwm_low_count[2];
-	uint64_t cp_pe_pwm_low_sum[2];
-	int64_t cp_pe_pwm_low_result[2];
 
 	bool cp_pe_is_ignored;
 } ADCResult;
