@@ -79,7 +79,7 @@ void phase_control_tick_check_autoswitch(void) {
 		// If the car is charging already for at least two seconds
 		if(system_timer_is_time_elapsed_ms(iec61851.last_state_change, 2000)) {
 			// If the phase 1 uses more than 5A and phase 2 and 3 use less than 0.5A
-			if((meter_register_set.current[0].f > 5.0f) && (meter_register_set.current[1].f < 0.5f) && (meter_register_set.current[2].f < 0.5f)) {
+			if((meter_register_set.CurrentL1ImExSum.f > 5.0f) && (meter_register_set.CurrentL2ImExSum.f < 0.5f) && (meter_register_set.CurrentL3ImExSum.f < 0.5f)) {
 				if(phase_control.autoswitch_time == 0) {
 					// If the autos-switch-timer was not yet started we start it
 					phase_control.autoswitch_time = system_timer_get_ms();
@@ -104,9 +104,9 @@ void phase_control_tick_check_autoswitch(void) {
 		// If the car is charging already for at least two seconds
 		if(system_timer_is_time_elapsed_ms(iec61851.last_state_change, 2000)) {
 			// If the phase 1 uses more than 5A and phase 2 and 3 use less than 0.5A
-			const uint8_t phases_active = ((meter_register_set.current[0].f >= 0.5f) ? 1: 0) +
-										  ((meter_register_set.current[1].f >= 0.5f) ? 1: 0) +
-										  ((meter_register_set.current[2].f >= 0.5f) ? 1: 0);
+			const uint8_t phases_active = ((meter_register_set.CurrentL1ImExSum.f >= 0.5f) ? 1: 0) +
+			                              ((meter_register_set.CurrentL2ImExSum.f >= 0.5f) ? 1: 0) +
+			                              ((meter_register_set.CurrentL3ImExSum.f >= 0.5f) ? 1: 0);
 			if(phases_active > 1) {
 				if(phase_control.autoswitch_time == 0) {
 					// If the autos-switch-timer was not yet started we start it

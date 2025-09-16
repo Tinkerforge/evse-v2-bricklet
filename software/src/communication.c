@@ -372,13 +372,13 @@ BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotD
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
 	response->header.length    = sizeof(GetEnergyMeterValues_Response);
-	response->power            = meter_register_set.total_system_power.f;
-	response->current[0]       = meter_register_set.current[0].f;
-	response->current[1]       = meter_register_set.current[1].f;
-	response->current[2]       = meter_register_set.current[2].f;
-	response->phases_active[0] = (((meter_register_set.current[0].f > 0.3f) & meter.phases_connected[0]) << 0) |
-	                             (((meter_register_set.current[1].f > 0.3f) & meter.phases_connected[1]) << 1) |
-	                             (((meter_register_set.current[2].f > 0.3f) & meter.phases_connected[2]) << 2);
+	response->power            = meter_register_set.PowerActiveLSumImExDiff.f;
+	response->current[0]       = meter_register_set.CurrentL1ImExSum.f;
+	response->current[1]       = meter_register_set.CurrentL2ImExSum.f;
+	response->current[2]       = meter_register_set.CurrentL3ImExSum.f;
+	response->phases_active[0] = (((meter_register_set.CurrentL1ImExSum.f > 0.3f) & meter.phases_connected[0]) << 0) |
+	                             (((meter_register_set.CurrentL2ImExSum.f > 0.3f) & meter.phases_connected[1]) << 1) |
+	                             (((meter_register_set.CurrentL3ImExSum.f > 0.3f) & meter.phases_connected[2]) << 2);
 	response->phases_connected[0] = (meter.phases_connected[0] << 0) |
 	                                (meter.phases_connected[1] << 1) |
 	                                (meter.phases_connected[2] << 2);
