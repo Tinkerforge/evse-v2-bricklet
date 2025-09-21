@@ -340,6 +340,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint16_t values_length;
 	uint16_t values_chunk_offset;
 	float values_chunk_data[15];
 } __attribute__((__packed__)) GetAllEnergyMeterValuesLowLevel_Response;

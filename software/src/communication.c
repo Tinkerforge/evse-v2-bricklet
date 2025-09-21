@@ -387,27 +387,7 @@ BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValu
 }
 
 BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetAllEnergyMeterValuesLowLevel *data, GetAllEnergyMeterValuesLowLevel_Response *response) {
-	static uint32_t packet_payload_index = 0;
-
-	response->header.length = sizeof(GetAllEnergyMeterValuesLowLevel_Response);
-
-	const uint8_t packet_length = 60;
-	const uint16_t max_end = 88*sizeof(float);
-	const uint16_t start = packet_payload_index * packet_length;
-	const uint16_t end = MIN(start + packet_length, max_end);
-	const uint16_t copy_num = end-start;
-	uint8_t *copy_from = (uint8_t*)&meter_register_set;
-
-	response->values_chunk_offset = start/4;
-	memcpy(response->values_chunk_data, &copy_from[start], copy_num);
-
-	if(end < max_end) {
-		packet_payload_index++;
-	} else {
-		packet_payload_index = 0;
-	}
-
-	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+	return meter_fill_communication_values((GenericMeterValues_Response*)response);
 }
 
 BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErrors *data, GetEnergyMeterErrors_Response *response) {
