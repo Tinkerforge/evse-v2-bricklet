@@ -43,6 +43,7 @@
 #include "hardware_version.h"
 #include "phase_control.h"
 #include "tmp1075n.h"
+#include "eichrecht.h"
 
 int main(void) {
 	logging_init();
@@ -63,6 +64,7 @@ int main(void) {
 	meter_init();
 	phase_control_init();
 	tmp1075n_init();
+	eichrecht_init();
 
 	while(true) {
 		bootloader_tick();
@@ -79,5 +81,6 @@ int main(void) {
 		charging_slot_tick();
 		phase_control_tick();
 		tmp1075n_tick();
+		eichrecht_tick();
 	}
 }

@@ -44,6 +44,7 @@
 #include "hardware_version.h"
 #include "phase_control.h"
 #include "tmp1075n.h"
+#include "eichrecht.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -100,6 +101,14 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PHASES_CONNECTED:                  return length != sizeof(GetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phases_connected(message, response);
 		case FID_SET_CHARGING_PROTOCOL:                 return length != sizeof(SetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_protocol(message);
 		case FID_GET_CHARGING_PROTOCOL:                 return length != sizeof(GetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_charging_protocol(message, response);
+		case FID_SET_EICHRECHT_GENERAL_INFORMATION:     return length != sizeof(SetEichrechtGeneralInformation)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_general_information(message, response);
+		case FID_GET_EICHRECHT_GENERAL_INFORMATION:     return length != sizeof(GetEichrechtGeneralInformation)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_general_information(message, response);
+		case FID_SET_EICHRECHT_USER_ASSIGNMENT:         return length != sizeof(SetEichrechtUserAssignment)       ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_user_assignment(message, response);
+		case FID_GET_EICHRECHT_USER_ASSIGNMENT:         return length != sizeof(GetEichrechtUserAssignment)       ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_user_assignment(message, response);
+		case FID_SET_EICHRECHT_CHARGE_POINT:            return length != sizeof(SetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_charge_point(message, response);
+		case FID_GET_EICHRECHT_CHARGE_POINT:            return length != sizeof(GetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_charge_point(message, response);
+		case FID_SET_EICHRECHT_TRANSACTION:             return length != sizeof(SetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_transaction(message, response);
+		case FID_GET_EICHRECHT_TRANSACTION:             return length != sizeof(GetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_transaction(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -881,6 +890,108 @@ BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichrechtGeneralInformation *data, SetEichrechtGeneralInformation_Response *response) {
+	response->header.length = sizeof(SetEichrechtGeneralInformation_Response);
+	eichrecht.ocmf.gi[sizeof(eichrecht.ocmf.gi) - 1] = 0;
+	memcpy(eichrecht.ocmf.gi, data->gateway_identification, sizeof(data->gateway_identification));
+	eichrecht.ocmf.gs[sizeof(eichrecht.ocmf.gs) - 1] = 0;
+	memcpy(eichrecht.ocmf.gs, data->gateway_serial, sizeof(data->gateway_serial));
+
+	if(hardware_version.is_v4) {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichrechtGeneralInformation *data, GetEichrechtGeneralInformation_Response *response) {
+	response->header.length = sizeof(GetEichrechtGeneralInformation_Response);
+	memcpy(response->gateway_identification, eichrecht.ocmf.gi, sizeof(response->gateway_identification));
+	memcpy(response->gateway_serial, eichrecht.ocmf.gs, sizeof(response->gateway_serial));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_eichrecht_user_assignment(const SetEichrechtUserAssignment *data, SetEichrechtUserAssignment_Response *response) {
+	response->header.length = sizeof(SetEichrechtUserAssignment_Response);
+	eichrecht.ocmf.is = data->identification_status;
+	eichrecht.ocmf.if_[0] = data->identification_flags[0];
+	eichrecht.ocmf.if_[1] = data->identification_flags[1];
+	eichrecht.ocmf.if_[2] = data->identification_flags[2];
+	eichrecht.ocmf.if_[3] = data->identification_flags[3];
+	eichrecht.ocmf.it = data->identification_type;
+	eichrecht.ocmf.id[sizeof(eichrecht.ocmf.id) - 1] = 0;
+	memcpy(eichrecht.ocmf.id, data->identification_data, sizeof(data->identification_data));
+
+	if(hardware_version.is_v4) {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrechtUserAssignment *data, GetEichrechtUserAssignment_Response *response) {
+	response->header.length = sizeof(GetEichrechtUserAssignment_Response);
+	response->identification_status = eichrecht.ocmf.is;
+	response->identification_flags[0] = eichrecht.ocmf.if_[0];
+	response->identification_flags[1] = eichrecht.ocmf.if_[1];
+	response->identification_flags[2] = eichrecht.ocmf.if_[2];
+	response->identification_flags[3] = eichrecht.ocmf.if_[3];
+	response->identification_type = eichrecht.ocmf.it;
+	memcpy(response->identification_data, eichrecht.ocmf.id, sizeof(response->identification_data));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtChargePoint *data, SetEichrechtChargePoint_Response *response) {
+	response->header.length = sizeof(SetEichrechtChargePoint_Response);
+	eichrecht.ocmf.ct = data->identification_type;
+	eichrecht.ocmf.ci[sizeof(eichrecht.ocmf.ci) - 1] = 0;
+	memcpy(eichrecht.ocmf.ci, data->identification, sizeof(data->identification));
+
+	if(hardware_version.is_v4) {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtChargePoint *data, GetEichrechtChargePoint_Response *response) {
+	response->header.length = sizeof(GetEichrechtChargePoint_Response);
+	response->identification_type = eichrecht.ocmf.ct;
+	memcpy(response->identification, eichrecht.ocmf.ci, sizeof(response->identification));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response) {
+	response->header.length = sizeof(SetEichrechtTransaction_Response);
+	eichrecht.ocmf.tx = data->transaction;
+	eichrecht.unix_time = data->unix_time;
+	eichrecht.new_transaction = true;
+
+	if(hardware_version.is_v4) {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response) {
+	response->header.length = sizeof(GetEichrechtTransaction_Response);
+	response->transaction = eichrecht.ocmf.tx;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 
 bool handle_energy_meter_values_callback(void) {
 	static bool is_buffered = false;
@@ -906,6 +1017,29 @@ bool handle_energy_meter_values_callback(void) {
 
 	return false;
 }
+
+bool handle_eichrecht_dataset_low_level_callback(void) {
+	static bool is_buffered = false;
+	static EichrechtDatasetLowLevel_Callback cb;
+
+	if(!is_buffered) {
+		// tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtDatasetLowLevel_Callback), FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL);
+		// TODO: Implement EichrechtDatasetLowLevel callback handling
+
+		return false;
+	}
+
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtDatasetLowLevel_Callback));
+		is_buffered = false;
+		return true;
+	} else {
+		is_buffered = true;
+	}
+
+	return false;
+}
+
 
 void communication_tick(void) {
 	communication_callback_tick();

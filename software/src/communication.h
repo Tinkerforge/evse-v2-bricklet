@@ -140,6 +140,52 @@ void communication_init(void);
 #define EVSE_V2_CHARGING_PROTOCOL_IEC61851 0
 #define EVSE_V2_CHARGING_PROTOCOL_ISO15118 1
 
+#define EVSE_V2_EICHRECHT_STATE_OK 0
+#define EVSE_V2_EICHRECHT_STATE_NOT_ALL_INFO_SET 1
+#define EVSE_V2_EICHRECHT_STATE_BUSY 2
+#define EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED 3
+
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_RFID_NONE 0
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_RFID_PLAIN 1
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_RFID_RELATED 2
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_RFID_PSK 3
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_NONE 4
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_RS 5
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_AUTH 6
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_RS_TLS 7
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_AUTH_TLS 8
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_CACHE 9
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_WHITELIST 10
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_OCPP_CERTIFIED 11
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_ISO15118_NONE 12
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_ISO15118_PNC 13
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_PLMN_NONE 14
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_PLMN_RING 15
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_PLMN_SMS 16
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_FLAG_NOT_SET 17
+
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_NONE 0
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_DENIED 1
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_UNDEFINED 2
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_ISO14443 3
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_ISO15693 4
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_EMAID 5
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_EVCCID 6
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_EVCOID 7
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_ISO7812 8
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_CARD_TXN_NR 9
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_CENTRAL 10
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_CENTRAL_1 11
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_CENTRAL_2 12
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_LOCAL 13
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_LOCAL_1 14
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_LOCAL_2 15
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_PHONE_NUMBER 16
+#define EVSE_V2_EICHRECHT_USER_ASSIGNMENT_IDENTIFICATION_TYPE_KEY_CODE 17
+
+#define EVSE_V2_EICHRECHT_CHARGE_POINT_IDENTIFICATION_TYPE_EVSEID 0
+#define EVSE_V2_EICHRECHT_CHARGE_POINT_IDENTIFICATION_TYPE_CBIDC 1
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -205,8 +251,17 @@ void communication_init(void);
 #define FID_GET_PHASES_CONNECTED 44
 #define FID_SET_CHARGING_PROTOCOL 46
 #define FID_GET_CHARGING_PROTOCOL 47
+#define FID_SET_EICHRECHT_GENERAL_INFORMATION 48
+#define FID_GET_EICHRECHT_GENERAL_INFORMATION 49
+#define FID_SET_EICHRECHT_USER_ASSIGNMENT 50
+#define FID_GET_EICHRECHT_USER_ASSIGNMENT 51
+#define FID_SET_EICHRECHT_CHARGE_POINT 52
+#define FID_GET_EICHRECHT_CHARGE_POINT 53
+#define FID_SET_EICHRECHT_TRANSACTION 54
+#define FID_GET_EICHRECHT_TRANSACTION 55
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
+#define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 56
 
 typedef struct {
 	TFPMessageHeader header;
@@ -659,6 +714,100 @@ typedef struct {
 	uint16_t cp_duty_cycle;
 } __attribute__((__packed__)) GetChargingProtocol_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	char gateway_identification[32];
+	char gateway_serial[32];
+} __attribute__((__packed__)) SetEichrechtGeneralInformation;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t eichrecht_state;
+} __attribute__((__packed__)) SetEichrechtGeneralInformation_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtGeneralInformation;
+
+typedef struct {
+	TFPMessageHeader header;
+	char gateway_identification[32];
+	char gateway_serial[32];
+} __attribute__((__packed__)) GetEichrechtGeneralInformation_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool identification_status;
+	uint8_t identification_flags[4];
+	uint8_t identification_type;
+	char identification_data[40];
+} __attribute__((__packed__)) SetEichrechtUserAssignment;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t eichrecht_state;
+} __attribute__((__packed__)) SetEichrechtUserAssignment_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtUserAssignment;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool identification_status;
+	uint8_t identification_flags[4];
+	uint8_t identification_type;
+	char identification_data[40];
+} __attribute__((__packed__)) GetEichrechtUserAssignment_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t identification_type;
+	char identification[20];
+} __attribute__((__packed__)) SetEichrechtChargePoint;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t eichrecht_state;
+} __attribute__((__packed__)) SetEichrechtChargePoint_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtChargePoint;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t identification_type;
+	char identification[20];
+} __attribute__((__packed__)) GetEichrechtChargePoint_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	char transaction;
+	uint64_t unix_time;
+} __attribute__((__packed__)) SetEichrechtTransaction;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t eichrecht_state;
+} __attribute__((__packed__)) SetEichrechtTransaction_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtTransaction;
+
+typedef struct {
+	TFPMessageHeader header;
+	char transaction;
+} __attribute__((__packed__)) GetEichrechtTransaction_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t message_length;
+	uint16_t message_chunk_offset;
+	char message_chunk_data[60];
+} __attribute__((__packed__)) EichrechtDatasetLowLevel_Callback;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -707,14 +856,24 @@ BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *d
 BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response);
 BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data);
 BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichrechtGeneralInformation *data, SetEichrechtGeneralInformation_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichrechtGeneralInformation *data, GetEichrechtGeneralInformation_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_user_assignment(const SetEichrechtUserAssignment *data, SetEichrechtUserAssignment_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrechtUserAssignment *data, GetEichrechtUserAssignment_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtChargePoint *data, SetEichrechtChargePoint_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtChargePoint *data, GetEichrechtChargePoint_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);
+bool handle_eichrecht_dataset_low_level_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 1
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 2
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_energy_meter_values_callback, \
+	handle_eichrecht_dataset_low_level_callback, \
 
 
 #endif
