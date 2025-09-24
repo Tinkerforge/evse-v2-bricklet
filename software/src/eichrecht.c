@@ -48,7 +48,7 @@ void eichrecht_init(void) {
 
 const char *eichrecht_get_if_string(uint8_t index) {
     if (index < ARRAY_SIZE(if_strings)) {
-        return (char *)if_strings[index];
+        return if_strings[index];
     } else {
         return NULL;
     }
@@ -56,7 +56,7 @@ const char *eichrecht_get_if_string(uint8_t index) {
 
 const char *eichrecht_get_it_string(void) {
     if (eichrecht.ocmf.it < ARRAY_SIZE(it_strings)) {
-        return (char *)it_strings[eichrecht.ocmf.it];
+        return it_strings[eichrecht.ocmf.it];
     } else {
         return "";
     }
@@ -64,7 +64,7 @@ const char *eichrecht_get_it_string(void) {
 
 const char *eichrecht_get_ct_string(void) {
     if (eichrecht.ocmf.ct < ARRAY_SIZE(ct_strings)) {
-        return (char *)ct_strings[eichrecht.ocmf.ct];
+        return ct_strings[eichrecht.ocmf.ct];
     } else {
         return "";
     }
@@ -112,7 +112,7 @@ void eichrecht_create_dataset(void) {
 
     bool first = true;
     for (int i = 0; i < 4; i++) {
-        char *if_string = eichrecht_get_if_string(eichrecht.ocmf.if_[i]);
+        const char *if_string = eichrecht_get_if_string(eichrecht.ocmf.if_[i]);
         if (if_string) {
             if (!first) {
                 *ptr++ = ',';
