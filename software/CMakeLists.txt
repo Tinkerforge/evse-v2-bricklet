@@ -115,6 +115,10 @@ ADD_DEFINITIONS(-DARM_MATH_CM0) # Use CMSIS DSP math support
 # We don't have the space for double in the EVSE Bricklet 2.0.
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wdouble-promotion -Werror -fsingle-precision-constant")
 
+# LTO + Os will reduce flash size by ~10kb
+# SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+# SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+
 # Use below to completely forbid double division (is currently used by sqrtf internally)
 # If we need the flash space, we can use our own simple_sqrtf implementation and avoid sqrtf/ddiv completely.
 # This saves about 2.8kB of flash.
