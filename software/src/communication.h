@@ -186,6 +186,50 @@ void communication_init(void);
 #define EVSE_V2_EICHRECHT_CHARGE_POINT_IDENTIFICATION_TYPE_EVSEID 0
 #define EVSE_V2_EICHRECHT_CHARGE_POINT_IDENTIFICATION_TYPE_CBIDC 1
 
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_NOT_INITIALISED 0
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_IDLE 1
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_SIGNATURE_IN_PROGRESS 2
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_SIGNATURE_OK 15
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_DATE_TIME 128
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_CHECKSUM_ERROR 129
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_COMMAND 130
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_STATE 131
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_MEASUREMENT 132
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_TEST_MODE_ERROR 133
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_VERIFY_STATE_ERROR 243
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_SIGNATURE_STATE_ERROR 244
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_KEYPAIR_GENERATION 245
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_SHA_FAILED 246
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INIT_FAILED 247
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_DATA_NOT_LOCKED 248
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_CONFIG_NOT_LOCKED 249
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_VERIFY_ERROR 250
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_PUBLIC_KEY_ERROR 251
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_MESSAGE_FORMAT 252
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_INVALID_MESSAGE_SIZE 253
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_SIGNATURE_ERROR 254
+#define EVSE_V2_EICHRECHT_SIGNATURE_STATUS_UNDEFINED_ERROR 255
+
+#define EVSE_V2_EICHRECHT_SIGNATURE_FORMAT_ASN1 0
+#define EVSE_V2_EICHRECHT_SIGNATURE_FORMAT_BASE64 1
+
+#define EVSE_V2_EICHRECHT_MEASUREMENT_STATUS_IDLE 0
+#define EVSE_V2_EICHRECHT_MEASUREMENT_STATUS_ACTIVE 1
+#define EVSE_V2_EICHRECHT_MEASUREMENT_STATUS_ACTIVE_AFTER_POWER_FAILURE 2
+#define EVSE_V2_EICHRECHT_MEASUREMENT_STATUS_ACTIVE_AFTER_RESET 3
+#define EVSE_V2_EICHRECHT_MEASUREMENT_STATUS_INVALID_DATE_TIME 128
+
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_BEGIN 'B'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_END 'E'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_INTERMEDIATE 'C'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_EXCEPTION 'X'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_TARIFF_CHANGE 'T'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_SUSPENDED 'S'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_END_WITH_BEGIN 'r'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_FISCAL_READING 'f'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_HOLD_COMMAND 'h'
+#define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_LAST_CHARGE_READING 'i'
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -262,6 +306,8 @@ void communication_init(void);
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 56
+#define FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL 57
+#define FID_CALLBACK_EICHRECHT_PUBLIC_KEY 58
 
 typedef struct {
 	TFPMessageHeader header;
@@ -784,7 +830,9 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	char transaction;
-	uint64_t unix_time;
+	uint32_t unix_time;
+	int16_t utc_time_offset;
+	uint16_t signature_format;
 } __attribute__((__packed__)) SetEichrechtTransaction;
 
 typedef struct {
@@ -799,6 +847,11 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	char transaction;
+	uint8_t transaction_state;
+	uint8_t transaction_inner_state;
+	uint16_t measurement_status;
+	uint16_t signature_status;
+	uint8_t eichrecht_state;
 } __attribute__((__packed__)) GetEichrechtTransaction_Response;
 
 typedef struct {
@@ -807,6 +860,18 @@ typedef struct {
 	uint16_t message_chunk_offset;
 	char message_chunk_data[60];
 } __attribute__((__packed__)) EichrechtDatasetLowLevel_Callback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t message_length;
+	uint16_t message_chunk_offset;
+	char message_chunk_data[60];
+} __attribute__((__packed__)) EichrechtSignatureLowLevel_Callback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t public_key[64];
+} __attribute__((__packed__)) EichrechtPublicKey_Callback;
 
 
 // Function prototypes
@@ -868,12 +933,16 @@ BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTran
 // Callbacks
 bool handle_energy_meter_values_callback(void);
 bool handle_eichrecht_dataset_low_level_callback(void);
+bool handle_eichrecht_signature_low_level_callback(void);
+bool handle_eichrecht_public_key_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 2
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 4
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_energy_meter_values_callback, \
 	handle_eichrecht_dataset_low_level_callback, \
+	handle_eichrecht_signature_low_level_callback, \
+	handle_eichrecht_public_key_callback, \
 
 
 #endif

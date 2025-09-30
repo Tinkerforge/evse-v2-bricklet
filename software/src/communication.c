@@ -892,12 +892,13 @@ BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol 
 
 BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichrechtGeneralInformation *data, SetEichrechtGeneralInformation_Response *response) {
 	response->header.length = sizeof(SetEichrechtGeneralInformation_Response);
-	eichrecht.ocmf.gi[sizeof(eichrecht.ocmf.gi) - 1] = 0;
-	memcpy(eichrecht.ocmf.gi, data->gateway_identification, sizeof(data->gateway_identification));
-	eichrecht.ocmf.gs[sizeof(eichrecht.ocmf.gs) - 1] = 0;
-	memcpy(eichrecht.ocmf.gs, data->gateway_serial, sizeof(data->gateway_serial));
 
-	if(hardware_version.is_v4) {
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
+		eichrecht.ocmf.gi[sizeof(eichrecht.ocmf.gi) - 1] = 0;
+		memcpy(eichrecht.ocmf.gi, data->gateway_identification, sizeof(data->gateway_identification));
+		eichrecht.ocmf.gs[sizeof(eichrecht.ocmf.gs) - 1] = 0;
+		memcpy(eichrecht.ocmf.gs, data->gateway_serial, sizeof(data->gateway_serial));
+
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
 	} else {
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
@@ -916,16 +917,17 @@ BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichr
 
 BootloaderHandleMessageResponse set_eichrecht_user_assignment(const SetEichrechtUserAssignment *data, SetEichrechtUserAssignment_Response *response) {
 	response->header.length = sizeof(SetEichrechtUserAssignment_Response);
-	eichrecht.ocmf.is = data->identification_status;
-	eichrecht.ocmf.if_[0] = data->identification_flags[0];
-	eichrecht.ocmf.if_[1] = data->identification_flags[1];
-	eichrecht.ocmf.if_[2] = data->identification_flags[2];
-	eichrecht.ocmf.if_[3] = data->identification_flags[3];
-	eichrecht.ocmf.it = data->identification_type;
-	eichrecht.ocmf.id[sizeof(eichrecht.ocmf.id) - 1] = 0;
-	memcpy(eichrecht.ocmf.id, data->identification_data, sizeof(data->identification_data));
 
-	if(hardware_version.is_v4) {
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
+		eichrecht.ocmf.is = data->identification_status;
+		eichrecht.ocmf.if_[0] = data->identification_flags[0];
+		eichrecht.ocmf.if_[1] = data->identification_flags[1];
+		eichrecht.ocmf.if_[2] = data->identification_flags[2];
+		eichrecht.ocmf.if_[3] = data->identification_flags[3];
+		eichrecht.ocmf.it = data->identification_type;
+		eichrecht.ocmf.id[sizeof(eichrecht.ocmf.id) - 1] = 0;
+		memcpy(eichrecht.ocmf.id, data->identification_data, sizeof(data->identification_data));
+
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
 	} else {
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
@@ -949,11 +951,12 @@ BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrecht
 
 BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtChargePoint *data, SetEichrechtChargePoint_Response *response) {
 	response->header.length = sizeof(SetEichrechtChargePoint_Response);
-	eichrecht.ocmf.ct = data->identification_type;
-	eichrecht.ocmf.ci[sizeof(eichrecht.ocmf.ci) - 1] = 0;
-	memcpy(eichrecht.ocmf.ci, data->identification, sizeof(data->identification));
 
-	if(hardware_version.is_v4) {
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
+		eichrecht.ocmf.ct = data->identification_type;
+		eichrecht.ocmf.ci[sizeof(eichrecht.ocmf.ci) - 1] = 0;
+		memcpy(eichrecht.ocmf.ci, data->identification, sizeof(data->identification));
+
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
 	} else {
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
@@ -972,11 +975,35 @@ BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtCha
 
 BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response) {
 	response->header.length = sizeof(SetEichrechtTransaction_Response);
-	eichrecht.ocmf.tx = data->transaction;
-	eichrecht.unix_time = data->unix_time;
-	eichrecht.new_transaction = true;
 
-	if(hardware_version.is_v4) {
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
+		// Check if transaction is ongoing
+		if(eichrecht.transaction_state > 0) {
+			response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
+			return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+		}
+
+		// Check if measurement status is valid
+		if(data->transaction == 'B' || data->transaction == 'i') {
+			if(eichrecht.measurement_status != 0) { // 0 = idle
+				// Should be idle
+				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
+				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+			}
+		} else if(data->transaction == 'E' || data->transaction == 'C' || data->transaction == 'X' || data->transaction == 'T' || data->transaction == 'S' || data->transaction == 'r' || data->transaction == 'h') {
+			if(eichrecht.measurement_status != 1) { // 1 = active
+				// Should be active
+				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
+				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+			}
+		}
+
+		eichrecht.transaction = data->transaction;
+		eichrecht.unix_time = data->unix_time;
+		eichrecht.utc_time_offset = data->utc_time_offset;
+		eichrecht.signature_format = data->signature_format;
+		eichrecht.new_transaction = true;
+
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
 	} else {
 		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
@@ -987,7 +1014,22 @@ BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTran
 
 BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response) {
 	response->header.length = sizeof(GetEichrechtTransaction_Response);
-	response->transaction = eichrecht.ocmf.tx;
+
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
+		response->transaction             = eichrecht.transaction;
+		response->transaction_state       = eichrecht.transaction_state;
+		response->transaction_inner_state = eichrecht.transaction_inner_state;
+		response->measurement_status      = eichrecht.measurement_status;
+		response->signature_status        = eichrecht.signature_status;
+		response->eichrecht_state         = eichrecht.transaction_state > 0 ? EVSE_V2_EICHRECHT_STATE_BUSY : EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->transaction             = 0;
+		response->transaction_state       = 0;
+		response->transaction_inner_state = 0;
+		response->measurement_status      = 0;
+		response->signature_status        = 0;
+		response->eichrecht_state         = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -1023,14 +1065,87 @@ bool handle_eichrecht_dataset_low_level_callback(void) {
 	static EichrechtDatasetLowLevel_Callback cb;
 
 	if(!is_buffered) {
-		// tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtDatasetLowLevel_Callback), FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL);
-		// TODO: Implement EichrechtDatasetLowLevel callback handling
+		if(!eichrecht.dataset_out_ready) {
+			return false;
+		}
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtDatasetLowLevel_Callback), FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL);
+		cb.message_length = eichrecht.dataset_out_length;
+		cb.message_chunk_offset = eichrecht.dataset_out_chunk_offset;
+		const uint8_t length = MIN(60, eichrecht.dataset_out_length - eichrecht.dataset_out_chunk_offset);
+		memcpy(cb.message_chunk_data, &eichrecht.dataset_out[eichrecht.dataset_out_chunk_offset], length);
+		if(length < 60) {
+			memset(&cb.message_chunk_data[length], 0, 60 - length);
+		}
 
-		return false;
+		eichrecht.dataset_out_chunk_offset += 60;
+		if(eichrecht.dataset_out_chunk_offset >= eichrecht.dataset_out_length) {
+			eichrecht.dataset_out_ready = false;
+			eichrecht.dataset_out_chunk_offset = 0;
+		}
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtDatasetLowLevel_Callback));
+		is_buffered = false;
+		return true;
+	} else {
+		is_buffered = true;
+	}
+
+	return false;
+}
+
+bool handle_eichrecht_signature_low_level_callback(void) {
+	static bool is_buffered = false;
+	static EichrechtSignatureLowLevel_Callback cb;
+
+	if(!is_buffered) {
+		if(!eichrecht.signature_ready) {
+			return false;
+		}
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtSignatureLowLevel_Callback), FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL);
+		cb.message_length = eichrecht.signature_length;
+		cb.message_chunk_offset = eichrecht.signature_chunk_offset;
+		const uint8_t length = MIN(60, eichrecht.signature_length - eichrecht.signature_chunk_offset);
+		memcpy(cb.message_chunk_data, &eichrecht.signature[eichrecht.signature_chunk_offset], length);
+		if(length < 60) {
+			memset(&cb.message_chunk_data[length], 0, 60 - length);
+		}
+
+		eichrecht.signature_chunk_offset += 60;
+		if(eichrecht.signature_chunk_offset >= eichrecht.signature_length) {
+			eichrecht.signature_ready = false;
+			eichrecht.signature_chunk_offset = 0;
+		}
+	}
+
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtSignatureLowLevel_Callback));
+		is_buffered = false;
+		return true;
+	} else {
+		is_buffered = true;
+	}
+
+	return false;
+}
+
+bool handle_eichrecht_public_key_callback(void) {
+	static bool is_buffered = false;
+	static EichrechtPublicKey_Callback cb;
+
+	if(!is_buffered) {
+		if(!eichrecht.public_key_ready) {
+			return false;
+		}
+
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtPublicKey_Callback), FID_CALLBACK_EICHRECHT_PUBLIC_KEY);
+		memcpy(cb.public_key, eichrecht.public_key, sizeof(cb.public_key));
+		eichrecht.public_key_ready = false;
+	}
+
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtPublicKey_Callback));
 		is_buffered = false;
 		return true;
 	} else {

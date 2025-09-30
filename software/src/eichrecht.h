@@ -24,6 +24,9 @@
 
 #include "hardware_version.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+
 typedef struct {
     // General Information
     char gi[33]; // Gateway Identification
@@ -38,23 +41,47 @@ typedef struct {
     // Charge Point
     uint8_t ct; // Identification Type
     char ci[21]; // Identification
-
-    // Transaction
-    char tx; // Transaction
 } OCMF;
 
 typedef struct {
     OCMF ocmf;
 
-    uint64_t unix_time;
-    bool new_transaction;
+    uint8_t transaction_state;
+    uint8_t transaction_inner_state;
+    uint32_t transaction_state_time;
 
-    char dataset[1024];
+    char transaction;
+    uint32_t unix_time;
+    int16_t utc_time_offset;
+    uint16_t signature_format;
+    bool new_transaction;
+    uint16_t measurement_status;
+    uint16_t signature_status;
+    uint32_t timeout_counter;
+
+    char dataset_in[512] __attribute__((aligned(4)));
+    uint16_t dataset_in_index;
+
+    char dataset_out[1024] __attribute__((aligned(4)));
+    uint16_t dataset_out_index;
+    uint16_t dataset_out_length;
+    bool dataset_out_ready;
+    uint16_t dataset_out_chunk_offset;
+
+    char signature[256] __attribute__((aligned(4)));
+    uint16_t signature_index;
+    uint16_t signature_length;
+    bool signature_ready;
+    uint16_t signature_chunk_offset;
+
+    char public_key[64] __attribute__((aligned(4)));
+    bool public_key_ready;
 } Eichrecht;
 
 extern Eichrecht eichrecht;
 
 void eichrecht_init(void);
 void eichrecht_tick(void);
+void eichrecht_iskra_tick(void);
 
 #endif

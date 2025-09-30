@@ -22,6 +22,9 @@
 #include "eichrecht.h"
 
 #include "bricklib2/utility/util_definitions.h"
+#include "bricklib2/warp/meter.h"
+#include "bricklib2/warp/modbus.h"
+#include "bricklib2/hal/system_timer/system_timer.h"
 
 static const char *if_strings[] = {
     "RFID_NONE", "RFID_PLAIN", "RFID_RELATED", "RFID_PSK", "OCPP_NONE", "OCPP_RS", "OCPP_AUTH", "OCPP_RS_TLS", "OCPP_AUTH_TLS", "OCPP_CACHE", "OCPP_WHITELIST", "OCPP_CERTIFIED", "ISO15118_NONE", "ISO15118_PNC", "PLMN_NONE", "PLMN_RING", "PLMN_SMS"
@@ -38,12 +41,12 @@ static const char *ct_strings[] = {
 Eichrecht eichrecht;
 
 void eichrecht_init(void) {
+    memset(&eichrecht, 0, sizeof(Eichrecht));
+
     // Eichrecht support only on v4 hardware
     if(!hardware_version.is_v4) {
         return;
     }
-
-    memset(&eichrecht, 0, sizeof(Eichrecht));
 }
 
 const char *eichrecht_get_if_string(uint8_t index) {
@@ -95,12 +98,12 @@ void eichrecht_create_dataset(void) {
     // "RD":[]
     // }
 
-    memset(eichrecht.dataset, 0, sizeof(eichrecht.dataset));
+    memset(eichrecht.dataset_in, 0, sizeof(eichrecht.dataset_in));
 
     // The absolute maximum size of the dataset here is known (since all possible strings are predefined).
     // The dataset size was chosen big enough to hold the maximum possible size.
     // Thus we can use unsafe string functions here.
-    char *ptr = eichrecht.dataset;
+    char *ptr = eichrecht.dataset_in;
 
     ptr = stpcpy(ptr, "{\"FV\":\"1.0\",\"GI\":\"");
     ptr = stpcpy(ptr, eichrecht.ocmf.gi);
@@ -145,5 +148,441 @@ void eichrecht_tick(void) {
     if(eichrecht.new_transaction) {
         eichrecht_create_dataset();
         eichrecht.new_transaction = false;
+        eichrecht.transaction_state = 1;
+    }
+}
+
+bool eichrecht_iskra_write_utc_time_offset(const int16_t utc_time_offset) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: { // Write utc time offset
+            MeterRegisterType payload;
+            payload.i16_single = utc_time_offset;
+
+            meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, 7053+1, &payload);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // Check utc time offset write response
+            bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_write_unix_time(const uint32_t unix_time) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: { // Write unix time
+            MeterRegisterType payload;
+            payload.u32 = unix_time;
+
+            meter_write_register(MODBUS_FC_WRITE_MULTIPLE_REGISTERS, meter.slave_address, 7054+1, &payload);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // Check unix time write response
+            bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_MULTIPLE_REGISTERS);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+
+bool eichrecht_iskra_write_signature_format(uint16_t signature_format) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: { // Write unix time
+            MeterRegisterType payload;
+            payload.u16_single = signature_format;
+
+            meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, 7059+1, &payload);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // Check unix time write response
+            bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+
+bool eichrecht_iskra_write_dataset(void) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: {
+            eichrecht.dataset_in_index = 0;
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // Write dataset
+            uint16_t length = MIN(240, strlen(eichrecht.dataset_in) - eichrecht.dataset_in_index);
+            if((length & 1) == 1) {
+                length++; // Make even
+            }
+            meter_write_string(meter.slave_address, 7100+1 + (eichrecht.dataset_in_index / 2), &eichrecht.dataset_in[eichrecht.dataset_in_index], length);
+
+            eichrecht.transaction_inner_state++;
+            eichrecht.dataset_in_index += length;
+            return false;
+        }
+
+        case 2: { // Check dataset write response
+			bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_MULTIPLE_REGISTERS);
+			if(ret) {
+				modbus_clear_request(&rs485);
+                if(eichrecht.dataset_in_index < strlen(eichrecht.dataset_in)) {
+                    // More to write
+                    eichrecht.transaction_inner_state = 1;
+                } else {
+                    // Done
+                    eichrecht.transaction_inner_state++;
+                }
+			}
+            return false;
+        }
+
+        case 3: { // Write dataset length
+            MeterRegisterType payload;
+            payload.u16_single = strlen(eichrecht.dataset_in);
+            //payload.u16_single = 4;
+
+            meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, 7056+1, &payload);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 4: { // Check dataset length write response
+            bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_send_transaction_command(const char command) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: { // Send transaction command
+            MeterRegisterType payload;
+            payload.u16_single = command << 8;
+
+            meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, 7051+1, &payload);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // Check transaction command write response
+            bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_get_measurement_status(uint16_t *status) {
+    switch(eichrecht.transaction_inner_state) {
+		case 0: { // request measurement status from holding register
+            *status = 0xFFFF;
+			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7000+1, 1);
+			eichrecht.transaction_inner_state++;
+			return false;
+		}
+
+		case 1: { // read measurement status from holding register
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, status, 1);
+			if(ret) {
+				modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+			}
+			return false;
+		}
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_get_signature_status(uint16_t *status) {
+    switch(eichrecht.transaction_inner_state) {
+		case 0: { // request signature status from holding register
+            *status = 0xFFFF;
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7052+1, 1);
+			eichrecht.transaction_inner_state++;
+			return false;
+		}
+
+		case 1: { // read signature status from holding register
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, status, 1);
+			if(ret) {
+				modbus_clear_request(&rs485);
+                eichrecht.transaction_inner_state = 0;
+                return true;
+			}
+			return false;
+		}
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_read_dataset(void) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: {
+            memset(eichrecht.dataset_out, 0, sizeof(eichrecht.dataset_out));
+            eichrecht.dataset_out_index = 0;
+            eichrecht.dataset_out_length = 0;
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // request dataset length from holding register
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7057+1, 1);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 2: { // read dataset length from holding register
+            bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.dataset_out_length, 1);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.dataset_out_index = 0;
+                eichrecht.transaction_inner_state++;
+            }
+            return false;
+        }
+
+        case 3: { // request dataset from holding registers (max 120 registers in one go)
+            uint16_t length = (eichrecht.dataset_out_length+1)/2 - eichrecht.dataset_out_index;
+            if(length > 120) {
+                length = 120;
+            }
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7612+1 + eichrecht.dataset_out_index, length); // length here is in registers
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 4: { // read dataset from holding registers
+            uint16_t length = (eichrecht.dataset_out_length+1)/2 - eichrecht.dataset_out_index;
+            if(length > 120) {
+                length = 120;
+            }
+
+            bool ret = meter_get_read_registers_response_string(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.dataset_out[eichrecht.dataset_out_index*2], length*2); // length here is in bytes
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.dataset_out_index += length;
+                if(eichrecht.dataset_out_index < (eichrecht.dataset_out_length+1)/2) {
+                    // More to read
+                    eichrecht.transaction_inner_state = 3;
+                    return false;
+                } else {
+                    // Done
+                    eichrecht.transaction_inner_state = 0;
+                    eichrecht.dataset_out_ready = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_read_signature(void) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: {
+            memset(eichrecht.signature, 0, sizeof(eichrecht.signature));
+            eichrecht.signature_index = 0;
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // request signature length from holding register
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7058+1, 1);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 2: { // read signature length from holding register
+            bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.signature_length, 1);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.signature_index = 0;
+                eichrecht.transaction_inner_state++;
+            }
+            return false;
+        }
+
+        case 3: { // request signature from holding registers (max 120 registers in one go)
+            uint16_t length = eichrecht.signature_length - eichrecht.signature_index;
+            if(length > 120) {
+                length = 120;
+            }
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 8188+1 + eichrecht.signature_index, length);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 4: { // read signature from holding registers
+            uint16_t length = eichrecht.signature_length - eichrecht.signature_index;
+            if(length > 120) {
+                length = 120;
+            }
+
+            bool ret = meter_get_read_registers_response_string(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.signature[eichrecht.signature_index], length);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.signature_index += length;
+                if(eichrecht.signature_index < eichrecht.signature_length) {
+                    // More to read
+                    eichrecht.transaction_inner_state = 3;
+                    return false;
+                } else {
+                    // Done
+                    eichrecht.transaction_inner_state = 0;
+                    eichrecht.signature_ready = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool eichrecht_iskra_read_public_key(void) {
+    switch(eichrecht.transaction_inner_state) {
+        case 0: {
+            memset(eichrecht.public_key, 0, sizeof(eichrecht.public_key));
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 1: { // request public key from holding registers (64 bytes fixed size)
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 8124+1, 64);
+            eichrecht.transaction_inner_state++;
+            return false;
+        }
+
+        case 2: { // read public key from holding registers
+            bool ret = meter_get_read_registers_response_string(MODBUS_FC_READ_HOLDING_REGISTERS, eichrecht.public_key, 64);
+            if(ret) {
+                modbus_clear_request(&rs485);
+                eichrecht.public_key_ready = true;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+void eichrecht_reset_transaction(void) {
+    eichrecht.transaction_state = 0;
+    eichrecht.transaction_inner_state = 0;
+    eichrecht.transaction_state_time = 0;
+    modbus_clear_request(&rs485);
+}
+
+bool eichrecht_iskra_tick_next_state(void) {
+    switch(eichrecht.transaction_state) {
+        case 0: return false; // Should be unreachable
+        case 1: return (eichrecht.transaction == 'B') ? eichrecht_iskra_write_utc_time_offset(eichrecht.utc_time_offset) : true; // Only set utc time offset and unix time for 'B' transaction
+        case 2: return (eichrecht.transaction == 'B') ? eichrecht_iskra_write_unix_time(eichrecht.unix_time) : true;
+        case 3: return eichrecht_iskra_write_signature_format(eichrecht.signature_format);
+        case 4: return eichrecht_iskra_write_dataset();
+        case 5: {
+            if(eichrecht_iskra_get_measurement_status(&eichrecht.measurement_status)) {
+                if(eichrecht.transaction == 'B' || eichrecht.transaction == 'i') {
+                    if(eichrecht.measurement_status != 0) { // 0 = idle
+                        // Should be idle
+                        return false;
+                    }
+                } else if(eichrecht.transaction == 'E' || eichrecht.transaction == 'C' || eichrecht.transaction == 'X' || eichrecht.transaction == 'T' || eichrecht.transaction == 'S' || eichrecht.transaction == 'r' || eichrecht.transaction == 'h') {
+                    if(eichrecht.measurement_status != 1) { // 1 = active
+                        // Should be active
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+        case 6: return eichrecht_iskra_send_transaction_command(eichrecht.transaction);
+        case 7: {
+            if(eichrecht_iskra_get_signature_status(&eichrecht.signature_status)) {
+                if(eichrecht.signature_status == 15) { // 15 = signature OK
+                    return true;
+                }
+            }
+            return false;
+        }
+        case 8: return eichrecht_iskra_read_dataset();
+        case 9: return eichrecht_iskra_read_signature();
+        case 10: return eichrecht_iskra_read_public_key();
+        default: eichrecht_reset_transaction();
+    }
+
+    return false;
+}
+
+// This is called by meter_iskra when meter is idle and eichrecht.transaction_state > 0
+void eichrecht_iskra_tick(void) {
+    // Eichrecht support only on v4 hardware
+    if(!hardware_version.is_v4) {
+        return;
+    }
+
+    // TODO: How long for the timeout?
+    // Check for timeout
+    if(eichrecht.transaction_state_time == 0) {
+        eichrecht.transaction_state_time = system_timer_get_ms();
+    } else if(system_timer_is_time_elapsed_ms(eichrecht.transaction_state_time, 3000)) {
+        eichrecht.timeout_counter++; // TODO: Add timeout counter to API?
+        eichrecht_reset_transaction();
+        return;
+    }
+
+    if(eichrecht_iskra_tick_next_state()) {
+        eichrecht.transaction_state++;
+        eichrecht.transaction_inner_state = 0;
+        eichrecht.transaction_state_time = system_timer_get_ms();
     }
 }
