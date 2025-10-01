@@ -110,16 +110,37 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/bricklib2/cmake/configs/config_xmc1_add_
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf -lm) # Use lib math (sqrt etc)
 ADD_DEFINITIONS(-DARM_MATH_CM0) # Use CMSIS DSP math support
+ADD_DEFINITIONS(-D__ARM_FEATURE_DSP=0) # Cortex-M0 doesn't have DSP instructions
 
-# warn when double is used and always use single precision for constants.
-# We don't have the space for double in the EVSE Bricklet 2.0.
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wdouble-promotion -Werror -fsingle-precision-constant")
+# Make sure constants are single precision by default
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsingle-precision-constant")
+
+# We already define -Wall in config_comcu_add_standard_flags.txt
+# Add extra warnings
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
+
+# Additional warnings (beyond -Wextra)
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wdouble-promotion")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wfloat-conversion")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wshadow")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstrict-prototypes")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wcast-align")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wduplicated-cond")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wduplicated-branches")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wnull-dereference")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wjump-misses-init")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstack-usage=1024")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wundef")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wshift-overflow=2")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-conversion")
+
+# Treat warnings as errors in EVSE firmware
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+
+# Generate linker map in build/ folder for size analysis
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-Map=statistics.map")
 
 # LTO + Os will reduce flash size by ~10kb
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
-
-# Use below to completely forbid double division (is currently used by sqrtf internally)
-# If we need the flash space, we can use our own simple_sqrtf implementation and avoid sqrtf/ddiv completely.
-# This saves about 2.8kB of flash.
-#SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wdouble-promotion -Werror -fsingle-precision-constant -Wl,--undefined=__aeabi_ddiv -Wl,--undefined=__divdi3 -Wl,--wrap=__aeabi_ddiv -Wl,--wrap=__divdi3 -Wl,-Map=out.map -Wl,--gc-sections")
