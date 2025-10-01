@@ -31,7 +31,7 @@
 #define RS485_USIC                XMC_UART1_CH1
 
 #define RS485_RX_PIN              P2_13
-#define RS485_RX_INPUT            XMC_USIC_CH_INPUT_DX0
+#define RS485_RX_INPUT            XMC_UART_CH_INPUT_RXD // UART input stage DX0
 #define RS485_RX_SOURCE           0b011 // DX0D
 
 #define RS485_TX_PIN              P2_12

@@ -43,7 +43,7 @@
 #define BOOTLOADER_FIX_POINTER_END
 
 // --- Oscilater defines ---
-#define OSCHP_FREQUENCY 16000000
+#define OSCHP_FREQUENCY 16000000U
 #define DCLK_CLOCK_SRC  1
 #define DCO1_CAL_SRC    1
 

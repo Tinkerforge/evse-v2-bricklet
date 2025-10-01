@@ -395,7 +395,7 @@ void led_tick_status_breathing(void) {
 		led.breathing_index -= 1;
 	}
 	led.breathing_index = BETWEEN(0, led.breathing_index, 255);
-	
+
 	if(led.breathing_index == 0) {
 		led.breathing_up = true;
 	} else if(led.breathing_index == 255) {
@@ -478,7 +478,7 @@ void led_tick_status_api(void) {
 			// This way we don't waste any time and the first blinking pattern already has
 			// the correct amount of blinks.
 			led_update(0, 0, 0);
-			led.blink_num       = led.api_indication - 2000;
+			led.blink_num       = (uint32_t)(led.api_indication - 2000);
 			led.blink_count     = 0;
 			led.blink_on        = false;
 			led.blink_last_time = system_timer_get_ms();

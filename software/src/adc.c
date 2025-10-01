@@ -356,7 +356,7 @@ void adc_enable_all(const bool all) {
 
 void adc_check_result(const uint8_t i) {
 	uint32_t result = XMC_VADC_GROUP_GetDetailedResult(adc[i].group, adc[i].result_reg);
-	if(result & (1 << 31)) {
+	if(result & (1UL << 31)) {
 		uint16_t r = result & 0xFFFF;
 		if((i <= 1) && (r < 2048)) {
 			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT] += r;
@@ -440,11 +440,11 @@ void adc_check_count(const uint8_t i) {
 			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*220/273;
 
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
-			const uint32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
-			if(divisor == 0) {
+			const int32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
+			if(divisor <= 0) {
 				adc_result.pp_pe_resistance = 0xFFFFFFFF;
 			} else {
-				adc_result.pp_pe_resistance = 1000*2*adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]/divisor;
+				adc_result.pp_pe_resistance = (uint32_t)(1000*2*adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]/divisor);
 				if(adc_result.pp_pe_resistance > 10000) {
 					adc_result.pp_pe_resistance = 0xFFFFFFFF;
 				}
@@ -471,10 +471,14 @@ void adc_check_count(const uint8_t i) {
 				if(adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] <= adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT]) {
 					adc_result.cp_pe_resistance = 0xFFFFFFFF;
 				} else {
-					const uint32_t divisor = adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT];
-					adc_result.cp_pe_resistance = 910*(adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT] - ADC_DIODE_DROP)/divisor;
-					if(adc_result.cp_pe_resistance > 32000) {
+					const int32_t divisor = adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT];
+					if(divisor <= 0) {
 						adc_result.cp_pe_resistance = 0xFFFFFFFF;
+					} else {
+						adc_result.cp_pe_resistance = (uint32_t)(910*(adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT] - ADC_DIODE_DROP)/divisor);
+						if(adc_result.cp_pe_resistance > 32000) {
+							adc_result.cp_pe_resistance = 0xFFFFFFFF;
+						}
 					}
 				}
 			}
