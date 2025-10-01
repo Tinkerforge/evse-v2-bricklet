@@ -104,7 +104,7 @@ void hardware_version_init(void) {
 	}
 }
 
-XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num) {
+XMC_GPIO_PORT_t *hardware_version_get_port(const uint8_t pin_num) {
 	if(hardware_version.is_v2) {
 		return hardware_version_v2[pin_num].port;
 	// V3 and V4 have same hardware layout
@@ -115,7 +115,7 @@ XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num) {
 	return NULL;
 }
 
-const uint8_t hardware_version_get_pin(const uint8_t pin_num) {
+uint8_t hardware_version_get_pin(const uint8_t pin_num) {
 	if(hardware_version.is_v2) {
 		return hardware_version_v2[pin_num].pin;
 	// V3 and V4 have same hardware layout

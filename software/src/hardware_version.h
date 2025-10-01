@@ -40,6 +40,6 @@ typedef struct {
 extern HardwareVersion hardware_version;
 
 void hardware_version_init(void);
-XMC_GPIO_PORT_t *const hardware_version_get_port(const uint8_t pin_num);
-const uint8_t hardware_version_get_pin(const uint8_t pin_num);
+XMC_GPIO_PORT_t *hardware_version_get_port(const uint8_t pin_num);
+uint8_t hardware_version_get_pin(const uint8_t pin_num);
 #endif
