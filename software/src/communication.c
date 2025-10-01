@@ -49,7 +49,7 @@
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
 BootloaderHandleMessageResponse handle_message(const void *message, void *response) {
-	const uint8_t length = ((TFPMessageHeader*)message)->length;
+	const uint8_t length = ((const TFPMessageHeader*)message)->length;
 
 	// Restart communication watchdog timer.
 	evse.communication_watchdog_time = system_timer_get_ms();
