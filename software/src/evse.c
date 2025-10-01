@@ -672,7 +672,7 @@ bool evse_is_shutdown(void) {
 	return new_return;
 }
 
-void evse_cp_connect() {
+void evse_cp_connect(void) {
 	if(XMC_GPIO_GetInput(EVSE_CP_DISCONNECT_PIN)) {
 		evse.cp_reconnect_time = system_timer_get_ms();
 		// Don't allow 0, since we use it as flag for "re-connect time handled"
@@ -684,7 +684,7 @@ void evse_cp_connect() {
 	XMC_GPIO_SetOutputLow(EVSE_CP_DISCONNECT_PIN);
 }
 
-void evse_cp_disconnect() {
+void evse_cp_disconnect(void) {
 	XMC_GPIO_SetOutputHigh(EVSE_CP_DISCONNECT_PIN);
 }
 
