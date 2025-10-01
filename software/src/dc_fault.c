@@ -160,6 +160,7 @@ void dc_fault_calibration_tick(void) {
 				dc_fault.calibration_time = system_timer_get_ms();
 				dc_fault.calibration_state++;
 			}
+			break;
 		}
 
 		case 5: { // Wait 1s for 6x and 30x to go low again
