@@ -115,6 +115,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 
 
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response) {
+	(void)data;
 	response->header.length            = sizeof(GetState_Response);
 	response->iec61851_state           = iec61851.state;
 	response->contactor_state          = contactor_check.state;
@@ -143,6 +144,7 @@ BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Respons
 }
 
 BootloaderHandleMessageResponse get_hardware_configuration(const GetHardwareConfiguration *data, GetHardwareConfiguration_Response *response) {
+	(void)data;
 	response->header.length         = sizeof(GetHardwareConfiguration_Response);
 	response->jumper_configuration  = evse.config_jumper_current;
 	response->has_lock_switch       = evse.has_lock_switch;
@@ -175,6 +177,7 @@ bool get_bit(const uint32_t value, uint8_t const bit_position) {
 }
 
 BootloaderHandleMessageResponse get_low_level_state(const GetLowLevelState *data, GetLowLevelState_Response *response) {
+	(void)data;
 	response->header.length             = sizeof(GetLowLevelState_Response);
 	response->led_state                 = led.state;
 	response->cp_pwm_duty_cycle         = evse_get_cp_duty_cycle();
@@ -335,6 +338,7 @@ BootloaderHandleMessageResponse get_charging_slot(const GetChargingSlot *data, G
 }
 
 BootloaderHandleMessageResponse get_all_charging_slots(const GetAllChargingSlots *data, GetAllChargingSlots_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetAllChargingSlots_Response);
 	for(uint8_t i = 0; i < CHARGING_SLOT_NUM; i++) {
 		response->max_current[i]                    = charging_slot.max_current[i];
@@ -380,6 +384,7 @@ BootloaderHandleMessageResponse get_charging_slot_default(const GetChargingSlotD
 }
 
 BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValues *data, GetEnergyMeterValues_Response *response) {
+	(void)data;
 	response->header.length    = sizeof(GetEnergyMeterValues_Response);
 	response->power            = meter_register_set.PowerActiveLSumImExDiff.f;
 	response->current[0]       = meter_register_set.CurrentL1ImExSum.f;
@@ -396,10 +401,12 @@ BootloaderHandleMessageResponse get_energy_meter_values(const GetEnergyMeterValu
 }
 
 BootloaderHandleMessageResponse get_all_energy_meter_values_low_level(const GetAllEnergyMeterValuesLowLevel *data, GetAllEnergyMeterValuesLowLevel_Response *response) {
+	(void)data;
 	return meter_fill_communication_values((GenericMeterValues_Response*)response);
 }
 
 BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErrors *data, GetEnergyMeterErrors_Response *response) {
+	(void)data;
 	response->header.length  = sizeof(GetEnergyMeterErrors_Response);
 	response->error_count[0] = rs485.modbus_common_error_counters.timeout;
 	response->error_count[1] = 0; // Global timeout. Currently global timeout triggers watchdog and EVSE will restart, so this will always be 0.
@@ -412,6 +419,7 @@ BootloaderHandleMessageResponse get_energy_meter_errors(const GetEnergyMeterErro
 }
 
 BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEnergyMeterRelativeEnergy *data) {
+	(void)data;
 	meter.reset_energy_meter = true;
 	evse_save_config();
 
@@ -456,6 +464,7 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 }
 
 BootloaderHandleMessageResponse get_gpio_configuration(const GetGPIOConfiguration *data, GetGPIOConfiguration_Response *response) {
+	(void)data;
 	response->header.length                = sizeof(GetGPIOConfiguration_Response);
 	response->shutdown_input_configuration = evse.shutdown_input_configuration;
 	response->input_configuration          = evse.input_configuration;
@@ -486,6 +495,7 @@ BootloaderHandleMessageResponse set_data_storage(const SetDataStorage *data) {
 }
 
 BootloaderHandleMessageResponse get_indicator_led(const GetIndicatorLED *data, GetIndicatorLED_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetIndicatorLED_Response);
 	response->indication    = led.api_indication;
 	response->color_h       = led.set_h;
@@ -597,6 +607,7 @@ BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfigur
 }
 
 BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfiguration *data, GetButtonConfiguration_Response *response) {
+	(void)data;
 	response->header.length        = sizeof(GetButtonConfiguration_Response);
 	response->button_configuration = button.configuration;
 
@@ -604,6 +615,7 @@ BootloaderHandleMessageResponse get_button_configuration(const GetButtonConfigur
 }
 
 BootloaderHandleMessageResponse get_button_state(const GetButtonState *data, GetButtonState_Response *response) {
+	(void)data;
 	response->header.length       = sizeof(GetButtonState_Response);
 	response->button_press_time   = button.press_time;
 	response->button_release_time = button.release_time;
@@ -623,6 +635,7 @@ BootloaderHandleMessageResponse set_ev_wakeup(const SetEVWakeup *data) {
 }
 
 BootloaderHandleMessageResponse get_ev_wakuep(const GetEVWakuep *data, GetEVWakuep_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetEVWakuep_Response);
 	response->ev_wakeup_enabled = evse.ev_wakeup_enabled;
 
@@ -659,6 +672,7 @@ BootloaderHandleMessageResponse set_control_pilot_disconnect(const SetControlPil
 }
 
 BootloaderHandleMessageResponse get_control_pilot_disconnect(const GetControlPilotDisconnect *data, GetControlPilotDisconnect_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetControlPilotDisconnect_Response);
 	response->control_pilot_disconnect = evse.control_pilot_disconnect;
 
@@ -666,6 +680,7 @@ BootloaderHandleMessageResponse get_control_pilot_disconnect(const GetControlPil
 }
 
 BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllData1_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetAllData1_Response);
 	TFPMessageFull parts;
 
@@ -685,6 +700,7 @@ BootloaderHandleMessageResponse get_all_data_1(const GetAllData1 *data, GetAllDa
 }
 
 BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllData2_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetAllData2_Response);
 	TFPMessageFull parts;
 
@@ -757,6 +773,7 @@ BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data) {
 }
 
 BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoostMode_Response *response) {
+	(void)data;
 	response->header.length       = sizeof(GetBoostMode_Response);
 	response->boost_mode_enabled = evse.boost_mode_enabled;
 
@@ -764,6 +781,7 @@ BootloaderHandleMessageResponse get_boost_mode(const GetBoostMode *data, GetBoos
 }
 
 BootloaderHandleMessageResponse trigger_dc_fault_test(const TriggerDCFaultTest *data, TriggerDCFaultTest_Response *response) {
+	(void)data;
 	response->header.length = sizeof(TriggerDCFaultTest_Response);
 	if(!dc_fault.calibration_running && (iec61851.state == IEC61851_STATE_A) && (adc_result.cp_pe_resistance > 0xFFFF) && XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN)) {
 		response->started = true;
@@ -788,6 +806,7 @@ BootloaderHandleMessageResponse set_gp_output(const SetGPOutput *data) {
 }
 
 BootloaderHandleMessageResponse get_temperature(const GetTemperature *data, GetTemperature_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetTemperature_Response);
 	if(hardware_version.is_v2) {
 		response->temperature = 0;
@@ -816,6 +835,7 @@ BootloaderHandleMessageResponse set_phase_control(const SetPhaseControl *data) {
 }
 
 BootloaderHandleMessageResponse get_phase_control(const GetPhaseControl *data, GetPhaseControl_Response *response) {
+	(void)data;
 	response->header.length    = sizeof(GetPhaseControl_Response);
 
 	response->phases_current   = phase_control.current;
@@ -836,6 +856,7 @@ BootloaderHandleMessageResponse set_phase_auto_switch(const SetPhaseAutoSwitch *
 }
 
 BootloaderHandleMessageResponse get_phase_auto_switch(const GetPhaseAutoSwitch *data, GetPhaseAutoSwitch_Response *response) {
+	(void)data;
 	response->header.length             = sizeof(GetPhaseAutoSwitch_Response);
 	response->phase_auto_switch_enabled = phase_control.autoswitch_enabled;
 
@@ -862,6 +883,7 @@ BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *d
 }
 
 BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response) {
+	(void)data;
 	response->header.length    = sizeof(GetPhasesConnected_Response);
 	response->phases_connected = phase_control.phases_connected;
 
@@ -878,6 +900,7 @@ BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol 
 }
 
 BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetChargingProtocol_Response);
 	if(hardware_version.is_v4 && iec61851.iso15118_active) {
 		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_ISO15118;
@@ -908,6 +931,7 @@ BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichr
 }
 
 BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichrechtGeneralInformation *data, GetEichrechtGeneralInformation_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetEichrechtGeneralInformation_Response);
 	memcpy(response->gateway_identification, eichrecht.ocmf.gi, sizeof(response->gateway_identification));
 	memcpy(response->gateway_serial, eichrecht.ocmf.gs, sizeof(response->gateway_serial));
@@ -937,6 +961,7 @@ BootloaderHandleMessageResponse set_eichrecht_user_assignment(const SetEichrecht
 }
 
 BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrechtUserAssignment *data, GetEichrechtUserAssignment_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetEichrechtUserAssignment_Response);
 	response->identification_status = eichrecht.ocmf.is;
 	response->identification_flags[0] = eichrecht.ocmf.if_[0];
@@ -966,6 +991,7 @@ BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtCha
 }
 
 BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtChargePoint *data, GetEichrechtChargePoint_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetEichrechtChargePoint_Response);
 	response->identification_type = eichrecht.ocmf.ct;
 	memcpy(response->identification, eichrecht.ocmf.ci, sizeof(response->identification));
@@ -1013,6 +1039,7 @@ BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTran
 }
 
 BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response) {
+	(void)data;
 	response->header.length = sizeof(GetEichrechtTransaction_Response);
 
 	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
