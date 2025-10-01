@@ -458,8 +458,6 @@ void evse_init_jumper(void) {
 			evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_10A;
 		} else if(pin0 == 'o' && pin1 == 'l') {
 			evse.config_jumper_current = EVSE_CONFIG_JUMPER_CURRENT_6A;
-		} else if(pin0 == 'l' && pin1 == 'l') {
-			evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
 		} else {
 			evse.config_jumper_current = EVSE_CONFIG_JUMPER_UNCONFIGURED;
 		}
