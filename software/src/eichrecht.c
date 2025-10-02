@@ -23,6 +23,7 @@
 
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/warp/meter.h"
+#include "bricklib2/warp/meter_iskra.h"
 #include "bricklib2/warp/modbus.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 
@@ -529,14 +530,14 @@ bool eichrecht_iskra_tick_next_state(void) {
         case 3: return eichrecht_iskra_write_signature_format(eichrecht.signature_format);
         case 4: return eichrecht_iskra_write_dataset();
         case 5: {
-            if(eichrecht_iskra_get_measurement_status(&eichrecht.measurement_status)) {
+            if(eichrecht_iskra_get_measurement_status(&meter_iskra.measurement_status)) {
                 if(eichrecht.transaction == 'B' || eichrecht.transaction == 'i') {
-                    if(eichrecht.measurement_status != 0) { // 0 = idle
+                    if(meter_iskra.measurement_status != 0) { // 0 = idle
                         // Should be idle
                         return false;
                     }
                 } else if(eichrecht.transaction == 'E' || eichrecht.transaction == 'C' || eichrecht.transaction == 'X' || eichrecht.transaction == 'T' || eichrecht.transaction == 'S' || eichrecht.transaction == 'r' || eichrecht.transaction == 'h') {
-                    if(eichrecht.measurement_status != 1) { // 1 = active
+                    if(meter_iskra.measurement_status != 1) { // 1 = active
                         // Should be active
                         return false;
                     }
@@ -547,8 +548,8 @@ bool eichrecht_iskra_tick_next_state(void) {
         }
         case 6: return eichrecht_iskra_send_transaction_command(eichrecht.transaction);
         case 7: {
-            if(eichrecht_iskra_get_signature_status(&eichrecht.signature_status)) {
-                if(eichrecht.signature_status == 15) { // 15 = signature OK
+            if(eichrecht_iskra_get_signature_status(&meter_iskra.signature_status)) {
+                if(meter_iskra.signature_status == 15) { // 15 = signature OK
                     return true;
                 }
             }

@@ -28,6 +28,7 @@
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/utility/util_definitions.h"
 #include "bricklib2/warp/meter.h"
+#include "bricklib2/warp/meter_iskra.h"
 #include "bricklib2/warp/rs485.h"
 #include "bricklib2/warp/contactor_check.h"
 
@@ -1011,13 +1012,13 @@ BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTran
 
 		// Check if measurement status is valid
 		if(data->transaction == 'B' || data->transaction == 'i') {
-			if(eichrecht.measurement_status != 0) { // 0 = idle
+			if(meter_iskra.measurement_status != 0) { // 0 = idle
 				// Should be idle
 				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
 				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 			}
 		} else if(data->transaction == 'E' || data->transaction == 'C' || data->transaction == 'X' || data->transaction == 'T' || data->transaction == 'S' || data->transaction == 'r' || data->transaction == 'h') {
-			if(eichrecht.measurement_status != 1) { // 1 = active
+			if(meter_iskra.measurement_status != 1) { // 1 = active
 				// Should be active
 				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
 				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
@@ -1046,8 +1047,8 @@ BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTran
 		response->transaction             = eichrecht.transaction;
 		response->transaction_state       = eichrecht.transaction_state;
 		response->transaction_inner_state = eichrecht.transaction_inner_state;
-		response->measurement_status      = eichrecht.measurement_status;
-		response->signature_status        = eichrecht.signature_status;
+		response->measurement_status      = meter_iskra.measurement_status;
+		response->signature_status        = meter_iskra.signature_status;
 		response->eichrecht_state         = eichrecht.transaction_state > 0 ? EVSE_V2_EICHRECHT_STATE_BUSY : EVSE_V2_EICHRECHT_STATE_OK;
 	} else {
 		response->transaction             = 0;

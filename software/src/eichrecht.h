@@ -55,8 +55,6 @@ typedef struct {
     int16_t utc_time_offset;
     uint16_t signature_format;
     bool new_transaction;
-    uint16_t measurement_status;
-    uint16_t signature_status;
     uint32_t timeout_counter;
 
     char dataset_in[512] __attribute__((aligned(4)));
