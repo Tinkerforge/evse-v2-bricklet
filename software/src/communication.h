@@ -303,11 +303,11 @@ void communication_init(void);
 #define FID_GET_EICHRECHT_CHARGE_POINT 53
 #define FID_SET_EICHRECHT_TRANSACTION 54
 #define FID_GET_EICHRECHT_TRANSACTION 55
+#define FID_GET_EICHRECHT_PUBLIC_KEY 56
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
-#define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 56
-#define FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL 57
-#define FID_CALLBACK_EICHRECHT_PUBLIC_KEY 58
+#define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 57
+#define FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL 58
 
 typedef struct {
 	TFPMessageHeader header;
@@ -856,6 +856,15 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtPublicKey;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t public_key[64];
+} __attribute__((__packed__)) GetEichrechtPublicKey_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 	uint16_t message_length;
 	uint16_t message_chunk_offset;
 	char message_chunk_data[60];
@@ -867,11 +876,6 @@ typedef struct {
 	uint16_t message_chunk_offset;
 	char message_chunk_data[60];
 } __attribute__((__packed__)) EichrechtSignatureLowLevel_Callback;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t public_key[64];
-} __attribute__((__packed__)) EichrechtPublicKey_Callback;
 
 
 // Function prototypes
@@ -929,20 +933,19 @@ BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtCha
 BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtChargePoint *data, GetEichrechtChargePoint_Response *response);
 BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_public_key(const GetEichrechtPublicKey *data, GetEichrechtPublicKey_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);
 bool handle_eichrecht_dataset_low_level_callback(void);
 bool handle_eichrecht_signature_low_level_callback(void);
-bool handle_eichrecht_public_key_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 4
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 3
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_energy_meter_values_callback, \
 	handle_eichrecht_dataset_low_level_callback, \
 	handle_eichrecht_signature_low_level_callback, \
-	handle_eichrecht_public_key_callback, \
 
 
 #endif

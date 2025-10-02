@@ -505,7 +505,7 @@ bool eichrecht_iskra_read_public_key(void) {
             bool ret = meter_get_read_registers_response_string(MODBUS_FC_READ_HOLDING_REGISTERS, eichrecht.public_key, 64);
             if(ret) {
                 modbus_clear_request(&rs485);
-                eichrecht.public_key_ready = true;
+                eichrecht.transaction_inner_state = 0;
                 return true;
             }
             return false;
@@ -557,11 +557,18 @@ bool eichrecht_iskra_tick_next_state(void) {
         }
         case 8: return eichrecht_iskra_read_dataset();
         case 9: return eichrecht_iskra_read_signature();
-        case 10: return eichrecht_iskra_read_public_key();
         default: eichrecht_reset_transaction();
     }
 
     return false;
+}
+
+
+// This is called by meter_iskra when eichrecht.init_done == false
+void eichrecht_iskra_init_tick(void) {
+    if(eichrecht_iskra_read_public_key()) {
+        eichrecht.init_done = true;
+    }
 }
 
 // This is called by meter_iskra when meter is idle and eichrecht.transaction_state > 0

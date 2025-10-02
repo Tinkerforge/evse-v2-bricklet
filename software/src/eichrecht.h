@@ -46,6 +46,8 @@ typedef struct {
 typedef struct {
     OCMF ocmf;
 
+    bool init_done;
+
     uint8_t transaction_state;
     uint8_t transaction_inner_state;
     uint32_t transaction_state_time;
@@ -73,7 +75,6 @@ typedef struct {
     uint16_t signature_chunk_offset;
 
     char public_key[64] __attribute__((aligned(4)));
-    bool public_key_ready;
 } Eichrecht;
 
 extern Eichrecht eichrecht;
@@ -81,5 +82,6 @@ extern Eichrecht eichrecht;
 void eichrecht_init(void);
 void eichrecht_tick(void);
 void eichrecht_iskra_tick(void);
+void eichrecht_iskra_init_tick(void);
 
 #endif

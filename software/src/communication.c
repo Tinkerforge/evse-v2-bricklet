@@ -110,6 +110,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_EICHRECHT_CHARGE_POINT:            return length != sizeof(GetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_charge_point(message, response);
 		case FID_SET_EICHRECHT_TRANSACTION:             return length != sizeof(SetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_transaction(message, response);
 		case FID_GET_EICHRECHT_TRANSACTION:             return length != sizeof(GetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_transaction(message, response);
+		case FID_GET_EICHRECHT_PUBLIC_KEY:              return length != sizeof(GetEichrechtPublicKey)            ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_public_key(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -1062,6 +1063,13 @@ BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTran
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse get_eichrecht_public_key(const GetEichrechtPublicKey *data, GetEichrechtPublicKey_Response *response) {
+	response->header.length = sizeof(GetEichrechtPublicKey_Response);
+	memcpy(response->public_key, eichrecht.public_key, sizeof(response->public_key));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 
 bool handle_energy_meter_values_callback(void) {
 	static bool is_buffered = false;
@@ -1149,31 +1157,6 @@ bool handle_eichrecht_signature_low_level_callback(void) {
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtSignatureLowLevel_Callback));
-		is_buffered = false;
-		return true;
-	} else {
-		is_buffered = true;
-	}
-
-	return false;
-}
-
-bool handle_eichrecht_public_key_callback(void) {
-	static bool is_buffered = false;
-	static EichrechtPublicKey_Callback cb;
-
-	if(!is_buffered) {
-		if(!eichrecht.public_key_ready) {
-			return false;
-		}
-
-		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(EichrechtPublicKey_Callback), FID_CALLBACK_EICHRECHT_PUBLIC_KEY);
-		memcpy(cb.public_key, eichrecht.public_key, sizeof(cb.public_key));
-		eichrecht.public_key_ready = false;
-	}
-
-	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtPublicKey_Callback));
 		is_buffered = false;
 		return true;
 	} else {
