@@ -30,6 +30,7 @@
 #include "hardware_version.h"
 
 #include "iec61851.h"
+#include "evse.h"
 
 #define ADC_DIODE_DROP 650
 
@@ -357,13 +358,25 @@ void adc_enable_all(const bool all) {
 void adc_check_result(const uint8_t i) {
 	uint32_t result = XMC_VADC_GROUP_GetDetailedResult(adc[i].group, adc[i].result_reg);
 	if(result & (1UL << 31)) {
-		uint16_t r = result & 0xFFFF;
-		if((i <= 1) && (r < 2048)) {
-			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT] += r;
-			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT]++;
+
+		// If cp is not connected we are reading a bogus voltage from a
+		// resistor divider with high ohms. In this case we don't want to
+		// evaluate any measurements.
+		if(evse_is_cp_connected()) {
+			uint16_t r = result & 0xFFFF;
+			if((i <= 1) && (r < 2048)) {
+				adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT] += r;
+				adc[i].result_count[ADC_NEGATIVE_MEASUREMENT]++;
+			} else {
+				adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] += r;
+				adc[i].result_count[ADC_POSITIVE_MEASUREMENT]++;
+			}
 		} else {
-			adc[i].result_sum[ADC_POSITIVE_MEASUREMENT] += r;
-			adc[i].result_count[ADC_POSITIVE_MEASUREMENT]++;
+			// Also reset old measurements while cp is disconnected
+			adc[i].result_sum[ADC_NEGATIVE_MEASUREMENT]   = 0;
+			adc[i].result_count[ADC_NEGATIVE_MEASUREMENT] = 0;
+			adc[i].result_sum[ADC_POSITIVE_MEASUREMENT]   = 0;
+			adc[i].result_count[ADC_POSITIVE_MEASUREMENT] = 0;
 		}
 
 		if(i == 0) {

@@ -214,3 +214,4 @@
 
 2025-XX-XX: 2.2.17 (TBD)
 - Add support for dynamic length meter values
+- Don't allow ADC measurements while CP disconnected
