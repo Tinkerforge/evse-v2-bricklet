@@ -216,3 +216,4 @@
 - Add support for dynamic length meter values
 - Don't allow ADC measurements while CP disconnected
 - Don't do diode check during phase control
+- Add support for meter Iskra WM3M4C (only hardware version 4)
