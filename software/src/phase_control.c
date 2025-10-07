@@ -295,7 +295,7 @@ void phase_control_state_phase_change(void) {
 				evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
 				// If the car is currently allowed to charge and the IEC61851 state was C before the state change
 				// we wait for the car to start charging again before phase switch is done
-				if((ma != 0) && (ma != 1000) && (iec61851.state == IEC61851_STATE_C)) {
+				if((ma != 0) && (iec61851.state == IEC61851_STATE_C)) {
 					phase_control.progress_state = 7;
 					phase_control.progress_state_time = system_timer_get_ms();
 				} else {
