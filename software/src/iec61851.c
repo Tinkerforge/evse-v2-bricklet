@@ -452,7 +452,8 @@ void iec61851_tick(void) {
 	          (adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) && (adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) &&
 	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
 	          (!iec61851.force_state_f && !adc_result.cp_pe_is_ignored && evse_is_cp_connected()) &&
-	          (iec61851_get_max_ma() != 0)) {
+	          (iec61851_get_max_ma() != 0) &&
+	          (phase_control.progress_state == 0)) {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[ADC_CHANNEL_VCP1].ignore_count > 0) || (adc[ADC_CHANNEL_VCP2].ignore_count > 0)) {
 			return;
