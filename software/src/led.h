@@ -31,6 +31,10 @@
 #define LED_BLINK_DURATION_OFF  250
 #define LED_BLINK_DURATION_WAIT 2000
 
+#define LED_ENUMERATE_DURATION  2000UL
+#define LED_ENUMERATE_BLINK_ON  250
+#define LED_ENUMERATE_BLINK_OFF 250
+
 #define LED_STANDBY_TIME (1000*60*15) // Standby after 15 minutes
 
 #define LED_HUE_RED 0
@@ -52,13 +56,16 @@
 #define LED_HUE_OK       LED_HUE_GREEN
 #define LED_HUE_WARNING  LED_HUE_ORANGE
 
+#define LED_ENUMERATOR_NUM 8
+
 typedef enum {
 	LED_STATE_OFF,
 	LED_STATE_ON,
 	LED_STATE_BLINKING,
 	LED_STATE_FLICKER,
 	LED_STATE_BREATHING,
-	LED_STATE_API
+	LED_STATE_API,
+	LED_STATE_ENUMERATE
 } LEDState;
 
 typedef struct {
@@ -107,6 +114,14 @@ typedef struct {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
+
+	uint16_t enumerator_h[LED_ENUMERATOR_NUM];
+	uint8_t enumerator_s[LED_ENUMERATOR_NUM];
+	uint8_t enumerator_v[LED_ENUMERATOR_NUM];
+	uint8_t enumerate_value;
+	uint32_t enumerate_value_change_time;
+	uint32_t enumerate_start_time;
+	LEDState enumerate_before_state;
 } LED;
 
 extern LED led;
@@ -115,6 +130,7 @@ void led_set_off(void);
 void led_set_on(const bool force);
 void led_set_blinking(const uint8_t num);
 void led_set_breathing(void);
+void led_set_enumerate(void);
 
 void led_init(void);
 void led_tick(void);

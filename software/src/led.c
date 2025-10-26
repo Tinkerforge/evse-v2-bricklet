@@ -139,14 +139,43 @@ void led_reset_api_state(void) {
 	led.api_nag_time     = 0;
 }
 
+void led_set_enumerate(void) {
+	// Check if enumerate configuration is disabled
+	if((led.enumerator_h[0] == 0) && (led.enumerator_s[0] == 0) && (led.enumerator_v[0] == 0)) {
+		return;
+	}
+
+	// API and BLINKING have higher priority than enumerate
+	if((led.state == LED_STATE_API) || (led.state == LED_STATE_BLINKING)) {
+		return;
+	}
+
+	// Otherwise enumerate LED value
+	if(led.state != LED_STATE_ENUMERATE) {
+		led.enumerate_before_state = led.state;
+	}
+
+	led.state         = LED_STATE_ENUMERATE;
+	uint8_t new_value = led.enumerate_value + 1;
+	if(new_value >= 8) {
+		new_value = 0;
+	} else if((led.enumerator_h[new_value] == 0) || (led.enumerator_s[new_value] == 0) || (led.enumerator_v[new_value] == 0)) {
+		new_value = 0;
+	}
+	led.enumerate_value = new_value;
+	led.enumerate_value_change_time = system_timer_get_ms();
+	led.enumerate_start_time = 0;
+
+}
+
 void led_set_breathing(void) {
 	// Check if we are already breathing state
 	if(led.state == LED_STATE_BREATHING) {
 		return;
 	}
 
-	// API has higher priority than breathing
-	if(led.state == LED_STATE_API) {
+	// API and enumerate have higher priority than breathing
+	if((led.state == LED_STATE_API) || (led.state == LED_STATE_ENUMERATE)) {
 		return;
 	}
 
@@ -180,8 +209,8 @@ void led_set_blinking(const uint8_t num) {
 // Called whenever there is activity
 // LED will go to standby after 15 minutes again
 void led_set_on(const bool force) {
-	// led "on" does not overwrite API state
-	if(!force && (led.state == LED_STATE_API)) {
+	// led "on" does not overwrite API state or enumerate state
+	if(!force && ((led.state == LED_STATE_API) || (led.state == LED_STATE_ENUMERATE))) {
 		return;
 	}
 
@@ -192,8 +221,8 @@ void led_set_on(const bool force) {
 }
 
 void led_set_off(void) {
-	// led "off" does not overwrite API state
-	if(led.state == LED_STATE_API) {
+	// led "off" does not overwrite API state or enumerate state
+	if((led.state == LED_STATE_API) || (led.state == LED_STATE_ENUMERATE)) {
 		return;
 	}
 
@@ -494,7 +523,43 @@ void led_tick_status_api(void) {
 	}
 }
 
-// TODO: Always use HSV. Use V for dimming (instead of index) and then the cie1931 table for the resulting rgb value.
+void led_tick_status_enumerate(void) {
+	if(hardware_version.is_v2) {
+		if(led.enumerate_start_time == 0) {
+			led.enumerate_start_time = system_timer_get_ms();
+		}
+
+		const uint8_t num_blink = led.enumerate_value + 1;
+		const uint32_t elapsed_time = system_timer_get_ms() - led.enumerate_value_change_time;
+
+		if(elapsed_time < LED_ENUMERATE_DURATION/2) {
+			led_update(0, 0, 0);
+		} else if(elapsed_time < LED_ENUMERATE_DURATION/2UL + num_blink * (LED_ENUMERATE_BLINK_ON + LED_ENUMERATE_BLINK_OFF)) {
+			const uint32_t blink_time   = elapsed_time - LED_ENUMERATE_DURATION/2;
+			const uint8_t current_blink = blink_time / (LED_ENUMERATE_BLINK_ON + LED_ENUMERATE_BLINK_OFF);
+			const uint32_t time_in_current_blink = blink_time % (LED_ENUMERATE_BLINK_ON + LED_ENUMERATE_BLINK_OFF);
+			if(current_blink < num_blink) {
+				if(time_in_current_blink < LED_ENUMERATE_BLINK_ON) {
+					led_update(LED_HUE_STANDARD, 255, 255);
+				} else {
+					led_update(0, 0, 0);
+				}
+			}
+		} else if(system_timer_is_time_elapsed_ms(led.enumerate_start_time, LED_ENUMERATE_DURATION + num_blink * (LED_ENUMERATE_BLINK_ON + LED_ENUMERATE_BLINK_OFF))) {
+			led.enumerate_start_time = 0;
+			led.state                = led.enumerate_before_state;
+		}
+	} else {
+		led_update(led.enumerator_h[led.enumerate_value], led.enumerator_s[led.enumerate_value], led.enumerator_v[led.enumerate_value]);
+		if(led.enumerate_start_time == 0) {
+			led.enumerate_start_time = system_timer_get_ms();
+		} else if(system_timer_is_time_elapsed_ms(led.enumerate_start_time, LED_ENUMERATE_DURATION)) {
+			led.enumerate_start_time = 0;
+			led.state                = led.enumerate_before_state;
+		}
+	}
+}
+
 void led_tick(void) {
 	if((led.state != LED_STATE_API) || (led.api_indication <= 2000) || (led.api_indication >= 2011)) {
 		led.blink_external  = -1;
@@ -507,5 +572,6 @@ void led_tick(void) {
 		case LED_STATE_FLICKER:   led_tick_status_flicker();        break;
 		case LED_STATE_BREATHING: led_tick_status_breathing();      break;
 		case LED_STATE_API:       led_tick_status_api();            break;
+		case LED_STATE_ENUMERATE: led_tick_status_enumerate();      break;
 	}
 }

@@ -217,3 +217,4 @@
 - Don't allow ADC measurements while CP disconnected
 - Don't do diode check during phase control
 - Add support for meter Iskra WM3M4C (only hardware version 4)
+- Add API and support for LED enumerator (mode selection by button)

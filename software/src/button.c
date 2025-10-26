@@ -94,6 +94,11 @@ void button_tick(void) {
 		if(!value) {
 			button.state = BUTTON_STATE_RELEASED;
 			button.release_time = system_timer_get_ms();
+
+			// Handle enumerate button configuration on button release
+			if(button.configuration == EVSE_V2_BUTTON_CONFIGURATION_ENUMERATE) {
+				led_set_enumerate();
+			}
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
 			button.press_time = system_timer_get_ms();

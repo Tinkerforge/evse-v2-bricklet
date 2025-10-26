@@ -111,6 +111,10 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_EICHRECHT_TRANSACTION:             return length != sizeof(SetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_transaction(message, response);
 		case FID_GET_EICHRECHT_TRANSACTION:             return length != sizeof(GetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_transaction(message, response);
 		case FID_GET_EICHRECHT_PUBLIC_KEY:              return length != sizeof(GetEichrechtPublicKey)            ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_public_key(message, response);
+		case FID_SET_ENUMERATE_CONFIGURATION:           return length != sizeof(SetEnumerateConfiguration)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_enumerate_configuration(message);
+		case FID_GET_ENUMERATE_CONFIGURATION:           return length != sizeof(GetEnumerateConfiguration)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_configuration(message, response);
+		case FID_SET_ENUMERATE_VALUE:                   return length != sizeof(SetEnumerateValue)                ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_enumerate_value(message);
+		case FID_GET_ENUMERATE_VALUE:                   return length != sizeof(GetEnumerateValue)                ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_value(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -1066,6 +1070,53 @@ BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTran
 BootloaderHandleMessageResponse get_eichrecht_public_key(const GetEichrechtPublicKey *data, GetEichrechtPublicKey_Response *response) {
 	response->header.length = sizeof(GetEichrechtPublicKey_Response);
 	memcpy(response->public_key, eichrecht.public_key, sizeof(response->public_key));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_enumerate_configuration(const SetEnumerateConfiguration *data) {
+	for(uint8_t i = 0; i < LED_ENUMERATOR_NUM; i++) {
+		led.enumerator_h[i] = data->enumerator_h[i];
+		led.enumerator_s[i] = data->enumerator_s[i];
+		led.enumerator_v[i] = data->enumerator_v[i];
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_enumerate_configuration(const GetEnumerateConfiguration *data, GetEnumerateConfiguration_Response *response) {
+	response->header.length = sizeof(GetEnumerateConfiguration_Response);
+	for(uint8_t i = 0; i < LED_ENUMERATOR_NUM; i++) {
+		response->enumerator_h[i] = led.enumerator_h[i];
+		response->enumerator_s[i] = led.enumerator_s[i];
+		response->enumerator_v[i] = led.enumerator_v[i];
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_enumerate_value(const SetEnumerateValue *data) {
+	led.enumerate_value             = data->value;
+	led.enumerate_value_change_time = system_timer_get_ms();
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_enumerate_value(const GetEnumerateValue *data, GetEnumerateValue_Response *response) {
+	static uint8_t  last_enumerate_value       = 0;
+	static uint32_t last_enumerate_change_time = 0;
+
+	response->header.length     = sizeof(GetEnumerateValue_Response);
+	// Don't give new values to caller until enumeration has finished
+	if(led.enumerate_start_time != 0) {
+		response->value             = last_enumerate_value;
+		response->value_change_time = last_enumerate_change_time;
+	} else {
+		response->value             = led.enumerate_value;
+		last_enumerate_value        = led.enumerate_value;
+		response->value_change_time = led.enumerate_value_change_time;
+		last_enumerate_change_time  = led.enumerate_value_change_time;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

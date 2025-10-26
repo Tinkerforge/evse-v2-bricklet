@@ -102,6 +102,7 @@ void communication_init(void);
 #define EVSE_V2_BUTTON_CONFIGURATION_START_CHARGING 1
 #define EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING 2
 #define EVSE_V2_BUTTON_CONFIGURATION_START_AND_STOP_CHARGING 3
+#define EVSE_V2_BUTTON_CONFIGURATION_ENUMERATE 4
 
 #define EVSE_V2_CONTROL_PILOT_DISCONNECTED 0
 #define EVSE_V2_CONTROL_PILOT_CONNECTED 1
@@ -304,6 +305,10 @@ void communication_init(void);
 #define FID_SET_EICHRECHT_TRANSACTION 54
 #define FID_GET_EICHRECHT_TRANSACTION 55
 #define FID_GET_EICHRECHT_PUBLIC_KEY 56
+#define FID_SET_ENUMERATE_CONFIGURATION 59
+#define FID_GET_ENUMERATE_CONFIGURATION 60
+#define FID_SET_ENUMERATE_VALUE 61
+#define FID_GET_ENUMERATE_VALUE 62
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 57
@@ -877,6 +882,39 @@ typedef struct {
 	char message_chunk_data[60];
 } __attribute__((__packed__)) EichrechtSignatureLowLevel_Callback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t enumerator_h[8];
+	uint8_t enumerator_s[8];
+	uint8_t enumerator_v[8];
+} __attribute__((__packed__)) SetEnumerateConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEnumerateConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t enumerator_h[8];
+	uint8_t enumerator_s[8];
+	uint8_t enumerator_v[8];
+} __attribute__((__packed__)) GetEnumerateConfiguration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t value;
+} __attribute__((__packed__)) SetEnumerateValue;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEnumerateValue;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t value;
+	uint32_t value_change_time;
+} __attribute__((__packed__)) GetEnumerateValue_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -934,6 +972,10 @@ BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtCha
 BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_public_key(const GetEichrechtPublicKey *data, GetEichrechtPublicKey_Response *response);
+BootloaderHandleMessageResponse set_enumerate_configuration(const SetEnumerateConfiguration *data);
+BootloaderHandleMessageResponse get_enumerate_configuration(const GetEnumerateConfiguration *data, GetEnumerateConfiguration_Response *response);
+BootloaderHandleMessageResponse set_enumerate_value(const SetEnumerateValue *data);
+BootloaderHandleMessageResponse get_enumerate_value(const GetEnumerateValue *data, GetEnumerateValue_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);
