@@ -142,6 +142,59 @@ ADC adc_v3[ADC_NUM] = {
 	},
 };
 
+ADC adc_v4[ADC_NUM] = {
+	{ // Channel ADC_CHANNEL_VCP1  (w/o resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 4,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 6,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP1"
+	},
+	{ // Channel ADC_CHANNEL_VCP2  (w/ resistor)
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 5,
+		.result_reg    = 6,
+		.channel_num   = 7,
+		.channel_alias = -1,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "VCP2"
+	},
+	{ // Channel ADC_CHANNEL_VPP
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 1,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 6,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "VPP"
+	},
+	{ // Channel ADC_CHANNEL_V12P
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 2,
+		.result_reg    = 5,
+		.channel_num   = 1,
+		.channel_alias = 7,
+		.group_index   = 0,
+		.group         = VADC_G0,
+		.name          = "V12P"
+	},
+	{ // Channel ADC_CHANNEL_V12M
+		.port          = XMC_GPIO_PORT2,
+		.pin           = 3,
+		.result_reg    = 4,
+		.channel_num   = 0,
+		.channel_alias = 5,
+		.group_index   = 1,
+		.group         = VADC_G1,
+		.name          = "V12M"
+	},
+};
+
 ADCResult adc_result;
 
 // Interrupt for debugging
@@ -167,9 +220,10 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 void adc_init_adc(void) {
 	if(hardware_version.is_v2) {
 		adc = adc_v2;
-	} else if(hardware_version.is_v3 || hardware_version.is_v4) {
-		// V3 and V4 have same hardware layout
+	} else if(hardware_version.is_v3) {
 		adc = adc_v3;
+	} else if (hardware_version.is_v4) {
+		adc = adc_v4;
 	}
 
 	for(uint8_t i = 0; i < ADC_NUM; i ++) {
