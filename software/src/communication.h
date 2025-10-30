@@ -641,6 +641,8 @@ typedef struct {
 	uint8_t phases_info;
 	bool phase_auto_switch_enabled;
 	uint8_t phases_connected;
+	uint8_t enumerate_value;
+	uint32_t enumerate_value_change_time;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {

@@ -743,6 +743,9 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_phases_connected(NULL, (GetPhasesConnected_Response*)&parts);
 	memcpy(&response->phases_connected, parts.data, sizeof(GetPhasesConnected_Response) - sizeof(TFPMessageHeader));
 
+	get_enumerate_value(NULL, (GetEnumerateValue_Response*)&parts);
+	memcpy(&response->enumerate_value, parts.data, sizeof(GetEnumerateValue_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
