@@ -154,10 +154,15 @@ void led_set_enumerate(void) {
 	uint8_t new_value = led.enumerate_value;
 	if(led.state != LED_STATE_ENUMERATE) {
 		led.enumerate_before_state = led.state;
+		if((led.enumerate_initial_time != 0) && !system_timer_is_time_elapsed_ms(led.enumerate_initial_time, 10*1000)) {
+			// If enumeration is started again within 10s we increment the value
+			new_value++;
+		}
 	} else {
-		// Only increment enumerate value after first button press
+		// Always increment enumerate value after first button press
 		new_value++;
 	}
+	led.enumerate_initial_time = system_timer_get_ms();
 
 	led.state = LED_STATE_ENUMERATE;
 	if(new_value >= 8) {
@@ -564,6 +569,11 @@ void led_tick_status_enumerate(void) {
 }
 
 void led_tick(void) {
+	// Always reset enumerate initial time after 10s
+	if(system_timer_is_time_elapsed_ms(led.enumerate_initial_time, 10*1000)) {
+		led.enumerate_initial_time = 0;
+	}
+
 	if((led.state != LED_STATE_API) || (led.api_indication <= 2000) || (led.api_indication >= 2011)) {
 		led.blink_external  = -1;
 	}

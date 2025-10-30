@@ -121,6 +121,7 @@ typedef struct {
 	uint8_t enumerate_value;
 	uint32_t enumerate_value_change_time;
 	uint32_t enumerate_start_time;
+	uint32_t enumerate_initial_time;
 	LEDState enumerate_before_state;
 } LED;
 
