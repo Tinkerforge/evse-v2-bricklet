@@ -601,7 +601,7 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 }
 
 BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfiguration *data) {
-	if(data->button_configuration > EVSE_V2_BUTTON_CONFIGURATION_START_AND_STOP_CHARGING) {
+	if(data->button_configuration > EVSE_V2_BUTTON_CONFIGURATION_ENUMERATE) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
