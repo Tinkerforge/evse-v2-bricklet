@@ -59,6 +59,8 @@
 #define EVSE_CONFIG_AUTOSWITCH_POS      15
 #define EVSE_CONFIG_PHASES_CON_POS      16
 #define EVSE_CONFIG_MAGIC6_POS          17
+#define EVSE_CONFIG_CP_RECON_TIME_POS   18
+#define EVSE_CONFIG_MAGIC7_POS          19
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {
@@ -73,6 +75,7 @@ typedef struct {
 #define EVSE_CONFIG_MAGIC4              0x67892345
 #define EVSE_CONFIG_MAGIC5              0x78923456
 #define EVSE_CONFIG_MAGIC6              0x89234567
+#define EVSE_CONFIG_MAGIC7              0x92345678
 #define EVSE_CONFIG_SLOT_MAGIC          0x62870616
 
 #define EVSE_STORAGE_PAGES              16

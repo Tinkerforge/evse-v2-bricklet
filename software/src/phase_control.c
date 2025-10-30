@@ -26,19 +26,23 @@
 #include <string.h>
 
 #include "bricklib2/hal/system_timer/system_timer.h"
+#include "bricklib2/warp/meter.h"
+#include "bricklib2/utility/util_definitions.h"
 
 #include "xmc_gpio.h"
 #include "hardware_version.h"
 #include "iec61851.h"
 #include "evse.h"
 #include "adc.h"
-#include "bricklib2/warp/meter.h"
+#include "communication.h"
 
 PhaseControl phase_control;
 
 void phase_control_init(void) {
-	const bool autoswitch_enabled_save = phase_control.autoswitch_enabled;
-	const uint8_t phases_connected_save   = phase_control.phases_connected;
+	const bool autoswitch_enabled_save   = phase_control.autoswitch_enabled;
+	const uint8_t phases_connected_save  = phase_control.phases_connected;
+	const uint8_t cp_reconnect_time_save = phase_control.cp_reconnect_time;
+
 	memset(&phase_control, 0, sizeof(PhaseControl));
 	phase_control.phases_connected = phases_connected_save;
 
@@ -47,6 +51,7 @@ void phase_control_init(void) {
 	phase_control.requested = phase_control.phases_connected;
 
 	phase_control.autoswitch_enabled = autoswitch_enabled_save;
+	phase_control.cp_reconnect_time  = cp_reconnect_time_save;
 
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
@@ -267,18 +272,23 @@ void phase_control_state_phase_change(void) {
 		}
 
 		case 5: { // CP Connect
-			// Normally we wait for 15 seconds before reconnecting the CP. That means that we simulate
-			// an unplug of the type 2 connector and a re-plug-in after 15 seconds.
-			// The IEC61851 does not specify a time for this, but 15 seconds seems reasonable.
+			// Normally we wait for 45 seconds before reconnecting the CP. That means that we simulate
+			// an unplug of the type 2 connector and a re-plug-in after 45 seconds.
+			// The IEC61851 does not specify a time for this. By trial and error we found out that
+			// some EVs (BMW iX3, Cupra Tavascan) need 45 seconds to recognize the re-plug-in properly.
+			// We use this as default and allow the user to change it.
+
 			// However, if the contactor was switched under load, we fear that the EV may not have noticed
-			// that we wanted to stop charging. In this case we wait for a full minute to absolutely make sure
-			// that the EV notices what is going on.
+			// that we wanted to stop charging. In this case we wait for at least a full minute to absolutely
+			// make sure that the EV notices what is going on (even if the user configured 15s).
 			//
 			// Note that this only happens if the EV does not respond to the CP signal change within 6 seconds
 			// while the standard specifies that the EV needs to respond within 3 seconds.
 			// So this should only happen if the EV charger has some kind of hang-up
 			// (we have seen this hang-up with Polestar chargers).
-			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? 60000 : 15000;
+
+			const uint32_t user_configuration = (phase_control.cp_reconnect_time == EVSE_V2_CP_RECONNECT_TIME_DEFAULT) ? PHASE_CONTROL_CP_RECONNECT_TIME_DEFAULT : (PHASE_CONTROL_CP_RECONNECT_TIME_MINIMUM + (phase_control.cp_reconnect_time * PHASE_CONTROL_CP_RECONNECT_TIME_INCREMENT));
+			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? MAX(user_configuration, PHASE_CONTROL_CP_RECONNECT_TIME_UNDER_LOAD) : user_configuration;
 
 			// Connect CP
 			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, wait_ms_before_reconnect)) {

@@ -231,6 +231,30 @@ void communication_init(void);
 #define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_HOLD_COMMAND 'h'
 #define EVSE_V2_EICHRECHT_TRANSACTION_COMMAND_LAST_CHARGE_READING 'i'
 
+#define EVSE_V2_CP_RECONNECT_TIME_DEFAULT 0
+#define EVSE_V2_CP_RECONNECT_TIME_15_SECONDS 1
+#define EVSE_V2_CP_RECONNECT_TIME_20_SECONDS 2
+#define EVSE_V2_CP_RECONNECT_TIME_25_SECONDS 3
+#define EVSE_V2_CP_RECONNECT_TIME_30_SECONDS 4
+#define EVSE_V2_CP_RECONNECT_TIME_35_SECONDS 5
+#define EVSE_V2_CP_RECONNECT_TIME_40_SECONDS 6
+#define EVSE_V2_CP_RECONNECT_TIME_45_SECONDS 7
+#define EVSE_V2_CP_RECONNECT_TIME_50_SECONDS 8
+#define EVSE_V2_CP_RECONNECT_TIME_55_SECONDS 9
+#define EVSE_V2_CP_RECONNECT_TIME_60_SECONDS 10
+#define EVSE_V2_CP_RECONNECT_TIME_65_SECONDS 11
+#define EVSE_V2_CP_RECONNECT_TIME_70_SECONDS 12
+#define EVSE_V2_CP_RECONNECT_TIME_75_SECONDS 13
+#define EVSE_V2_CP_RECONNECT_TIME_80_SECONDS 14
+#define EVSE_V2_CP_RECONNECT_TIME_85_SECONDS 15
+#define EVSE_V2_CP_RECONNECT_TIME_90_SECONDS 16
+#define EVSE_V2_CP_RECONNECT_TIME_95_SECONDS 17
+#define EVSE_V2_CP_RECONNECT_TIME_100_SECONDS 18
+#define EVSE_V2_CP_RECONNECT_TIME_105_SECONDS 19
+#define EVSE_V2_CP_RECONNECT_TIME_110_SECONDS 20
+#define EVSE_V2_CP_RECONNECT_TIME_115_SECONDS 21
+#define EVSE_V2_CP_RECONNECT_TIME_120_SECONDS 22
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -309,6 +333,8 @@ void communication_init(void);
 #define FID_GET_ENUMERATE_CONFIGURATION 60
 #define FID_SET_ENUMERATE_VALUE 61
 #define FID_GET_ENUMERATE_VALUE 62
+#define FID_SET_CP_RECONNECT_TIME 63
+#define FID_GET_CP_RECONNECT_TIME 64
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 57
@@ -643,6 +669,7 @@ typedef struct {
 	uint8_t phases_connected;
 	uint8_t enumerate_value;
 	uint32_t enumerate_value_change_time;
+	uint8_t cp_reconnect_time;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -917,6 +944,20 @@ typedef struct {
 	uint32_t value_change_time;
 } __attribute__((__packed__)) GetEnumerateValue_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t cp_reconnect_time;
+} __attribute__((__packed__)) SetCPReconnectTime;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetCPReconnectTime;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t cp_reconnect_time;
+} __attribute__((__packed__)) GetCPReconnectTime_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -978,6 +1019,8 @@ BootloaderHandleMessageResponse set_enumerate_configuration(const SetEnumerateCo
 BootloaderHandleMessageResponse get_enumerate_configuration(const GetEnumerateConfiguration *data, GetEnumerateConfiguration_Response *response);
 BootloaderHandleMessageResponse set_enumerate_value(const SetEnumerateValue *data);
 BootloaderHandleMessageResponse get_enumerate_value(const GetEnumerateValue *data, GetEnumerateValue_Response *response);
+BootloaderHandleMessageResponse set_cp_reconnect_time(const SetCPReconnectTime *data);
+BootloaderHandleMessageResponse get_cp_reconnect_time(const GetCPReconnectTime *data, GetCPReconnectTime_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);
