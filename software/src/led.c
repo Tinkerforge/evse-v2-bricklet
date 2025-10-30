@@ -159,7 +159,7 @@ void led_set_enumerate(void) {
 	uint8_t new_value = led.enumerate_value + 1;
 	if(new_value >= 8) {
 		new_value = 0;
-	} else if((led.enumerator_h[new_value] == 0) || (led.enumerator_s[new_value] == 0) || (led.enumerator_v[new_value] == 0)) {
+	} else if((led.enumerator_h[new_value] == 0) && (led.enumerator_s[new_value] == 0) && (led.enumerator_v[new_value] == 0)) {
 		new_value = 0;
 	}
 	led.enumerate_value = new_value;
