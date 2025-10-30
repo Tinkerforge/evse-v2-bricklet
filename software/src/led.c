@@ -151,12 +151,15 @@ void led_set_enumerate(void) {
 	}
 
 	// Otherwise enumerate LED value
+	uint8_t new_value = led.enumerate_value;
 	if(led.state != LED_STATE_ENUMERATE) {
 		led.enumerate_before_state = led.state;
+	} else {
+		// Only increment enumerate value after first button press
+		new_value++;
 	}
 
-	led.state         = LED_STATE_ENUMERATE;
-	uint8_t new_value = led.enumerate_value + 1;
+	led.state = LED_STATE_ENUMERATE;
 	if(new_value >= 8) {
 		new_value = 0;
 	} else if((led.enumerator_h[new_value] == 0) && (led.enumerator_s[new_value] == 0) && (led.enumerator_v[new_value] == 0)) {
