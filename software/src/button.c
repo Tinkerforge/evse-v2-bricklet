@@ -81,8 +81,6 @@ void button_tick(void) {
 		// DEBOUNCE button state will be overwritten after debounce time
 		if(!value) {
 			button.state = BUTTON_STATE_RELEASED_DEBOUNCE;
-			// We always see a button release as a state change that turns the LED on (until standby)
-			led_set_on(false);
 		} else {
 			button.state = BUTTON_STATE_PRESSED_DEBOUNCE;
 		}
@@ -98,6 +96,9 @@ void button_tick(void) {
 			// Handle enumerate button configuration on button release
 			if(button.configuration == EVSE_V2_BUTTON_CONFIGURATION_ENUMERATE) {
 				led_set_enumerate();
+			} else {
+				// Othwerwise we see a button release as a state change that turns the LED on (until standby)
+				led_set_on(false);
 			}
 		} else {
 			button.state = BUTTON_STATE_PRESSED;
