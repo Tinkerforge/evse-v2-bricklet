@@ -153,7 +153,7 @@ void led_set_enumerate(void) {
 	// Otherwise enumerate LED value
 	uint8_t new_value = led.enumerate_value;
 	if(led.state != LED_STATE_ENUMERATE) {
-		led.enumerate_before_state = led.state;
+		led.enumerate_before_state = (led.state == LED_STATE_OFF) ? LED_STATE_ON : led.state;
 		if((led.enumerate_initial_time != 0) && !system_timer_is_time_elapsed_ms(led.enumerate_initial_time, 10*1000)) {
 			// If enumeration is started again within 10s we increment the value
 			new_value++;
