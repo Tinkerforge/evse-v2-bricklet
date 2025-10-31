@@ -39,9 +39,9 @@
 PhaseControl phase_control;
 
 void phase_control_init(void) {
-	const bool autoswitch_enabled_save   = phase_control.autoswitch_enabled;
-	const uint8_t phases_connected_save  = phase_control.phases_connected;
-	const uint8_t cp_reconnect_time_save = phase_control.cp_reconnect_time;
+	const bool autoswitch_enabled_save        = phase_control.autoswitch_enabled;
+	const uint8_t phases_connected_save       = phase_control.phases_connected;
+	const uint8_t phase_switch_wait_time_save = phase_control.phase_switch_wait_time;
 
 	memset(&phase_control, 0, sizeof(PhaseControl));
 	phase_control.phases_connected = phases_connected_save;
@@ -50,8 +50,8 @@ void phase_control_init(void) {
 	phase_control.current   = phase_control.phases_connected;
 	phase_control.requested = phase_control.phases_connected;
 
-	phase_control.autoswitch_enabled = autoswitch_enabled_save;
-	phase_control.cp_reconnect_time  = cp_reconnect_time_save;
+	phase_control.autoswitch_enabled     = autoswitch_enabled_save;
+	phase_control.phase_switch_wait_time = phase_switch_wait_time_save;
 
 	const XMC_GPIO_CONFIG_t pin_config_output_low = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
@@ -287,8 +287,8 @@ void phase_control_state_phase_change(void) {
 			// So this should only happen if the EV charger has some kind of hang-up
 			// (we have seen this hang-up with Polestar chargers).
 
-			const uint32_t user_configuration = (phase_control.cp_reconnect_time == EVSE_V2_CP_RECONNECT_TIME_DEFAULT) ? PHASE_CONTROL_CP_RECONNECT_TIME_DEFAULT : (PHASE_CONTROL_CP_RECONNECT_TIME_MINIMUM + (phase_control.cp_reconnect_time * PHASE_CONTROL_CP_RECONNECT_TIME_INCREMENT));
-			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? MAX(user_configuration, PHASE_CONTROL_CP_RECONNECT_TIME_UNDER_LOAD) : user_configuration;
+			const uint32_t user_configuration = (phase_control.phase_switch_wait_time == EVSE_V2_PHASE_SWITCH_WAIT_TIME_DEFAULT) ? PHASE_CONTROL_PHASE_SWITCH_WAIT_TIME_DEFAULT : (PHASE_CONTROL_PHASE_SWITCH_WAIT_TIME_MINIMUM + (phase_control.phase_switch_wait_time * PHASE_CONTROL_PHASE_SWITCH_WAIT_TIME_INCREMENT));
+			const uint32_t wait_ms_before_reconnect = evse.contactor_maybe_switched_under_load ? MAX(user_configuration, PHASE_CONTROL_PHASE_SWITCH_WAIT_TIME_UNDER_LOAD) : user_configuration;
 
 			// Connect CP
 			if(system_timer_is_time_elapsed_ms(phase_control.progress_state_time, wait_ms_before_reconnect)) {

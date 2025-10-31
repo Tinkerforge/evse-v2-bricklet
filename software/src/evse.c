@@ -248,9 +248,9 @@ void evse_load_config(void) {
 	}
 
 	if(page[EVSE_CONFIG_MAGIC7_POS] != EVSE_CONFIG_MAGIC7) {
-		phase_control.cp_reconnect_time = EVSE_V2_CP_RECONNECT_TIME_DEFAULT;
+		phase_control.phase_switch_wait_time = EVSE_V2_PHASE_SWITCH_WAIT_TIME_DEFAULT;
 	} else {
-		phase_control.cp_reconnect_time = page[EVSE_CONFIG_CP_RECON_TIME_POS];
+		phase_control.phase_switch_wait_time = page[EVSE_CONFIG_PS_WAIT_TIME_POS];
 	}
 
 	// Handle charging slot defaults
@@ -331,7 +331,7 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_MAGIC6_POS]          = EVSE_CONFIG_MAGIC6;
 
 	page[EVSE_CONFIG_MAGIC7_POS]          = EVSE_CONFIG_MAGIC7;
-	page[EVSE_CONFIG_CP_RECON_TIME_POS]   = phase_control.cp_reconnect_time;
+	page[EVSE_CONFIG_PS_WAIT_TIME_POS]    = phase_control.phase_switch_wait_time;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

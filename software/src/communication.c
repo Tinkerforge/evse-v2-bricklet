@@ -115,8 +115,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_ENUMERATE_CONFIGURATION:           return length != sizeof(GetEnumerateConfiguration)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_configuration(message, response);
 		case FID_SET_ENUMERATE_VALUE:                   return length != sizeof(SetEnumerateValue)                ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_enumerate_value(message);
 		case FID_GET_ENUMERATE_VALUE:                   return length != sizeof(GetEnumerateValue)                ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_value(message, response);
-		case FID_SET_CP_RECONNECT_TIME:                 return length != sizeof(SetCPReconnectTime)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_cp_reconnect_time(message);
-		case FID_GET_CP_RECONNECT_TIME:                 return length != sizeof(GetCPReconnectTime)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_cp_reconnect_time(message, response);
+		case FID_SET_PHASE_SWITCH_WAIT_TIME:            return length != sizeof(SetPhaseSwitchWaitTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_switch_wait_time(message);
+		case FID_GET_PHASE_SWITCH_WAIT_TIME:            return length != sizeof(GetPhaseSwitchWaitTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_switch_wait_time(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -748,8 +748,8 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_enumerate_value(NULL, (GetEnumerateValue_Response*)&parts);
 	memcpy(&response->enumerate_value, parts.data, sizeof(GetEnumerateValue_Response) - sizeof(TFPMessageHeader));
 
-	get_cp_reconnect_time(NULL, (GetCPReconnectTime_Response*)&parts);
-	memcpy(&response->cp_reconnect_time, parts.data, sizeof(GetCPReconnectTime_Response) - sizeof(TFPMessageHeader));
+	get_phase_switch_wait_time(NULL, (GetPhaseSwitchWaitTime_Response*)&parts);
+	memcpy(&response->phase_switch_wait_time, parts.data, sizeof(GetPhaseSwitchWaitTime_Response) - sizeof(TFPMessageHeader));
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -1138,20 +1138,20 @@ BootloaderHandleMessageResponse get_enumerate_value(const GetEnumerateValue *dat
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_cp_reconnect_time(const SetCPReconnectTime *data) {
-	if(data->cp_reconnect_time > EVSE_V2_CP_RECONNECT_TIME_120_SECONDS) {
+BootloaderHandleMessageResponse set_phase_switch_wait_time(const SetPhaseSwitchWaitTime *data) {
+	if(data->phase_switch_wait_time > EVSE_V2_PHASE_SWITCH_WAIT_TIME_120_SECONDS) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	evse.cp_reconnect_time = data->cp_reconnect_time;
+	phase_control.phase_switch_wait_time = data->phase_switch_wait_time;
 	evse_save_config();
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_cp_reconnect_time(const GetCPReconnectTime *data, GetCPReconnectTime_Response *response) {
-	response->header.length     = sizeof(GetCPReconnectTime_Response);
-	response->cp_reconnect_time = evse.cp_reconnect_time;
+BootloaderHandleMessageResponse get_phase_switch_wait_time(const GetPhaseSwitchWaitTime *data, GetPhaseSwitchWaitTime_Response *response) {
+	response->header.length     = sizeof(GetPhaseSwitchWaitTime_Response);
+	response->phase_switch_wait_time = phase_control.phase_switch_wait_time;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
