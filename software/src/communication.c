@@ -1120,10 +1120,17 @@ BootloaderHandleMessageResponse get_enumerate_value(const GetEnumerateValue *dat
 		response->value             = last_enumerate_value;
 		response->value_change_time = last_enumerate_change_time;
 	} else {
+		// Don't report the change to the caller if the value didn't change after the user pressed the button
+		if(led.enumerate_value == last_enumerate_value) {
+			response->value_change_time = 0;
+			last_enumerate_change_time  = 0;
+		} else {
+			response->value_change_time = led.enumerate_value_change_time;
+			last_enumerate_change_time  = led.enumerate_value_change_time;
+		}
+
 		response->value             = led.enumerate_value;
 		last_enumerate_value        = led.enumerate_value;
-		response->value_change_time = led.enumerate_value_change_time;
-		last_enumerate_change_time  = led.enumerate_value_change_time;
 	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
