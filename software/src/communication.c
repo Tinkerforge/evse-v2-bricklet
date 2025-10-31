@@ -1104,8 +1104,10 @@ BootloaderHandleMessageResponse get_enumerate_configuration(const GetEnumerateCo
 }
 
 BootloaderHandleMessageResponse set_enumerate_value(const SetEnumerateValue *data) {
-	led.enumerate_value             = data->value;
-	led.enumerate_value_change_time = 0;
+	if(led.enumerate_initial_time == 0) {
+		led.enumerate_value             = data->value;
+		led.enumerate_value_change_time = 0;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
