@@ -230,6 +230,25 @@ void iec61851_reset_ev_wakeup(void) {
 	iec61851.state_b1b2_transition_seen = false;
 	iec61851.currently_beeing_woken_up = false;
 	iec61851.force_state_f = false;
+
+	// If CP is connected we are done with EV wakeup reset
+	if(!evse_is_cp_connected()) {
+		return;
+	}
+
+	// If CP is disconnected and phase switch is ongoing we are also done
+	if((phase_control.progress_state > 0)  && (phase_control.progress_state < 6)) {
+		return;
+	}
+
+	// If CP is disconnected by the API we leave it disconnected until it is reconnected by the API
+	if(evse.control_pilot_disconnect) {
+		return;
+	}
+
+	// Otherwise the reset_ev_wakeup was called while a wakeup was ongoing
+	// so we have to reconnect here.
+	evse_cp_connect();
 }
 
 void iec61851_handle_time_in_b2(void) {

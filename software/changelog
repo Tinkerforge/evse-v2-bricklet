@@ -219,3 +219,4 @@
 - Add support for meter Iskra WM3M4C (only hardware version 4)
 - Add API and support for LED enumerator (mode selection by button)
 - Add API and support for user configurable CP reconnect time
+- Make sure cp can not stay disconnected when ev wakeup is reset
