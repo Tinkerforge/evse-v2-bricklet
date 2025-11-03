@@ -232,7 +232,7 @@ void iec61851_reset_ev_wakeup(void) {
 	iec61851.force_state_f = false;
 
 	// If CP is connected we are done with EV wakeup reset
-	if(!evse_is_cp_connected()) {
+	if(evse_is_cp_connected()) {
 		return;
 	}
 
