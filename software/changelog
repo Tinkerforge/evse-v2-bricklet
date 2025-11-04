@@ -221,5 +221,5 @@
 - Add API and support for user configurable CP reconnect time
 - Make sure cp can not stay disconnected when ev wakeup is reset
 
-2025-11-04: 2.2.18 (TBD)
+2025-11-04: 2.2.18 (6670b3e4)
 - Increase default phase change wait time from 45s to 60s
