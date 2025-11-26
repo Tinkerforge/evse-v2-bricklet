@@ -223,3 +223,6 @@
 
 2025-11-04: 2.2.18 (6670b3e4)
 - Increase default phase change wait time from 45s to 60s
+
+TBD: 2.2.19 (TBD)
+- Make sure cp can not stay disconnected when charging current is changed during disconnect

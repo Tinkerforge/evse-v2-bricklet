@@ -492,7 +492,11 @@ void iec61851_tick(void) {
 	} else {
 		// Wait for ADC CP/PE measurements to be valid
 		if((adc[ADC_CHANNEL_VCP1].ignore_count > 0) || (adc[ADC_CHANNEL_VCP2].ignore_count > 0)) {
-			return;
+			// Ignore the ignore_count when cp is disconnected. If cp is disconnected the ignore count is not decreased anymore, so we
+			// could potentially get stuck here.
+			if(evse_is_cp_connected()) {
+				return;
+			}
 		}
 
 		if((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) {
