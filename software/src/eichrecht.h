@@ -29,8 +29,8 @@
 
 typedef struct {
     // General Information
-    char gi[33]; // Gateway Identification
-    char gs[33]; // Gateway Serial
+    char gi[42]; // Gateway Identification
+    char gs[26]; // Gateway Serial
 
     // User Assignment
     bool is; // Identification Status

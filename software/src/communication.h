@@ -1,5 +1,5 @@
 /* evse-v2-bricklet
- * Copyright (C) 2025 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2026 Olaf Lüke <olaf@tinkerforge.com>
  *
  * communication.h: TFP protocol message handling
  *
@@ -320,25 +320,27 @@ void communication_init(void);
 #define FID_GET_PHASES_CONNECTED 44
 #define FID_SET_CHARGING_PROTOCOL 46
 #define FID_GET_CHARGING_PROTOCOL 47
-#define FID_SET_EICHRECHT_GENERAL_INFORMATION 48
-#define FID_GET_EICHRECHT_GENERAL_INFORMATION 49
-#define FID_SET_EICHRECHT_USER_ASSIGNMENT 50
-#define FID_GET_EICHRECHT_USER_ASSIGNMENT 51
-#define FID_SET_EICHRECHT_CHARGE_POINT 52
-#define FID_GET_EICHRECHT_CHARGE_POINT 53
-#define FID_SET_EICHRECHT_TRANSACTION 54
-#define FID_GET_EICHRECHT_TRANSACTION 55
-#define FID_GET_EICHRECHT_PUBLIC_KEY 56
-#define FID_SET_ENUMERATE_CONFIGURATION 59
-#define FID_GET_ENUMERATE_CONFIGURATION 60
-#define FID_SET_ENUMERATE_VALUE 61
-#define FID_GET_ENUMERATE_VALUE 62
-#define FID_SET_PHASE_SWITCH_WAIT_TIME 63
-#define FID_GET_PHASE_SWITCH_WAIT_TIME 64
+#define FID_SET_EICHRECHT_GATEWAY_IDENTIFICATION 48
+#define FID_GET_EICHRECHT_GATEWAY_IDENTIFICATION 49
+#define FID_SET_EICHRECHT_GATEWAY_SERIAL 50
+#define FID_GET_EICHRECHT_GATEWAY_SERIAL 51
+#define FID_SET_EICHRECHT_USER_ASSIGNMENT 52
+#define FID_GET_EICHRECHT_USER_ASSIGNMENT 53
+#define FID_SET_EICHRECHT_CHARGE_POINT 54
+#define FID_GET_EICHRECHT_CHARGE_POINT 55
+#define FID_SET_EICHRECHT_TRANSACTION 56
+#define FID_GET_EICHRECHT_TRANSACTION 57
+#define FID_GET_EICHRECHT_PUBLIC_KEY 58
+#define FID_SET_ENUMERATE_CONFIGURATION 61
+#define FID_GET_ENUMERATE_CONFIGURATION 62
+#define FID_SET_ENUMERATE_VALUE 63
+#define FID_GET_ENUMERATE_VALUE 64
+#define FID_SET_PHASE_SWITCH_WAIT_TIME 65
+#define FID_GET_PHASE_SWITCH_WAIT_TIME 66
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
-#define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 57
-#define FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL 58
+#define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 59
+#define FID_CALLBACK_EICHRECHT_SIGNATURE_LOW_LEVEL 60
 
 typedef struct {
 	TFPMessageHeader header;
@@ -796,24 +798,41 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	char gateway_identification[32];
-	char gateway_serial[32];
-} __attribute__((__packed__)) SetEichrechtGeneralInformation;
+	char gateway_identification[41];
+} __attribute__((__packed__)) SetEichrechtGatewayIdentification;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t eichrecht_state;
-} __attribute__((__packed__)) SetEichrechtGeneralInformation_Response;
+} __attribute__((__packed__)) SetEichrechtGatewayIdentification_Response;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetEichrechtGeneralInformation;
+} __attribute__((__packed__)) GetEichrechtGatewayIdentification;
 
 typedef struct {
 	TFPMessageHeader header;
-	char gateway_identification[32];
-	char gateway_serial[32];
-} __attribute__((__packed__)) GetEichrechtGeneralInformation_Response;
+	char gateway_identification[41];
+} __attribute__((__packed__)) GetEichrechtGatewayIdentification_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	char gateway_serial[25];
+} __attribute__((__packed__)) SetEichrechtGatewaySerial;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t eichrecht_state;
+} __attribute__((__packed__)) SetEichrechtGatewaySerial_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEichrechtGatewaySerial;
+
+typedef struct {
+	TFPMessageHeader header;
+	char gateway_serial[25];
+} __attribute__((__packed__)) GetEichrechtGatewaySerial_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -1006,8 +1025,10 @@ BootloaderHandleMessageResponse set_phases_connected(const SetPhasesConnected *d
 BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *data, GetPhasesConnected_Response *response);
 BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data);
 BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response);
-BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichrechtGeneralInformation *data, SetEichrechtGeneralInformation_Response *response);
-BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichrechtGeneralInformation *data, GetEichrechtGeneralInformation_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_gateway_identification(const SetEichrechtGatewayIdentification *data, SetEichrechtGatewayIdentification_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_gateway_identification(const GetEichrechtGatewayIdentification *data, GetEichrechtGatewayIdentification_Response *response);
+BootloaderHandleMessageResponse set_eichrecht_gateway_serial(const SetEichrechtGatewaySerial *data, SetEichrechtGatewaySerial_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_gateway_serial(const GetEichrechtGatewaySerial *data, GetEichrechtGatewaySerial_Response *response);
 BootloaderHandleMessageResponse set_eichrecht_user_assignment(const SetEichrechtUserAssignment *data, SetEichrechtUserAssignment_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrechtUserAssignment *data, GetEichrechtUserAssignment_Response *response);
 BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtChargePoint *data, SetEichrechtChargePoint_Response *response);

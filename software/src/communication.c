@@ -102,8 +102,10 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PHASES_CONNECTED:                  return length != sizeof(GetPhasesConnected)               ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phases_connected(message, response);
 		case FID_SET_CHARGING_PROTOCOL:                 return length != sizeof(SetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_charging_protocol(message);
 		case FID_GET_CHARGING_PROTOCOL:                 return length != sizeof(GetChargingProtocol)              ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_charging_protocol(message, response);
-		case FID_SET_EICHRECHT_GENERAL_INFORMATION:     return length != sizeof(SetEichrechtGeneralInformation)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_general_information(message, response);
-		case FID_GET_EICHRECHT_GENERAL_INFORMATION:     return length != sizeof(GetEichrechtGeneralInformation)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_general_information(message, response);
+		case FID_SET_EICHRECHT_GATEWAY_IDENTIFICATION:  return length != sizeof(SetEichrechtGatewayIdentification) ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_gateway_identification(message, response);
+		case FID_GET_EICHRECHT_GATEWAY_IDENTIFICATION:  return length != sizeof(GetEichrechtGatewayIdentification) ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_gateway_identification(message, response);
+		case FID_SET_EICHRECHT_GATEWAY_SERIAL:          return length != sizeof(SetEichrechtGatewaySerial)         ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_gateway_serial(message, response);
+		case FID_GET_EICHRECHT_GATEWAY_SERIAL:          return length != sizeof(GetEichrechtGatewaySerial)         ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_gateway_serial(message, response);
 		case FID_SET_EICHRECHT_USER_ASSIGNMENT:         return length != sizeof(SetEichrechtUserAssignment)       ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_user_assignment(message, response);
 		case FID_GET_EICHRECHT_USER_ASSIGNMENT:         return length != sizeof(GetEichrechtUserAssignment)       ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_user_assignment(message, response);
 		case FID_SET_EICHRECHT_CHARGE_POINT:            return length != sizeof(SetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_charge_point(message, response);
@@ -927,12 +929,33 @@ BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichrechtGeneralInformation *data, SetEichrechtGeneralInformation_Response *response) {
-	response->header.length = sizeof(SetEichrechtGeneralInformation_Response);
+BootloaderHandleMessageResponse set_eichrecht_gateway_identification(const SetEichrechtGatewayIdentification *data, SetEichrechtGatewayIdentification_Response *response) {
+	response->header.length = sizeof(SetEichrechtGatewayIdentification_Response);
 
 	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
 		eichrecht.ocmf.gi[sizeof(eichrecht.ocmf.gi) - 1] = 0;
 		memcpy(eichrecht.ocmf.gi, data->gateway_identification, sizeof(data->gateway_identification));
+
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_OK;
+	} else {
+		response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_NOT_SUPPORTED;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_eichrecht_gateway_identification(const GetEichrechtGatewayIdentification *data, GetEichrechtGatewayIdentification_Response *response) {
+	(void)data;
+	response->header.length = sizeof(GetEichrechtGatewayIdentification_Response);
+	memcpy(response->gateway_identification, eichrecht.ocmf.gi, sizeof(response->gateway_identification));
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_eichrecht_gateway_serial(const SetEichrechtGatewaySerial *data, SetEichrechtGatewaySerial_Response *response) {
+	response->header.length = sizeof(SetEichrechtGatewaySerial_Response);
+
+	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
 		eichrecht.ocmf.gs[sizeof(eichrecht.ocmf.gs) - 1] = 0;
 		memcpy(eichrecht.ocmf.gs, data->gateway_serial, sizeof(data->gateway_serial));
 
@@ -944,10 +967,9 @@ BootloaderHandleMessageResponse set_eichrecht_general_information(const SetEichr
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_eichrecht_general_information(const GetEichrechtGeneralInformation *data, GetEichrechtGeneralInformation_Response *response) {
+BootloaderHandleMessageResponse get_eichrecht_gateway_serial(const GetEichrechtGatewaySerial *data, GetEichrechtGatewaySerial_Response *response) {
 	(void)data;
-	response->header.length = sizeof(GetEichrechtGeneralInformation_Response);
-	memcpy(response->gateway_identification, eichrecht.ocmf.gi, sizeof(response->gateway_identification));
+	response->header.length = sizeof(GetEichrechtGatewaySerial_Response);
 	memcpy(response->gateway_serial, eichrecht.ocmf.gs, sizeof(response->gateway_serial));
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
