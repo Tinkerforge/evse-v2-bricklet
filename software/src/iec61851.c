@@ -164,6 +164,11 @@ void iec61851_set_state(IEC61851State state) {
 
 			// Start new dc fault test after each charging
 			dc_fault.calibration_start = true;
+
+			// In temporary mode we switch back to ISO 15118 protocol after EV has disconnected
+			if(iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_IEC61851_TEMPORARY) {
+				iec61851.charging_protocol = EVSE_V2_CHARGING_PROTOCOL_ISO15118;
+			}
 		}
 
 		// If we are in state A or in an error state, we will only allow to turn the contactor on after the next diode check.
@@ -403,7 +408,7 @@ void iec61851_state_b(void) {
 	uint32_t ma = iec61851_get_max_ma();
 
 	// Apply 1kHz square wave to CP with appropriate duty cycle, disable contactor
-	if(hardware_version.is_v4 && iec61851.iso15118_active) {
+	if(hardware_version.is_v4 && (iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118)) {
 		evse_set_output(iec61851.iso15118_cp_duty_cycle, false);
 	} else {
 		evse_set_output(iec61851_get_duty_cycle_for_ma(ma), false);
@@ -420,7 +425,7 @@ void iec61851_state_c(void) {
 
 	// Apply 1kHz square wave to CP with appropriate duty cycle, enable contactor
 	uint32_t ma = iec61851_get_max_ma();
-	if(hardware_version.is_v4 && iec61851.iso15118_active) {
+	if(hardware_version.is_v4 && (iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118)) {
 		evse_set_output(iec61851.iso15118_cp_duty_cycle, true);
 	} else {
 		evse_set_output(iec61851_get_duty_cycle_for_ma(ma), true);
@@ -469,7 +474,7 @@ void iec61851_tick(void) {
 	// * The CP contact is connected
 	// * We currently apply a PWM (i.e. max ma is not 0)
 	// TODO: What do we need to check here when ISO15118 is active?
-	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && (!iec61851.iso15118_active) &&
+	} else if(((iec61851.state == IEC61851_STATE_B) || (iec61851.state == IEC61851_STATE_C)) && (iec61851.charging_protocol != EVSE_V2_CHARGING_PROTOCOL_ISO15118) &&
 	          (adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) && (adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT] != 0) &&
 	          ((adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] > -10000) || (ABS(adc[ADC_CHANNEL_VCP1].result_mv[ADC_NEGATIVE_MEASUREMENT] - adc[ADC_CHANNEL_VCP2].result_mv[ADC_NEGATIVE_MEASUREMENT]) > 2000)) &&
 	          (!iec61851.force_state_f && !adc_result.cp_pe_is_ignored && evse_is_cp_connected()) &&

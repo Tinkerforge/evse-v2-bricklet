@@ -67,7 +67,7 @@ typedef struct {
 
 	uint32_t time_in_b2;
 
-	bool iso15118_active;
+	uint8_t charging_protocol;
 	uint16_t iso15118_cp_duty_cycle;
 
 	bool force_state_f;

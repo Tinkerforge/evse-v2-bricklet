@@ -908,7 +908,7 @@ BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *d
 
 BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data) {
 	if(hardware_version.is_v4) {
-		iec61851.iso15118_active        = data->charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118;
+		iec61851.charging_protocol      = data->charging_protocol;
 		iec61851.iso15118_cp_duty_cycle = data->cp_duty_cycle;
 	}
 
@@ -918,11 +918,11 @@ BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol 
 BootloaderHandleMessageResponse get_charging_protocol(const GetChargingProtocol *data, GetChargingProtocol_Response *response) {
 	(void)data;
 	response->header.length = sizeof(GetChargingProtocol_Response);
-	if(hardware_version.is_v4 && iec61851.iso15118_active) {
-		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_ISO15118;
+	if(hardware_version.is_v4) {
+		response->charging_protocol = iec61851.charging_protocol;
 		response->cp_duty_cycle     = iec61851.iso15118_cp_duty_cycle;
 	} else {
-		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_IEC61851;
+		response->charging_protocol = EVSE_V2_CHARGING_PROTOCOL_IEC61851_PERMANENT;
 		response->cp_duty_cycle     = evse_get_cp_duty_cycle();
 	}
 
