@@ -506,6 +506,7 @@ void adc_check_count(const uint8_t i) {
 			// result_mv = result*220/273
 			adc[i].result_mv[ADC_POSITIVE_MEASUREMENT] = adc[i].result[ADC_POSITIVE_MEASUREMENT]*220/273;
 
+			// TODO WARP4: (VPP*2k*3k)/(5V*3k-VPP*(2k+3k))
 			// Rpp = (Vpp*1k*2k)/(5V*2k-Vpp*(1k+2k))
 			const int32_t divisor = 5000*2 - adc[ADC_CHANNEL_VPP].result_mv[ADC_POSITIVE_MEASUREMENT]*(1+2);
 			if(divisor <= 0) {
@@ -533,6 +534,7 @@ void adc_check_count(const uint8_t i) {
 				adc_result.cp_pe_is_ignored = false;
 				adc_result.resistance_counter++;
 
+				// TODO: resistance divider for WARP4 is 1000
 				// resistance divider, 910 ohm on EVSE
 				// diode voltage drop 650mV (value is educated guess)
 				if(adc[ADC_CHANNEL_VCP1].result_mv[ADC_POSITIVE_MEASUREMENT] <= adc[ADC_CHANNEL_VCP2].result_mv[ADC_POSITIVE_MEASUREMENT]) {

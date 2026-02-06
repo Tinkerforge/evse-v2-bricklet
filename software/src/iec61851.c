@@ -184,6 +184,8 @@ void iec61851_set_state(IEC61851State state) {
 //       if resistance > 10000. Do we want to have a specific
 //       state for that?
 uint32_t iec61851_get_ma_from_pp_resistance(void) {
+	// WARP4: 0V   = 16A
+	//        3.3V = 32A
 	if(adc_result.pp_pe_resistance >= IEC61851_PP_RESISTANCE_13A) {
 		return 13000; // 13A
 	} else if(adc_result.pp_pe_resistance >= IEC61851_PP_RESISTANCE_20A) {
