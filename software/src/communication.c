@@ -1052,7 +1052,13 @@ BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTran
 				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
 				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 			}
-		} else if(data->transaction == 'E' || data->transaction == 'C' || data->transaction == 'X' || data->transaction == 'T' || data->transaction == 'S' || data->transaction == 'r' || data->transaction == 'h') {
+		} else if(data->transaction == 'E' || data->transaction == 'r') {
+			if(meter_iskra.measurement_status == 0) { // 1 = active, 2 = Active, Error DTM (Date, Time, Message), i.e. power loss, 3 = Active, Error WDR (WD reset), i.e. unexpected reset
+				// Should be active
+				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
+				return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+			}
+		} else if(data->transaction == 'C' || data->transaction == 'X' || data->transaction == 'T' || data->transaction == 'S' || data->transaction == 'h') {
 			if(meter_iskra.measurement_status != 1) { // 1 = active
 				// Should be active
 				response->eichrecht_state = EVSE_V2_EICHRECHT_STATE_BUSY;
