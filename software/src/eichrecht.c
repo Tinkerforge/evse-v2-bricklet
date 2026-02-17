@@ -525,8 +525,8 @@ void eichrecht_reset_transaction(void) {
 bool eichrecht_iskra_tick_next_state(void) {
     switch(eichrecht.transaction_state) {
         case 0: return false; // Should be unreachable
-        case 1: return (eichrecht.transaction == 'B' || eichrecht.transaction == 'E' || eichrecht.transaction == 'r') ? eichrecht_iskra_write_utc_time_offset(eichrecht.utc_time_offset) : true; // Only set utc time offset and unix time for 'B' transaction
-        case 2: return (eichrecht.transaction == 'B' || eichrecht.transaction == 'E' || eichrecht.transaction == 'r') ? eichrecht_iskra_write_unix_time(eichrecht.unix_time) : true;
+        case 1: return (eichrecht.transaction == 'B' || eichrecht.transaction == 'E' || eichrecht.transaction == 'r' || eichrecht.transaction == 'i') ? eichrecht_iskra_write_utc_time_offset(eichrecht.utc_time_offset) : true; // Only set utc time offset and unix time for 'B' transaction
+        case 2: return (eichrecht.transaction == 'B' || eichrecht.transaction == 'E' || eichrecht.transaction == 'r' || eichrecht.transaction == 'i') ? eichrecht_iskra_write_unix_time(eichrecht.unix_time) : true;
         case 3: return eichrecht_iskra_write_signature_format(eichrecht.signature_format);
         case 4: return eichrecht_iskra_write_dataset();
         case 5: {
