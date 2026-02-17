@@ -74,6 +74,24 @@ const char *eichrecht_get_ct_string(void) {
     }
 }
 
+static char *itoa_p(uint8_t value, char *str) {
+	if(value >= 100) {
+		str[2] = '0' + (value % 10);
+		str[1] = '0' + ((value / 10) % 10);
+		str[0] = '0' + (value / 100);
+		return str + 3;
+	}
+
+	if(value >= 10) {
+		str[1] = '0' + (value % 10);
+		str[0] = '0' + (value / 10);
+		return str + 2;
+	}
+
+	str[0] = '0' + value;
+	return str + 1;
+}
+
 void eichrecht_create_dataset(void) {
     // WM3M4C manual:
     // JSON names must be in specified order and without whitespaces. Downloaded message should look like
@@ -132,6 +150,15 @@ void eichrecht_create_dataset(void) {
     ptr = stpcpy(ptr, eichrecht_get_it_string());
     ptr = stpcpy(ptr, "\",\"ID\":\"");
     ptr = stpcpy(ptr, eichrecht.ocmf.id);
+    ptr = stpcpy(ptr, "\",\"CF\":\"");
+
+    uint32_t fw = BOOTLOADER_FIRMWARE_CONFIGURATION_POINTER->firmware_version;
+    ptr = itoa_p((fw >> 16) & 0xFF, ptr);
+    *ptr++ = '.';
+    ptr = itoa_p((fw >> 8)  & 0xFF, ptr);
+    *ptr++ = '.';
+    ptr = itoa_p((fw >> 0)  & 0xFF, ptr);
+
     ptr = stpcpy(ptr, "\",\"CT\":\"");
     ptr = stpcpy(ptr, eichrecht_get_ct_string());
     ptr = stpcpy(ptr, "\",\"CI\":\"");
