@@ -106,7 +106,7 @@ void eichrecht_create_dataset(void) {
     // Thus we can use unsafe string functions here.
     char *ptr = eichrecht.dataset_in;
 
-    ptr = stpcpy(ptr, "{\"FV\":\"1.0\",\"GI\":\"");
+    ptr = stpcpy(ptr, "{\"FV\":\"1.3\",\"GI\":\"");
     ptr = stpcpy(ptr, eichrecht.ocmf.gi);
     ptr = stpcpy(ptr, "\",\"GS\":\"");
     ptr = stpcpy(ptr, eichrecht.ocmf.gs);
