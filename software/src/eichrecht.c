@@ -454,6 +454,9 @@ bool eichrecht_iskra_read_dataset(void) {
 bool eichrecht_iskra_read_signature(void) {
     switch(eichrecht.transaction_inner_state) {
         case 0: {
+            if (eichrecht.dataset_out_ready) {
+                return false;
+            }
             memset(eichrecht.signature, 0, sizeof(eichrecht.signature));
             eichrecht.signature_index = 0;
             eichrecht.transaction_inner_state++;

@@ -1228,15 +1228,19 @@ bool handle_eichrecht_dataset_low_level_callback(void) {
 		}
 
 		eichrecht.dataset_out_chunk_offset += 60;
-		if(eichrecht.dataset_out_chunk_offset >= eichrecht.dataset_out_length) {
-			eichrecht.dataset_out_ready = false;
-			eichrecht.dataset_out_chunk_offset = 0;
-		}
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(EichrechtDatasetLowLevel_Callback));
 		is_buffered = false;
+
+		// The signature is fetched only if dataset_out_ready is false.
+		// Delay resetting dataset_out_ready until the last packet was sent
+		// to make sure the dataset is sent completely before sendin the signature.
+		if(eichrecht.dataset_out_chunk_offset >= eichrecht.dataset_out_length) {
+			eichrecht.dataset_out_ready = false;
+			eichrecht.dataset_out_chunk_offset = 0;
+		}
 		return true;
 	} else {
 		is_buffered = true;
