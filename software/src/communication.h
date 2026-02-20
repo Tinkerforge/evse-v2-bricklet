@@ -329,7 +329,7 @@ void communication_init(void);
 #define FID_SET_EICHRECHT_CHARGE_POINT 54
 #define FID_GET_EICHRECHT_CHARGE_POINT 55
 #define FID_SET_EICHRECHT_TRANSACTION 56
-#define FID_GET_EICHRECHT_TRANSACTION 57
+#define FID_GET_EICHRECHT_TRANSACTION_STATE 57
 #define FID_GET_EICHRECHT_PUBLIC_KEY 58
 #define FID_SET_ENUMERATE_CONFIGURATION 61
 #define FID_GET_ENUMERATE_CONFIGURATION 62
@@ -895,7 +895,7 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetEichrechtTransaction;
+} __attribute__((__packed__)) GetEichrechtTransactionState;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -905,7 +905,7 @@ typedef struct {
 	uint16_t measurement_status;
 	uint16_t signature_status;
 	uint8_t eichrecht_state;
-} __attribute__((__packed__)) GetEichrechtTransaction_Response;
+} __attribute__((__packed__)) GetEichrechtTransactionState_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -1034,7 +1034,7 @@ BootloaderHandleMessageResponse get_eichrecht_user_assignment(const GetEichrecht
 BootloaderHandleMessageResponse set_eichrecht_charge_point(const SetEichrechtChargePoint *data, SetEichrechtChargePoint_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_charge_point(const GetEichrechtChargePoint *data, GetEichrechtChargePoint_Response *response);
 BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTransaction *data, SetEichrechtTransaction_Response *response);
-BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response);
+BootloaderHandleMessageResponse get_eichrecht_transaction_state(const GetEichrechtTransactionState *data, GetEichrechtTransactionState_Response *response);
 BootloaderHandleMessageResponse get_eichrecht_public_key(const GetEichrechtPublicKey *data, GetEichrechtPublicKey_Response *response);
 BootloaderHandleMessageResponse set_enumerate_configuration(const SetEnumerateConfiguration *data);
 BootloaderHandleMessageResponse get_enumerate_configuration(const GetEnumerateConfiguration *data, GetEnumerateConfiguration_Response *response);

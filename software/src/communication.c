@@ -111,7 +111,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_EICHRECHT_CHARGE_POINT:            return length != sizeof(SetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_charge_point(message, response);
 		case FID_GET_EICHRECHT_CHARGE_POINT:            return length != sizeof(GetEichrechtChargePoint)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_charge_point(message, response);
 		case FID_SET_EICHRECHT_TRANSACTION:             return length != sizeof(SetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_eichrecht_transaction(message, response);
-		case FID_GET_EICHRECHT_TRANSACTION:             return length != sizeof(GetEichrechtTransaction)          ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_transaction(message, response);
+		case FID_GET_EICHRECHT_TRANSACTION_STATE:       return length != sizeof(GetEichrechtTransactionState)     ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_transaction_state(message, response);
 		case FID_GET_EICHRECHT_PUBLIC_KEY:              return length != sizeof(GetEichrechtPublicKey)            ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_eichrecht_public_key(message, response);
 		case FID_SET_ENUMERATE_CONFIGURATION:           return length != sizeof(SetEnumerateConfiguration)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_enumerate_configuration(message);
 		case FID_GET_ENUMERATE_CONFIGURATION:           return length != sizeof(GetEnumerateConfiguration)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_configuration(message, response);
@@ -1080,9 +1080,9 @@ BootloaderHandleMessageResponse set_eichrecht_transaction(const SetEichrechtTran
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_eichrecht_transaction(const GetEichrechtTransaction *data, GetEichrechtTransaction_Response *response) {
+BootloaderHandleMessageResponse get_eichrecht_transaction_state(const GetEichrechtTransactionState *data, GetEichrechtTransactionState_Response *response) {
 	(void)data;
-	response->header.length = sizeof(GetEichrechtTransaction_Response);
+	response->header.length = sizeof(GetEichrechtTransactionState_Response);
 
 	if(hardware_version.is_v4 && meter_supports_eichrecht()) {
 		response->transaction             = eichrecht.transaction;
