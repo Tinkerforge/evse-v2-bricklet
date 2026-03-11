@@ -67,4 +67,6 @@
 #define EVSE_V3_CONTACTOR_PIN             P1_6
 #define EVSE_V3_PHASE_SWITCH_PIN          P1_5
 
+#define EVSE_V4_PLC_RESET_PIN             P3_0
+
 #endif

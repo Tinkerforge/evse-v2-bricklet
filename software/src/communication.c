@@ -46,6 +46,7 @@
 #include "phase_control.h"
 #include "tmp1075n.h"
 #include "eichrecht.h"
+#include "plc.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -119,6 +120,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_ENUMERATE_VALUE:                   return length != sizeof(GetEnumerateValue)                ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_enumerate_value(message, response);
 		case FID_SET_PHASE_SWITCH_WAIT_TIME:            return length != sizeof(SetPhaseSwitchWaitTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_phase_switch_wait_time(message);
 		case FID_GET_PHASE_SWITCH_WAIT_TIME:            return length != sizeof(GetPhaseSwitchWaitTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_switch_wait_time(message, response);
+		case FID_SET_PLC_MODEM:                         return length != sizeof(SetPLCModem)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_plc_modem(message);
+		case FID_GET_PLC_MODEM:                         return length != sizeof(GetPLCModem)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_plc_modem(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -1180,6 +1183,19 @@ BootloaderHandleMessageResponse set_phase_switch_wait_time(const SetPhaseSwitchW
 BootloaderHandleMessageResponse get_phase_switch_wait_time(const GetPhaseSwitchWaitTime *data, GetPhaseSwitchWaitTime_Response *response) {
 	response->header.length     = sizeof(GetPhaseSwitchWaitTime_Response);
 	response->phase_switch_wait_time = phase_control.phase_switch_wait_time;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_plc_modem(const SetPLCModem *data) {
+	plc.enable = data->plc_modem_enabled;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_plc_modem(const GetPLCModem *data, GetPLCModem_Response *response) {
+	response->header.length     = sizeof(GetPLCModem_Response);
+	response->plc_modem_enabled = plc.enable;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

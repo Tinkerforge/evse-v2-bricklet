@@ -44,6 +44,7 @@
 #include "phase_control.h"
 #include "tmp1075n.h"
 #include "eichrecht.h"
+#include "plc.h"
 
 int main(void) {
 	logging_init();
@@ -65,6 +66,7 @@ int main(void) {
 	phase_control_init();
 	tmp1075n_init();
 	eichrecht_init();
+	plc_init();
 
 	while(true) {
 		bootloader_tick();
@@ -82,5 +84,6 @@ int main(void) {
 		phase_control_tick();
 		tmp1075n_tick();
 		eichrecht_tick();
+		plc_tick();
 	}
 }
