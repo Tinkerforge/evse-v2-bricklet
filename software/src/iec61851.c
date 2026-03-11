@@ -279,7 +279,16 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 	// If we are in state b and we change from no PWM to PWM (0mA to >0mA)
 	// then we start the b1b2 transition timer.
 	if(iec61851.state_b1b2_transition_seen) {
-		iec61851.state_b1b2_transition_time = system_timer_get_ms();
+		// After an ISO 15118 session, some EVs (e.g. Hyundai Ioniq 5) don't
+		// fall back to IEC 61851 charging at all. They sit in State B
+		// until the EVSE does a CP disconnect wakeup. The normal B1->B2 wakeup
+		// timeout is 90 seconds. Set the transition time 80s in the past so the
+		// first CP disconnect fires after ~10 seconds instead.
+		if(iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_IEC61851_TEMPORARY) {
+			iec61851.state_b1b2_transition_time = system_timer_get_ms() - 80*1000;
+		} else {
+			iec61851.state_b1b2_transition_time = system_timer_get_ms();
+		}
 		iec61851.state_b1b2_transition_seen = false;
 	}
 
