@@ -40,7 +40,7 @@ typedef struct {
 	uint16_t last_timer_value;
 
 	uint32_t frequency; // Measured mains frequency in 1/1000 Hz (e.g. 50000 = 50.00 Hz)
-	bool valid; // True once enough samples have been collected and signal is present
+	bool valid;         // True once enough samples have been collected and signal is present
 
 	uint32_t last_edge_ms;
 	uint32_t last_update;

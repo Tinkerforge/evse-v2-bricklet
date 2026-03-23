@@ -45,7 +45,7 @@ void __attribute__((optimize("-O3"))) IRQ_Hdlr_6(void) {
 	const uint16_t delta = current - frequency.last_timer_value;
 
 	// Only accept periods in the plausible range
-	if(delta >= FREQUENCY_MIN_TICKS && delta <= FREQUENCY_MAX_TICKS) {
+	if((delta >= FREQUENCY_MIN_TICKS) && (delta <= FREQUENCY_MAX_TICKS)) {
 		frequency.period_buffer[frequency.buffer_index] = delta;
 		frequency.buffer_index++;
 	}
@@ -116,8 +116,7 @@ void frequency_tick(void) {
 	}
 
 	// Check for timeout (PE disconnected or no 50 Hz present)
-	if(frequency.last_edge_ms != 0 &&
-	   system_timer_is_time_elapsed_ms(frequency.last_edge_ms, FREQUENCY_TIMEOUT_MS)) {
+	if((frequency.last_edge_ms != 0) && system_timer_is_time_elapsed_ms(frequency.last_edge_ms, FREQUENCY_TIMEOUT_MS)) {
 		frequency.valid = false;
 		return;
 	}
