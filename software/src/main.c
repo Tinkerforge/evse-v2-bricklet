@@ -45,6 +45,7 @@
 #include "tmp1075n.h"
 #include "eichrecht.h"
 #include "plc.h"
+#include "frequency.h"
 
 int main(void) {
 	logging_init();
@@ -67,6 +68,7 @@ int main(void) {
 	tmp1075n_init();
 	eichrecht_init();
 	plc_init();
+	frequency_init();
 
 	while(true) {
 		bootloader_tick();
@@ -85,5 +87,6 @@ int main(void) {
 		tmp1075n_tick();
 		eichrecht_tick();
 		plc_tick();
+		frequency_tick();
 	}
 }

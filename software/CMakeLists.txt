@@ -42,6 +42,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/tmp1075n.c"
 	"${PROJECT_SOURCE_DIR}/src/eichrecht.c"
 	"${PROJECT_SOURCE_DIR}/src/plc.c"
+	"${PROJECT_SOURCE_DIR}/src/frequency.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
@@ -83,6 +84,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu4.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_ccu8.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_vadc.c"
+	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_eru.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc1_scu.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_uart.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/XMCLib/src/xmc_i2c.c"
