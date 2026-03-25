@@ -227,7 +227,7 @@
 2025-12-18: 2.2.19 (5092920a)
 - Make sure cp can not stay disconnected when charging current is changed during disconnect
 
-2026-XX-XX: 2.2.20 (TBD)
+2026-03-25: 2.2.20 (3970ae7d)
 - Add support for frequency measurement through PE detection (for DSZ15DZMOD)
 - Increase debounce for contactor check when closing (through bricklib)
 - Add ISO 15118 support functions [WARP4 only]
