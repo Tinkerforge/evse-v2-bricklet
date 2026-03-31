@@ -232,3 +232,7 @@
 - Increase debounce for contactor check when closing (through bricklib)
 - Add ISO 15118 support functions [WARP4 only]
 - Add Eichrecht support functions [WARP4 only]
+
+
+2026-XX-XX: 2.2.21 (TBD)
+- Use enumerate hue for breathing if load management enabled
