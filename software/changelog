@@ -236,3 +236,4 @@
 
 2026-XX-XX: 2.2.21 (TBD)
 - Use enumerate hue for breathing if load management enabled
+- Add test mode for improved provisioning

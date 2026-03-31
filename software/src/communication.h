@@ -339,6 +339,8 @@ void communication_init(void);
 #define FID_GET_PHASE_SWITCH_WAIT_TIME 66
 #define FID_SET_PLC_MODEM 67
 #define FID_GET_PLC_MODEM 68
+#define FID_SET_TEST_MODE 69
+#define FID_GET_TEST_MODE 70
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 59
@@ -674,6 +676,7 @@ typedef struct {
 	uint8_t enumerate_value;
 	uint32_t enumerate_value_change_time;
 	uint8_t phase_switch_wait_time;
+	bool plc_modem_enabled;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -993,6 +996,21 @@ typedef struct {
 	bool plc_modem_enabled;
 } __attribute__((__packed__)) GetPLCModem_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	bool test_mode_enabled;
+	uint32_t password;
+} __attribute__((__packed__)) SetTestMode;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetTestMode;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool test_mode_enabled;
+} __attribute__((__packed__)) GetTestMode_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -1060,6 +1078,8 @@ BootloaderHandleMessageResponse set_phase_switch_wait_time(const SetPhaseSwitchW
 BootloaderHandleMessageResponse get_phase_switch_wait_time(const GetPhaseSwitchWaitTime *data, GetPhaseSwitchWaitTime_Response *response);
 BootloaderHandleMessageResponse set_plc_modem(const SetPLCModem *data);
 BootloaderHandleMessageResponse get_plc_modem(const GetPLCModem *data, GetPLCModem_Response *response);
+BootloaderHandleMessageResponse set_test_mode(const SetTestMode *data);
+BootloaderHandleMessageResponse get_test_mode(const GetTestMode *data, GetTestMode_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);

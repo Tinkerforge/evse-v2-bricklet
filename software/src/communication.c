@@ -122,6 +122,8 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PHASE_SWITCH_WAIT_TIME:            return length != sizeof(GetPhaseSwitchWaitTime)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_phase_switch_wait_time(message, response);
 		case FID_SET_PLC_MODEM:                         return length != sizeof(SetPLCModem)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_plc_modem(message);
 		case FID_GET_PLC_MODEM:                         return length != sizeof(GetPLCModem)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_plc_modem(message, response);
+		case FID_SET_TEST_MODE:                         return length != sizeof(SetTestMode)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_test_mode(message);
+		case FID_GET_TEST_MODE:                         return length != sizeof(GetTestMode)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_test_mode(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -1196,6 +1198,22 @@ BootloaderHandleMessageResponse set_plc_modem(const SetPLCModem *data) {
 BootloaderHandleMessageResponse get_plc_modem(const GetPLCModem *data, GetPLCModem_Response *response) {
 	response->header.length     = sizeof(GetPLCModem_Response);
 	response->plc_modem_enabled = plc.enable;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_test_mode(const SetTestMode *data) {
+	if(data->password == 0xdeadbeef) {
+		iec61851.test_mode = data->test_mode_enabled;
+		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+}
+
+BootloaderHandleMessageResponse get_test_mode(const GetTestMode *data, GetTestMode_Response *response) {
+	response->header.length     = sizeof(GetTestMode_Response);
+	response->test_mode_enabled = iec61851.test_mode;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

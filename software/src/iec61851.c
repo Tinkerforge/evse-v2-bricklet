@@ -125,7 +125,7 @@ void iec61851_set_state(IEC61851State state) {
 			iec61851.last_error_time = system_timer_get_ms();
 		}
 		if((state == IEC61851_STATE_C) && (iec61851.last_error_time != 0)) {
-			if(!system_timer_is_time_elapsed_ms(iec61851.last_error_time, 30*1000)) {
+			if(!system_timer_is_time_elapsed_ms(iec61851.last_error_time, 30*1000) && !iec61851.test_mode) {
 				return;
 			}
 			iec61851.last_error_time = 0;
@@ -139,7 +139,7 @@ void iec61851_set_state(IEC61851State state) {
 		}
 
 		if((state == IEC61851_STATE_C) && (iec61851.last_state_c_end_time != 0)) {
-			if(!system_timer_is_time_elapsed_ms(iec61851.last_state_c_end_time, 5*1000)) {
+			if(!system_timer_is_time_elapsed_ms(iec61851.last_state_c_end_time, 5*1000) && !iec61851.test_mode) {
 				return;
 			}
 			iec61851.last_state_c_end_time = 0;
