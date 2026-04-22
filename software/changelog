@@ -233,7 +233,7 @@
 - Add ISO 15118 support functions [WARP4 only]
 - Add Eichrecht support functions [WARP4 only]
 
-
-2026-XX-XX: 2.2.21 (TBD)
+2026-04-22: 2.2.21 (16e3209a)
 - Use enumerate hue for breathing if load management enabled
 - Add test mode for improved provisioning
+- Add migration for shutdow input <-> §14a
