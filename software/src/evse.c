@@ -198,11 +198,11 @@ void evse_load_config(void) {
 	if(page[EVSE_CONFIG_MAGIC_POS] != EVSE_CONFIG_MAGIC) {
 		evse.legacy_managed               = false;
 		meter.relative_energy_sum.f       = 0.0f;
-		evse.shutdown_input_configuration = hardware_version.is_v2 ? EVSE_V2_SHUTDOWN_INPUT_IGNORED : EVSE_V2_SHUTDOWN_INPUT_4200_WATT_ON_CLOSE;
+		evse.shutdown_input_configuration_old = hardware_version.is_v2 ? EVSE_V2_SHUTDOWN_INPUT_IGNORED : EVSE_V2_SHUTDOWN_INPUT_4200_WATT_ON_CLOSE;
 	} else {
 		evse.legacy_managed               = page[EVSE_CONFIG_MANAGED_POS];
 		meter.relative_energy_sum.data    = page[EVSE_CONFIG_REL_SUM_POS];
-		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
+		evse.shutdown_input_configuration_old = page[EVSE_CONFIG_SHUTDOWN_INPUT_POS];
 	}
 
 	if(page[EVSE_CONFIG_MAGIC2_POS] != EVSE_CONFIG_MAGIC2) {
@@ -253,6 +253,12 @@ void evse_load_config(void) {
 		phase_control.phase_switch_wait_time = page[EVSE_CONFIG_PS_WAIT_TIME_POS];
 	}
 
+	if(page[EVSE_CONFIG_MAGIC8_POS] != EVSE_CONFIG_MAGIC8) {
+		evse.shutdown_input_configuration = evse.shutdown_input_configuration_old;
+	} else {
+		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT2_POS];
+	}
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	if(slot_default->magic == EVSE_CONFIG_SLOT_MAGIC) {
@@ -294,11 +300,18 @@ void evse_load_config(void) {
 }
 
 void evse_save_config(void) {
-	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)];
+	// In old firmwares the page buffer is not zeroed.
+	// If we downgrade from this firmware to an old firmware we were able to reproducible
+	// get the "EVSE_CONFIG_MAGIC8" in the correct page index as uninitialized stack memory.
+	// We put a new value above the page and print it (so the compiler can't possibly remove it),
+	// to make sure that we can't accidentially leak the magic from a new firmware into an firmware.
+	uint8_t random_val = system_timer_get_ms() % 255;
+	uint32_t page[EEPROM_PAGE_SIZE/sizeof(uint32_t)] = {0};
+	logd("random_val %d\n\r", random_val);
 
 	page[EVSE_CONFIG_MAGIC_POS]           = EVSE_CONFIG_MAGIC;
 	page[EVSE_CONFIG_MANAGED_POS]         = evse.legacy_managed;
-	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS]  = evse.shutdown_input_configuration;
+	page[EVSE_CONFIG_SHUTDOWN_INPUT_POS]  = evse.shutdown_input_configuration_old;
 	if(meter.reset_energy_meter) {
 		page[EVSE_CONFIG_REL_SUM_POS]     = meter_register_set.EnergyActiveLSumImExSum.data;
 		page[EVSE_CONFIG_REL_IMPORT_POS]  = meter_register_set.EnergyActiveLSumImport.data;
@@ -332,6 +345,9 @@ void evse_save_config(void) {
 
 	page[EVSE_CONFIG_MAGIC7_POS]          = EVSE_CONFIG_MAGIC7;
 	page[EVSE_CONFIG_PS_WAIT_TIME_POS]    = phase_control.phase_switch_wait_time;
+
+	page[EVSE_CONFIG_MAGIC8_POS]          = EVSE_CONFIG_MAGIC8;
+	page[EVSE_CONFIG_SHUTDOWN_INPUT2_POS] = evse.shutdown_input_configuration;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

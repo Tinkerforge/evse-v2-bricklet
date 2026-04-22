@@ -61,6 +61,8 @@
 #define EVSE_CONFIG_MAGIC6_POS          17
 #define EVSE_CONFIG_PS_WAIT_TIME_POS    18
 #define EVSE_CONFIG_MAGIC7_POS          19
+#define EVSE_CONFIG_SHUTDOWN_INPUT2_POS 20
+#define EVSE_CONFIG_MAGIC8_POS          21
 #define EVSE_CONFIG_SLOT_DEFAULT_POS    48
 
 typedef struct {
@@ -76,6 +78,7 @@ typedef struct {
 #define EVSE_CONFIG_MAGIC5              0x78923456
 #define EVSE_CONFIG_MAGIC6              0x89234567
 #define EVSE_CONFIG_MAGIC7              0x92345678
+#define EVSE_CONFIG_MAGIC8              0x23456742
 #define EVSE_CONFIG_SLOT_MAGIC          0x62870616
 
 #define EVSE_STORAGE_PAGES              16
@@ -94,6 +97,7 @@ typedef struct {
 	uint32_t last_contactor_switch;
 
 	uint8_t shutdown_input_configuration;
+	uint8_t shutdown_input_configuration_old;
 	uint8_t input_configuration;
 	uint8_t output_configuration;
 
