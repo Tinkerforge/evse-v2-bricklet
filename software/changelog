@@ -238,5 +238,5 @@
 - Add test mode for improved provisioning
 - Add migration for shutdow input <-> §14a
 
-2026-05-xx: 2.2.22 (TBD)
+2026-05-07: 2.2.22 (9e51c918)
 - Fix WARP2 breathing bug
