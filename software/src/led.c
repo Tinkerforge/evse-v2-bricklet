@@ -439,7 +439,7 @@ void led_tick_status_breathing(void) {
 		led.breathing_up = false;
 	}
 
-	if((led.enumerator_h[0] == 0) && (led.enumerator_s[0] == 0) && (led.enumerator_v[0] == 0)) {
+	if(hardware_version.is_v2 || ((led.enumerator_h[0] == 0) && (led.enumerator_s[0] == 0) && (led.enumerator_v[0] == 0))) {
 		led_update(LED_HUE_STANDARD, 255, led.breathing_index);
 	} else {
 		led_update(led.enumerator_h[led.enumerate_value], 255, led.breathing_index);
