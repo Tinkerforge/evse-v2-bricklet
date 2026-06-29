@@ -256,6 +256,23 @@ void communication_init(void);
 #define EVSE_V2_PHASE_SWITCH_WAIT_TIME_115_SECONDS 21
 #define EVSE_V2_PHASE_SWITCH_WAIT_TIME_120_SECONDS 22
 
+#define EVSE_V2_OVE_R37_STATE_DISABLED 0
+#define EVSE_V2_OVE_R37_STATE_NORMAL 1
+#define EVSE_V2_OVE_R37_STATE_TRIPPED 2
+#define EVSE_V2_OVE_R37_STATE_WAIT 3
+#define EVSE_V2_OVE_R37_STATE_RAMP 4
+
+#define EVSE_V2_OVE_R37_TRIP_REASON_NONE 0
+#define EVSE_V2_OVE_R37_TRIP_REASON_UNDERVOLTAGE 1
+#define EVSE_V2_OVE_R37_TRIP_REASON_OVERVOLTAGE 2
+#define EVSE_V2_OVE_R37_TRIP_REASON_FREQUENCY 4
+
+#define EVSE_V2_OVE_R37_FLAGS_VOLTAGE_IN_RANGE 1
+#define EVSE_V2_OVE_R37_FLAGS_FREQUENCY_IN_RANGE 2
+#define EVSE_V2_OVE_R37_FLAGS_VOLTAGE_VALID 4
+#define EVSE_V2_OVE_R37_FLAGS_CURRENT_VALID 8
+#define EVSE_V2_OVE_R37_FLAGS_FREQUENCY_VALID 16
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -342,6 +359,9 @@ void communication_init(void);
 #define FID_GET_PLC_MODEM 68
 #define FID_SET_TEST_MODE 69
 #define FID_GET_TEST_MODE 70
+#define FID_SET_OVE_R37_CONFIGURATION 71
+#define FID_GET_OVE_R37_CONFIGURATION 72
+#define FID_GET_OVE_R37_STATUS 73
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 59
@@ -678,6 +698,9 @@ typedef struct {
 	uint32_t enumerate_value_change_time;
 	uint8_t phase_switch_wait_time;
 	bool plc_modem_enabled;
+	uint8_t ove_r37_state;
+	uint8_t ove_r37_trip_reason;
+	uint8_t ove_r37_flags;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
@@ -1012,6 +1035,39 @@ typedef struct {
 	bool test_mode_enabled;
 } __attribute__((__packed__)) GetTestMode_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	bool enabled;
+	uint16_t undervoltage_threshold;
+	uint16_t undervoltage_observation_time;
+	uint16_t reconnect_wait_time;
+	uint16_t start_delay;
+} __attribute__((__packed__)) SetOVER37Configuration;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetOVER37Configuration;
+
+typedef struct {
+	TFPMessageHeader header;
+	bool enabled;
+	uint16_t undervoltage_threshold;
+	uint16_t undervoltage_observation_time;
+	uint16_t reconnect_wait_time;
+	uint16_t start_delay;
+} __attribute__((__packed__)) GetOVER37Configuration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetOVER37Status;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t state;
+	uint8_t trip_reason;
+	uint8_t flags;
+} __attribute__((__packed__)) GetOVER37Status_Response;
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -1081,6 +1137,9 @@ BootloaderHandleMessageResponse set_plc_modem(const SetPLCModem *data);
 BootloaderHandleMessageResponse get_plc_modem(const GetPLCModem *data, GetPLCModem_Response *response);
 BootloaderHandleMessageResponse set_test_mode(const SetTestMode *data);
 BootloaderHandleMessageResponse get_test_mode(const GetTestMode *data, GetTestMode_Response *response);
+BootloaderHandleMessageResponse set_ove_r37_configuration(const SetOVER37Configuration *data);
+BootloaderHandleMessageResponse get_ove_r37_configuration(const GetOVER37Configuration *data, GetOVER37Configuration_Response *response);
+BootloaderHandleMessageResponse get_ove_r37_status(const GetOVER37Status *data, GetOVER37Status_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);

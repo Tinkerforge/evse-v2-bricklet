@@ -43,6 +43,7 @@
 #include "iec61851.h"
 #include "hardware_version.h"
 #include "phase_control.h"
+#include "ove_r37.h"
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
@@ -259,6 +260,14 @@ void evse_load_config(void) {
 		evse.shutdown_input_configuration = page[EVSE_CONFIG_SHUTDOWN_INPUT2_POS];
 	}
 
+	if(page[EVSE_CONFIG_MAGIC9_POS] == EVSE_CONFIG_MAGIC9) {
+		ove_r37.enabled                   = page[EVSE_CONFIG_OVE_R37_ENABLED_POS];
+		ove_r37.undervoltage_threshold_pu = page[EVSE_CONFIG_OVE_R37_UV_THRESHOLD_POS];
+		ove_r37.undervoltage_observe_ms   = page[EVSE_CONFIG_OVE_R37_UV_OBSERVE_POS];
+		ove_r37.reconnect_wait_s          = page[EVSE_CONFIG_OVE_R37_RECONNECT_WAIT_POS];
+		ove_r37.start_delay_s             = page[EVSE_CONFIG_OVE_R37_START_DELAY_POS];
+	}
+
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);
 	if(slot_default->magic == EVSE_CONFIG_SLOT_MAGIC) {
@@ -348,6 +357,13 @@ void evse_save_config(void) {
 
 	page[EVSE_CONFIG_MAGIC8_POS]          = EVSE_CONFIG_MAGIC8;
 	page[EVSE_CONFIG_SHUTDOWN_INPUT2_POS] = evse.shutdown_input_configuration;
+
+	page[EVSE_CONFIG_MAGIC9_POS]                 = EVSE_CONFIG_MAGIC9;
+	page[EVSE_CONFIG_OVE_R37_ENABLED_POS]        = ove_r37.enabled;
+	page[EVSE_CONFIG_OVE_R37_UV_THRESHOLD_POS]   = ove_r37.undervoltage_threshold_pu;
+	page[EVSE_CONFIG_OVE_R37_UV_OBSERVE_POS]     = ove_r37.undervoltage_observe_ms;
+	page[EVSE_CONFIG_OVE_R37_RECONNECT_WAIT_POS] = ove_r37.reconnect_wait_s;
+	page[EVSE_CONFIG_OVE_R37_START_DELAY_POS]    = ove_r37.start_delay_s;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

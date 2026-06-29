@@ -47,6 +47,7 @@
 #include "tmp1075n.h"
 #include "eichrecht.h"
 #include "plc.h"
+#include "ove_r37.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -124,6 +125,9 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_PLC_MODEM:                         return length != sizeof(GetPLCModem)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_plc_modem(message, response);
 		case FID_SET_TEST_MODE:                         return length != sizeof(SetTestMode)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_test_mode(message);
 		case FID_GET_TEST_MODE:                         return length != sizeof(GetTestMode)                      ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_test_mode(message, response);
+		case FID_SET_OVE_R37_CONFIGURATION:             return length != sizeof(SetOVER37Configuration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_ove_r37_configuration(message);
+		case FID_GET_OVE_R37_CONFIGURATION:             return length != sizeof(GetOVER37Configuration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_ove_r37_configuration(message, response);
+		case FID_GET_OVE_R37_STATUS:                    return length != sizeof(GetOVER37Status)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_ove_r37_status(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -759,6 +763,12 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_phase_switch_wait_time(NULL, (GetPhaseSwitchWaitTime_Response*)&parts);
 	memcpy(&response->phase_switch_wait_time, parts.data, sizeof(GetPhaseSwitchWaitTime_Response) - sizeof(TFPMessageHeader));
 
+	get_plc_modem(NULL, (GetPLCModem_Response*)&parts);
+	memcpy(&response->plc_modem_enabled, parts.data, sizeof(GetPLCModem_Response) - sizeof(TFPMessageHeader));
+
+	get_ove_r37_status(NULL, (GetOVER37Status_Response*)&parts);
+	memcpy(&response->ove_r37_state, parts.data, sizeof(GetOVER37Status_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
@@ -1219,6 +1229,50 @@ BootloaderHandleMessageResponse set_test_mode(const SetTestMode *data) {
 BootloaderHandleMessageResponse get_test_mode(const GetTestMode *data, GetTestMode_Response *response) {
 	response->header.length     = sizeof(GetTestMode_Response);
 	response->test_mode_enabled = iec61851.test_mode;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_ove_r37_configuration(const SetOVER37Configuration *data) {
+	if((data->undervoltage_threshold > 1000) ||
+	   (data->reconnect_wait_time > OVE_R37_RECONNECT_WAIT_S_MAX) ||
+	   (data->start_delay > OVE_R37_START_DELAY_S_MAX)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if((ove_r37.enabled                   != data->enabled)                       ||
+	   (ove_r37.undervoltage_threshold_pu != data->undervoltage_threshold)        ||
+	   (ove_r37.undervoltage_observe_ms   != data->undervoltage_observation_time) ||
+	   (ove_r37.reconnect_wait_s          != data->reconnect_wait_time)           ||
+	   (ove_r37.start_delay_s             != data->start_delay)) {
+		ove_r37.enabled                   = data->enabled;
+		ove_r37.undervoltage_threshold_pu = data->undervoltage_threshold;
+		ove_r37.undervoltage_observe_ms   = data->undervoltage_observation_time;
+		ove_r37.reconnect_wait_s          = data->reconnect_wait_time;
+		ove_r37.start_delay_s             = data->start_delay;
+
+		evse_save_config();
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_ove_r37_configuration(const GetOVER37Configuration *data, GetOVER37Configuration_Response *response) {
+	response->header.length                 = sizeof(GetOVER37Configuration_Response);
+	response->enabled                       = ove_r37.enabled;
+	response->undervoltage_threshold        = ove_r37.undervoltage_threshold_pu;
+	response->undervoltage_observation_time = ove_r37.undervoltage_observe_ms;
+	response->reconnect_wait_time           = ove_r37.reconnect_wait_s;
+	response->start_delay                   = ove_r37.start_delay_s;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_ove_r37_status(const GetOVER37Status *data, GetOVER37Status_Response *response) {
+	response->header.length = sizeof(GetOVER37Status_Response);
+	response->state         = ove_r37.state;
+	response->trip_reason   = ove_r37.trip_reason;
+	response->flags         = ove_r37_get_flags();
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

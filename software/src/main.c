@@ -46,6 +46,7 @@
 #include "eichrecht.h"
 #include "plc.h"
 #include "frequency.h"
+#include "ove_r37.h"
 
 int main(void) {
 	logging_init();
@@ -53,6 +54,7 @@ int main(void) {
 
 	hardware_version_init();
 	communication_init();
+	ove_r37_init(); // Keep before evse_init()
 	evse_init();
 	charging_slot_init();
 	iec61851_init();
@@ -88,5 +90,6 @@ int main(void) {
 		eichrecht_tick();
 		plc_tick();
 		frequency_tick();
+		ove_r37_tick();
 	}
 }

@@ -36,6 +36,9 @@
 #define CHARGING_SLOT_LOAD_MANAGEMENT 7
 #define CHARGING_SLOT_EXTERNAL        8
 
+// TODO: What is the next free slot?
+#define CHARGING_SLOT_OVE_R37         19
+
 typedef struct {
 	uint16_t max_current_default[CHARGING_SLOT_DEFAULT_NUM];
 	bool active_default[CHARGING_SLOT_DEFAULT_NUM];

@@ -43,6 +43,7 @@ SET(SOURCES
 	"${PROJECT_SOURCE_DIR}/src/eichrecht.c"
 	"${PROJECT_SOURCE_DIR}/src/plc.c"
 	"${PROJECT_SOURCE_DIR}/src/frequency.c"
+	"${PROJECT_SOURCE_DIR}/src/ove_r37.c"
 
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/contactor_check.c"
 	"${PROJECT_SOURCE_DIR}/src/bricklib2/warp/rs485.c"
