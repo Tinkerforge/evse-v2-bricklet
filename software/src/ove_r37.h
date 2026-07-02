@@ -25,57 +25,40 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Nominal phase-to-neutral mains voltage (Un) in mV, used as the 1.0 pu reference.
 #define OVE_R37_NOMINAL_VOLTAGE_MV               230000
-
-// Meter measurements older than this (no successful fast read) are treated as
-// invalid, so the checks degrade safely instead of acting on stale data.
 #define OVE_R37_METER_STALE_MS                   1000
 
-// Per-unit thresholds expressed in 1/1000 pu (1000 = 1.0 pu = Un).
-
-// 5.9.8 Unterspannungsauslösung: default trip below 0.80 pu for longer than 3 s.
+// 5.9.8 Unterspannungsauslösung:
 #define OVE_R37_UNDERVOLTAGE_TRIP_PU_DEFAULT     800
 #define OVE_R37_UNDERVOLTAGE_OBSERVE_MS_DEFAULT  3000
 
-// 5.9.9 Spannungsbereiche: continuous operation must be kept within 0.9..1.1 pu.
+// 5.9.9 Spannungsbereiche
 #define OVE_R37_VOLTAGE_RANGE_MIN_PU             900
 #define OVE_R37_VOLTAGE_RANGE_MAX_PU             1100
 
-// 5.1.1 Frequenzbereiche: must not disconnect within 47.6..51.4 Hz (milli-Hz).
-#define OVE_R37_FREQUENCY_RANGE_MIN_MHZ          47600
-#define OVE_R37_FREQUENCY_RANGE_MAX_MHZ          51400
-
-// 5.7.4.2 Wiederzuschaltung: reconnect supply window.
+// 5.7.4.2 Wiederzuschaltung
 #define OVE_R37_RECONNECT_VOLTAGE_MIN_PU         900    // 0.9 pu
 #define OVE_R37_RECONNECT_VOLTAGE_MAX_PU         1090   // 1.09 pu
 #define OVE_R37_RECONNECT_FREQUENCY_MIN_MHZ      49900  // 49.90 Hz
 #define OVE_R37_RECONNECT_FREQUENCY_MAX_MHZ      50100  // 50.10 Hz
 
-// 5.7.4.2 Wartezeit tautom: settable 0..300 s, default 60 s.
+// 5.7.4.2 Wartezeit
 #define OVE_R37_RECONNECT_WAIT_S_DEFAULT         60
 #define OVE_R37_RECONNECT_WAIT_S_MAX             300
 
-// 5.7.4.2 Hochlauframpe: ramp the offered current up after reconnect. The
-// standard permits AC stations to use a 1 A/min current ramp as an alternative
-// to 10 % of rated power per minute; we use the simpler, always-compliant
-// 1 A/min ramp starting at the technical minimum current.
-#define OVE_R37_RAMP_START_MA                    6000   // technical minimum (6 A)
-#define OVE_R37_RAMP_FULL_MA                     32000  // ramp target / max EVSE current
-#define OVE_R37_RAMP_STEP_MA                     1000   // 1 A per step
-#define OVE_R37_RAMP_STEP_MS                     60000  // every 60 s -> 1 A/min
+// 5.7.4.2 Hochlauframpe
+#define OVE_R37_RAMP_START_MA                    6000
+#define OVE_R37_RAMP_FULL_MA                     32000
+#define OVE_R37_RAMP_RATE_MA_PER_MIN             1000   // 1 A/min
 
-// 5.9.3 Symmetriebedingungen: keep max pairwise phase current difference
-// <= 16 A, reaction time <= 60 s. When violated the offered current is capped
-// to 16 A; a hysteresis avoids oscillation around the threshold.
+// 5.9.3 Symmetriebedingungen
 #define OVE_R37_SYMMETRY_MAX_DIFF_MA             16000
 #define OVE_R37_SYMMETRY_RELEASE_DIFF_MA         14000
 #define OVE_R37_SYMMETRY_REACTION_MS             60000
 
-// Sentinel for "no current limit imposed" (max_current is uint16_t mA).
 #define OVE_R37_NO_LIMIT                         0xFFFF
 
-// 5.9.2 Prüfung B: charge start delay, settable 0..300 s.
+// 5.9.2 Prüfung B
 #define OVE_R37_START_DELAY_S_MAX                300
 
 #define OVE_R37_TRIP_NONE                        0
@@ -89,53 +72,56 @@
 #define OVE_R37_FLAG_CURRENT_VALID               (1 << 3)
 #define OVE_R37_FLAG_FREQUENCY_VALID             (1 << 4)
 
+#define OVE_R37_BOOT_WINDOW_MS                   30000
+
 typedef enum {
 	OVE_R37_STATE_DISABLED = 0,
 	OVE_R37_STATE_NORMAL,
 	OVE_R37_STATE_TRIPPED,
 	OVE_R37_STATE_WAIT,
 	OVE_R37_STATE_RAMP,
+	OVE_R37_STATE_BOOT,
 } OveR37State;
 
 typedef struct {
-	bool enabled;                       // R37 mode active (country = AT)
+	bool enabled;
 	uint16_t undervoltage_threshold_pu; // 1/1000 pu, default 800 (5.9.8)
 	uint16_t undervoltage_observe_ms;   // observation time before trip, default 3000 (5.9.8)
 	uint16_t reconnect_wait_s;          // tautom, default 60, max 300 (5.7.4.2)
 	uint16_t start_delay_s;             // charge start delay, max 300 (5.9.2 B)
 
-	// Measurement inputs (written by external code in a later phase; the meter
-	// provides per-phase voltage/current, frequency.c provides the frequency).
-	uint32_t voltage[3];                // phase-to-neutral voltage L1/L2/L3 in mV
-	uint32_t current[3];                // phase current L1/L2/L3 in mA
-	bool phase_connected[3];            // whether each phase is currently energized (meter live flag, >180 V)
-	bool phase_monitored[3];            // latched "phase is part of the installation"; stays set when a
-	                                    // present phase sags below the meter's connected threshold (5.9.8/5.7.4.2)
-	bool voltage_valid;                 // voltage[] and phase_connected[] are fresh and valid
-	bool current_valid;                 // current[] is fresh and valid
-	uint32_t frequency;                 // mains frequency in milli-Hz (50000 = 50.00 Hz)
-	bool frequency_valid;               // frequency is fresh and valid
-	bool charge_requested;              // vehicle connected and requesting to charge (5.9.2 B)
+	// Measurement inputs
+	uint32_t voltage[3];
+	uint32_t current[3];
+	bool phase_connected[3];
+	bool phase_monitored[3];
+
+	bool voltage_valid;
+	bool current_valid;
+	uint32_t frequency;
+	bool frequency_valid;
+	bool charge_requested;
 
 	// Runtime state machine.
 	OveR37State state;
 	uint8_t trip_reason;
 
 	// Status flags
-	bool voltage_in_range;              // all connected phases within 0.9..1.1 pu
-	bool frequency_in_range;            // frequency within 47.6..51.4 Hz
+	bool voltage_in_range;
+	bool frequency_in_range;
 
 	// Timers
-	uint32_t undervoltage_since;        // first ms a phase fell below the threshold
-	uint32_t wait_start;                // ms the reconnect wait was started
-	uint32_t ramp_start;                // ms the post-reconnect ramp was started
-	uint32_t start_delay_ref;           // ms a charge was requested (start delay reference)
-	bool charge_requested_last;         // previous charge_requested (rising-edge detection)
-	bool start_delay_active;            // charge start currently held off by the delay
+	uint32_t undervoltage_since;
+	uint32_t wait_start;
+	uint32_t ramp_start;
+	uint32_t boot_start;
+	uint32_t start_delay_ref;
+	bool charge_requested_last;
+	bool start_delay_active;
 
 	// Intermediate per-test current limits
-	uint16_t symmetry_limit;            // 5.9.3
-	uint16_t ramp_limit;                // 5.7.4.2
+	uint16_t symmetry_limit; // 5.9.3
+	uint16_t ramp_limit;     // 5.7.4.2
 
 	// Result
 	uint16_t max_current;
@@ -150,6 +136,7 @@ void ove_r37_tick(void);
 void ove_r37_check_undervoltage_trip(void);
 void ove_r37_check_voltage_range(void);
 void ove_r37_check_frequency_range(void);
+void ove_r37_check_boot_lockout(void);
 void ove_r37_check_reconnect_conditions(void);
 void ove_r37_apply_power_ramp(void);
 void ove_r37_check_phase_symmetry(void);

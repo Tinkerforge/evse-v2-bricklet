@@ -88,7 +88,7 @@ static uint32_t ove_r37_now_ms(void) {
 	return (now == 0) ? 1 : now;
 }
 
-// Reconnect supply condition (5.7.4.2): all connected phases within
+// Reconnect supply condition (5.7.4.2): All connected phases within
 // 0.9..1.09 pu and the frequency within 49.90..50.10 Hz.
 static bool ove_r37_reconnect_supply_ok(void) {
 	if(!ove_r37.voltage_valid || !ove_r37.frequency_valid) {
@@ -164,12 +164,16 @@ void ove_r37_tick(void) {
 	                           (iec61851.state == IEC61851_STATE_C);
 
 	if(ove_r37.state == OVE_R37_STATE_DISABLED) {
-		ove_r37.state = OVE_R37_STATE_NORMAL;
+		// On (re)start do not auto-resume charging (5.7.4.2). Enter the boot
+		// lock-out. ove_r37_check_boot_lockout() decides how to proceed.
+		ove_r37.state      = OVE_R37_STATE_BOOT;
+		ove_r37.boot_start = ove_r37_now_ms();
 	}
 
 	ove_r37_check_undervoltage_trip();
 	ove_r37_check_voltage_range();
 	ove_r37_check_frequency_range();
+	ove_r37_check_boot_lockout();
 	ove_r37_check_reconnect_conditions();
 	ove_r37_apply_power_ramp();
 	ove_r37_check_phase_symmetry();
@@ -181,7 +185,7 @@ void ove_r37_tick(void) {
 
 // 5.9.8 Unterspannungsauslösung
 void ove_r37_check_undervoltage_trip(void) {
-	// Without valid voltage data we cannot evaluate the condition; do not let
+	// Without valid voltage data we cannot evaluate the condition. Do not let
 	// the observation timer run so we never trip on stale/missing data.
 	if(!ove_r37.voltage_valid) {
 		ove_r37.undervoltage_since = 0;
@@ -247,17 +251,39 @@ void ove_r37_check_voltage_range(void) {
 
 // 5.1.1 Frequenzbereiche
 void ove_r37_check_frequency_range(void) {
-	// Ride-through requirement: the station must not disconnect while the
-	// frequency stays within 47.6..51.4 Hz. As loads/charging stations have no
-	// active LFSM requirement yet (5.1.2.3), the frequency never triggers a
-	// trip; it only gates reconnection (5.7.4.2). We compute a status flag only.
+	// Status flag: whether the mains frequency is within the 49.90..50.10 Hz
+	// reconnect window (5.7.4.2). The frequency never triggers a trip (loads
+	// have no active LFSM requirement yet, 5.1.2.3). This band gates whether
+	// charging may be (re)connected.
 	if(!ove_r37.frequency_valid) {
 		ove_r37.frequency_in_range = false;
 		return;
 	}
 
-	ove_r37.frequency_in_range = (ove_r37.frequency >= OVE_R37_FREQUENCY_RANGE_MIN_MHZ) &&
-	                             (ove_r37.frequency <= OVE_R37_FREQUENCY_RANGE_MAX_MHZ);
+	ove_r37.frequency_in_range = (ove_r37.frequency >= OVE_R37_RECONNECT_FREQUENCY_MIN_MHZ) &&
+	                             (ove_r37.frequency <= OVE_R37_RECONNECT_FREQUENCY_MAX_MHZ);
+}
+
+// 5.7.4.2 Wiederzuschaltung: boot lock-out.
+// After a (re)start we must not automatically resume charging. If an EV is (or
+// gets) connected within the boot window we cannot tell it apart from a charge
+// that was interrupted by the power loss, so we run the full reconnect flow
+// (supply within band + wait time + ramp). If no EV shows up within the window
+// we resume normal operation.
+void ove_r37_check_boot_lockout(void) {
+	if(ove_r37.state != OVE_R37_STATE_BOOT) {
+		return;
+	}
+
+	if(ove_r37.charge_requested) {
+		ove_r37.state      = OVE_R37_STATE_TRIPPED;
+		ove_r37.wait_start = 0;
+		return;
+	}
+
+	if(system_timer_is_time_elapsed_ms(ove_r37.boot_start, OVE_R37_BOOT_WINDOW_MS)) {
+		ove_r37.state = OVE_R37_STATE_NORMAL;
+	}
 }
 
 // 5.7.4.2 Wiederzuschaltung
@@ -268,14 +294,14 @@ void ove_r37_check_reconnect_conditions(void) {
 	}
 
 	// Any violation of the supply window (re)starts the wait from scratch
-	// (5.7.4.2 Prüfung 4c: reset of the wait time on renewed violation).
+	// (5.7.4.2 Prüfung 4c: Reset of the wait time on renewed violation).
 	if(!ove_r37_reconnect_supply_ok()) {
 		ove_r37.state      = OVE_R37_STATE_TRIPPED;
 		ove_r37.wait_start = 0;
 		return;
 	}
 
-	// Supply is within the reconnect window: start the wait time tautom.
+	// Supply is within the reconnect window: Start the wait time.
 	if(ove_r37.state == OVE_R37_STATE_TRIPPED) {
 		ove_r37.state      = OVE_R37_STATE_WAIT;
 		ove_r37.wait_start = ove_r37_now_ms();
@@ -296,14 +322,12 @@ void ove_r37_apply_power_ramp(void) {
 		return;
 	}
 
-	// Increase the offered current by 1 A every minute, starting at the
-	// technical minimum, until the full current is reached.
+	// Ramp the offered current up, starting at the technical minimum.
 	const uint32_t elapsed = system_timer_get_ms() - ove_r37.ramp_start;
-	const uint32_t steps   = elapsed / OVE_R37_RAMP_STEP_MS;
-	const uint32_t limit   = (uint32_t)OVE_R37_RAMP_START_MA + steps * OVE_R37_RAMP_STEP_MA;
+	const uint32_t limit   = (uint32_t)OVE_R37_RAMP_START_MA + (uint32_t)(((uint64_t)elapsed * OVE_R37_RAMP_RATE_MA_PER_MIN) / 60000U);
 
 	if(limit >= OVE_R37_RAMP_FULL_MA) {
-		// Ramp finished: release the limit and return to normal operation.
+		// Ramp finished: Release the limit and return to normal operation.
 		ove_r37.ramp_limit = OVE_R37_NO_LIMIT;
 		ove_r37.state      = OVE_R37_STATE_NORMAL;
 	} else {
@@ -313,46 +337,41 @@ void ove_r37_apply_power_ramp(void) {
 
 // 5.9.3 Symmetriebedingungen
 void ove_r37_check_phase_symmetry(void) {
+	// In Austria single- and two-phase charging is always limited to 16 A
+	if(!ove_r37.phase_connected[0] || !ove_r37.phase_connected[1] || !ove_r37.phase_connected[2]) {
+		ove_r37.symmetry_limit = OVE_R37_SYMMETRY_MAX_DIFF_MA;
+		return;
+	}
+
+	// Three-phase charging: Additionally cap reactively if the measured pairwise
+	// phase current difference exceeds 16 A.
 	if(!ove_r37.current_valid) {
 		ove_r37.symmetry_limit = OVE_R37_NO_LIMIT;
 		return;
 	}
 
-	// Determine the maximum pairwise difference between the connected phase
-	// currents (max - min over all connected phases).
-	uint32_t i_max    = 0;
-	uint32_t i_min    = 0xFFFFFFFFU;
-	bool     any      = false;
-	for(uint8_t i = 0; i < 3; i++) {
-		if(ove_r37.phase_connected[i]) {
-			any   = true;
-			i_max = MAX(i_max, ove_r37.current[i]);
-			i_min = MIN(i_min, ove_r37.current[i]);
-		}
-	}
-
-	if(!any) {
-		ove_r37.symmetry_limit = OVE_R37_NO_LIMIT;
-		return;
+	uint32_t i_max = ove_r37.current[0];
+	uint32_t i_min = ove_r37.current[0];
+	for(uint8_t i = 1; i < 3; i++) {
+		i_max = MAX(i_max, ove_r37.current[i]);
+		i_min = MIN(i_min, ove_r37.current[i]);
 	}
 
 	const uint32_t diff = i_max - i_min;
 
 	if(diff > OVE_R37_SYMMETRY_MAX_DIFF_MA) {
 		// Cap the offered current to 16 A so the maximum phase difference can
-		// not exceed 16 A. We have up to 60 s to react and act immediately.
+		// not exceed 16 A. We have up to 60 s to react.
 		ove_r37.symmetry_limit = OVE_R37_SYMMETRY_MAX_DIFF_MA;
 	} else if(diff < OVE_R37_SYMMETRY_RELEASE_DIFF_MA) {
-		// Sufficiently balanced again: release the cap (hysteresis avoids
-		// oscillation around the 16 A threshold).
+		// Sufficiently balanced again, release the cap with hysteresis.
 		ove_r37.symmetry_limit = OVE_R37_NO_LIMIT;
 	}
-	// In the hysteresis band the previous symmetry_limit is kept.
 }
 
 // 5.9.2 Prüfung B
 void ove_r37_apply_start_delay(void) {
-	// No charge requested: clear the delay state.
+	// No charge requested: Clear the delay state.
 	if(!ove_r37.charge_requested) {
 		ove_r37.charge_requested_last = false;
 		ove_r37.start_delay_ref       = 0;
@@ -360,7 +379,7 @@ void ove_r37_apply_start_delay(void) {
 		return;
 	}
 
-	// Rising edge of a charge request: take the delay reference time.
+	// Rising edge of a charge request: Take the delay reference time.
 	if(!ove_r37.charge_requested_last) {
 		ove_r37.charge_requested_last = true;
 		ove_r37.start_delay_ref       = ove_r37_now_ms();
@@ -372,8 +391,7 @@ void ove_r37_apply_start_delay(void) {
 	}
 
 	// Hold the start off until the configured delay has elapsed.
-	ove_r37.start_delay_active = !system_timer_is_time_elapsed_ms(ove_r37.start_delay_ref,
-	                                                              (uint32_t)ove_r37.start_delay_s * 1000U);
+	ove_r37.start_delay_active = !system_timer_is_time_elapsed_ms(ove_r37.start_delay_ref, (uint32_t)ove_r37.start_delay_s * 1000U);
 }
 
 void ove_r37_update_charging_slot(void) {
@@ -386,6 +404,7 @@ void ove_r37_update_charging_slot(void) {
 
 		case OVE_R37_STATE_TRIPPED:
 		case OVE_R37_STATE_WAIT:
+		case OVE_R37_STATE_BOOT:
 			limit = 0;
 			break;
 
