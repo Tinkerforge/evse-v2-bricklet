@@ -243,3 +243,6 @@
 
 2026-05-13: 2.2.23 (8d5f0389)
 - Add support for WM3M4
+
+2026-07-XX: 2.2.24 (TBD)
+- Fix wakeup timing when ISO 15118 active [WARP4 only]

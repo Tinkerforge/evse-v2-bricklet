@@ -150,6 +150,11 @@ void iec61851_set_state(IEC61851State state) {
 			led_set_on(false);
 		}
 
+		if((iec61851.state != IEC61851_STATE_C) && (state == IEC61851_STATE_C)) {
+			// We start charging, so the next b1b2 transition is per definition not the first one.
+			iec61851.first_b1b2_transition = false;
+		}
+
 		if((iec61851.state != IEC61851_STATE_A) && (state == IEC61851_STATE_A)) {
 			// If we change to state A, we know that no car is connected.
 			// As long as the contactor is not turned on we can arbitrarily switch phases now.
@@ -169,6 +174,9 @@ void iec61851_set_state(IEC61851State state) {
 			if(iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_IEC61851_TEMPORARY) {
 				iec61851.charging_protocol = EVSE_V2_CHARGING_PROTOCOL_ISO15118;
 			}
+
+			// The next b1b2 transition will be the first for the next EV.
+			iec61851.first_b1b2_transition = true;
 		}
 
 		// If we are in state A or in an error state, we will only allow to turn the contactor on after the next diode check.
@@ -284,11 +292,12 @@ void iec61851_handle_ev_wakeup(uint32_t ma) {
 		// until the EVSE does a CP disconnect wakeup. The normal B1->B2 wakeup
 		// timeout is 90 seconds. Set the transition time 80s in the past so the
 		// first CP disconnect fires after ~10 seconds instead.
-		if(iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_IEC61851_TEMPORARY) {
+		if(iec61851.first_b1b2_transition && (iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_IEC61851_TEMPORARY)) {
 			iec61851.state_b1b2_transition_time = system_timer_get_ms() - 80*1000;
 		} else {
 			iec61851.state_b1b2_transition_time = system_timer_get_ms();
 		}
+		iec61851.first_b1b2_transition = false;
 		iec61851.state_b1b2_transition_seen = false;
 	}
 
@@ -583,6 +592,7 @@ void iec61851_tick(void) {
 
 void iec61851_init(void) {
 	memset(&iec61851, 0, sizeof(IEC61851));
+	iec61851.first_b1b2_transition = true;
 	iec61851.last_state_change = system_timer_get_ms();
 	iec61851.boot_time = system_timer_get_ms();
 	if(iec61851.boot_time == 0) {

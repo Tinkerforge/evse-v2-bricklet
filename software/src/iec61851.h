@@ -62,6 +62,8 @@ typedef struct {
 	uint32_t state_b1b2_transition_time;
 	uint32_t state_b1b2_transition_seen;
 
+	bool first_b1b2_transition;
+
 	bool currently_beeing_woken_up;
 	bool instant_phase_switch_allowed;
 
