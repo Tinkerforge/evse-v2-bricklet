@@ -429,7 +429,11 @@ void iec61851_state_b(void) {
 
 	// If EV wakeup function is enabled, we handle the actual wakeup state machine in state B
 	// (when EV is connected but not charging)
-	iec61851_handle_ev_wakeup(ma);
+	if(iec61851.charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118) {
+		iec61851_reset_ev_wakeup();
+	} else {
+		iec61851_handle_ev_wakeup(ma);
+	}
 }
 
 void iec61851_state_c(void) {

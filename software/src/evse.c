@@ -382,7 +382,7 @@ uint16_t evse_get_cp_duty_cycle(void) {
 
 void evse_set_cp_duty_cycle(const float duty_cycle) {
 	static float last_duty_cycle = FLT_MAX;
-	if(((last_duty_cycle == 1000)) && ((duty_cycle > 0) && (duty_cycle < 1000))) {
+	if(((last_duty_cycle == 1000)) && ((duty_cycle > 0) && (duty_cycle < 1000)) && (iec61851.charging_protocol != EVSE_V2_CHARGING_PROTOCOL_ISO15118)) {
 		iec61851.state_b1b2_transition_seen = true;
 	}
 	if(last_duty_cycle != duty_cycle) {

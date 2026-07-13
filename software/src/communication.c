@@ -914,6 +914,10 @@ BootloaderHandleMessageResponse get_phases_connected(const GetPhasesConnected *d
 
 BootloaderHandleMessageResponse set_charging_protocol(const SetChargingProtocol *data) {
 	if(hardware_version.is_v4) {
+		if((data->charging_protocol == EVSE_V2_CHARGING_PROTOCOL_ISO15118) && (iec61851.charging_protocol != EVSE_V2_CHARGING_PROTOCOL_ISO15118)) {
+			iec61851_reset_ev_wakeup();
+		}
+
 		iec61851.charging_protocol      = data->charging_protocol;
 		iec61851.iso15118_cp_duty_cycle = data->cp_duty_cycle;
 	}
