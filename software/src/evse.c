@@ -265,7 +265,6 @@ void evse_load_config(void) {
 		ove_r37.undervoltage_threshold_pu = page[EVSE_CONFIG_OVE_R37_UV_THRESHOLD_POS];
 		ove_r37.undervoltage_observe_ms   = page[EVSE_CONFIG_OVE_R37_UV_OBSERVE_POS];
 		ove_r37.reconnect_wait_s          = page[EVSE_CONFIG_OVE_R37_RECONNECT_WAIT_POS];
-		ove_r37.start_delay_s             = page[EVSE_CONFIG_OVE_R37_START_DELAY_POS];
 	}
 
 	// Handle charging slot defaults
@@ -363,7 +362,7 @@ void evse_save_config(void) {
 	page[EVSE_CONFIG_OVE_R37_UV_THRESHOLD_POS]   = ove_r37.undervoltage_threshold_pu;
 	page[EVSE_CONFIG_OVE_R37_UV_OBSERVE_POS]     = ove_r37.undervoltage_observe_ms;
 	page[EVSE_CONFIG_OVE_R37_RECONNECT_WAIT_POS] = ove_r37.reconnect_wait_s;
-	page[EVSE_CONFIG_OVE_R37_START_DELAY_POS]    = ove_r37.start_delay_s;
+	page[EVSE_CONFIG_OVE_R37_START_DELAY_POS]    = 0;
 
 	// Handle charging slot defaults
 	EVSEChargingSlotDefault *slot_default = (EVSEChargingSlotDefault *)(&page[EVSE_CONFIG_SLOT_DEFAULT_POS]);

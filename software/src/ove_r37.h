@@ -71,6 +71,7 @@
 #define OVE_R37_FLAG_VOLTAGE_VALID               (1 << 2)
 #define OVE_R37_FLAG_CURRENT_VALID               (1 << 3)
 #define OVE_R37_FLAG_FREQUENCY_VALID             (1 << 4)
+#define OVE_R37_FLAG_START_DELAY_ACTIVE          (1 << 5)
 
 #define OVE_R37_BOOT_WINDOW_MS                   30000
 
@@ -88,7 +89,6 @@ typedef struct {
 	uint16_t undervoltage_threshold_pu; // 1/1000 pu, default 800 (5.9.8)
 	uint16_t undervoltage_observe_ms;   // observation time before trip, default 3000 (5.9.8)
 	uint16_t reconnect_wait_s;          // tautom, default 60, max 300 (5.7.4.2)
-	uint16_t start_delay_s;             // charge start delay, max 300 (5.9.2 B)
 
 	// Measurement inputs
 	uint32_t voltage[3];
@@ -115,8 +115,9 @@ typedef struct {
 	uint32_t wait_start;
 	uint32_t ramp_start;
 	uint32_t boot_start;
+
 	uint32_t start_delay_ref;
-	bool charge_requested_last;
+	uint32_t start_delay_ms;
 	bool start_delay_active;
 
 	// Intermediate per-test current limits
@@ -141,6 +142,8 @@ void ove_r37_check_reconnect_conditions(void);
 void ove_r37_apply_power_ramp(void);
 void ove_r37_check_phase_symmetry(void);
 void ove_r37_apply_start_delay(void);
+void ove_r37_arm_start_delay(uint16_t seconds);
+uint16_t ove_r37_get_start_delay_remaining_s(void);
 void ove_r37_update_charging_slot(void);
 
 uint8_t ove_r37_get_flags(void);

@@ -131,7 +131,6 @@ void ove_r37_init(void) {
 	ove_r37.undervoltage_threshold_pu = OVE_R37_UNDERVOLTAGE_TRIP_PU_DEFAULT;
 	ove_r37.undervoltage_observe_ms   = OVE_R37_UNDERVOLTAGE_OBSERVE_MS_DEFAULT;
 	ove_r37.reconnect_wait_s          = OVE_R37_RECONNECT_WAIT_S_DEFAULT;
-	ove_r37.start_delay_s             = 0;
 
 	ove_r37.state          = OVE_R37_STATE_DISABLED;
 	ove_r37.trip_reason    = OVE_R37_TRIP_NONE;
@@ -149,17 +148,16 @@ void ove_r37_tick(void) {
 	ove_r37_update_measurements();
 
 	if(!ove_r37.enabled) {
-		ove_r37.state          = OVE_R37_STATE_DISABLED;
-		ove_r37.trip_reason    = OVE_R37_TRIP_NONE;
-		ove_r37.symmetry_limit = OVE_R37_NO_LIMIT;
-		ove_r37.ramp_limit     = OVE_R37_NO_LIMIT;
+		ove_r37.state              = OVE_R37_STATE_DISABLED;
+		ove_r37.trip_reason        = OVE_R37_TRIP_NONE;
+		ove_r37.symmetry_limit     = OVE_R37_NO_LIMIT;
+		ove_r37.ramp_limit         = OVE_R37_NO_LIMIT;
+		ove_r37.start_delay_active = false;
 		ove_r37_update_charging_slot();
 		return;
 	}
 
 	// A charge is requested once a vehicle is connected (IEC state B or C).
-	// The rising edge (A -> B) starts the configurable start delay (5.9.2 B),
-	// which holds off the X1 -> X2 (PWM) charge start.
 	ove_r37.charge_requested = (iec61851.state == IEC61851_STATE_B) ||
 	                           (iec61851.state == IEC61851_STATE_C);
 
@@ -369,29 +367,58 @@ void ove_r37_check_phase_symmetry(void) {
 	}
 }
 
-// 5.9.2 Prüfung B
+// 5.9.2 Prüfung B: One-shot randomized charge start delay.
+// Armed by the ESP32 when a charging program with a preset start time wants
+// to start a charge. The reference time is the moment of arming (= the
+// programmed start time), so the X1 -> X2 transition happens at a random
+// delay of 0..300 s after the programmed start time.
+void ove_r37_arm_start_delay(uint16_t seconds) {
+	// A start delay of 0 is a no-op (nothing to hold off).
+	if(seconds == 0) {
+		return;
+	}
+
+	if(!ove_r37.enabled) {
+		return;
+	}
+
+	// Never interrupt a running charge: The delay only holds off the charge
+	// start (X1 -> X2), it must not force X2 -> X1.
+	if((iec61851.state == IEC61851_STATE_C) || (iec61851.state == IEC61851_STATE_D)) {
+		return;
+	}
+
+	ove_r37.start_delay_ref    = ove_r37_now_ms();
+	ove_r37.start_delay_ms     = (uint32_t)(seconds * 1000U);
+	ove_r37.start_delay_active = true;
+
+	// Apply the charging slot immediately to avoid race condition.
+	ove_r37_update_charging_slot();
+}
+
+uint16_t ove_r37_get_start_delay_remaining_s(void) {
+	if(!ove_r37.start_delay_active) {
+		return 0;
+	}
+
+	const uint32_t elapsed = system_timer_get_ms() - ove_r37.start_delay_ref;
+	if(elapsed >= ove_r37.start_delay_ms) {
+		return 0;
+	}
+
+	return (uint16_t)((ove_r37.start_delay_ms - elapsed + 999U) / 1000U);
+}
+
 void ove_r37_apply_start_delay(void) {
-	// No charge requested: Clear the delay state.
-	if(!ove_r37.charge_requested) {
-		ove_r37.charge_requested_last = false;
-		ove_r37.start_delay_ref       = 0;
-		ove_r37.start_delay_active    = false;
+	if(!ove_r37.start_delay_active) {
 		return;
 	}
 
-	// Rising edge of a charge request: Take the delay reference time.
-	if(!ove_r37.charge_requested_last) {
-		ove_r37.charge_requested_last = true;
-		ove_r37.start_delay_ref       = ove_r37_now_ms();
-	}
-
-	if(ove_r37.start_delay_s == 0) {
+	// The delay expires by time, regardless of the vehicle state. A vehicle
+	// that connects during the delay window is held off until expiry.
+	if(system_timer_is_time_elapsed_ms(ove_r37.start_delay_ref, ove_r37.start_delay_ms)) {
 		ove_r37.start_delay_active = false;
-		return;
 	}
-
-	// Hold the start off until the configured delay has elapsed.
-	ove_r37.start_delay_active = !system_timer_is_time_elapsed_ms(ove_r37.start_delay_ref, (uint32_t)ove_r37.start_delay_s * 1000U);
 }
 
 void ove_r37_update_charging_slot(void) {
@@ -417,7 +444,7 @@ void ove_r37_update_charging_slot(void) {
 			break;
 	}
 
-	// The configurable start delay holds off the charge start (5.9.2 B).
+	// The one-shot randomized start delay holds off the charge start (5.9.2 B).
 	if(((ove_r37.state == OVE_R37_STATE_NORMAL) || (ove_r37.state == OVE_R37_STATE_RAMP)) && ove_r37.start_delay_active) {
 		limit = 0;
 	}
@@ -439,5 +466,6 @@ uint8_t ove_r37_get_flags(void) {
 	       (ove_r37.frequency_in_range ? OVE_R37_FLAG_FREQUENCY_IN_RANGE : 0) |
 	       (ove_r37.voltage_valid      ? OVE_R37_FLAG_VOLTAGE_VALID      : 0) |
 	       (ove_r37.current_valid      ? OVE_R37_FLAG_CURRENT_VALID      : 0) |
-	       (ove_r37.frequency_valid    ? OVE_R37_FLAG_FREQUENCY_VALID    : 0);
+	       (ove_r37.frequency_valid    ? OVE_R37_FLAG_FREQUENCY_VALID    : 0) |
+	       (ove_r37.start_delay_active ? OVE_R37_FLAG_START_DELAY_ACTIVE : 0);
 }

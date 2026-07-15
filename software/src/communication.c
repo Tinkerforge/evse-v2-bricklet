@@ -1243,16 +1243,17 @@ BootloaderHandleMessageResponse set_ove_r37_configuration(const SetOVER37Configu
 	if((ove_r37.enabled                   != data->enabled)                       ||
 	   (ove_r37.undervoltage_threshold_pu != data->undervoltage_threshold)        ||
 	   (ove_r37.undervoltage_observe_ms   != data->undervoltage_observation_time) ||
-	   (ove_r37.reconnect_wait_s          != data->reconnect_wait_time)           ||
-	   (ove_r37.start_delay_s             != data->start_delay)) {
+	   (ove_r37.reconnect_wait_s          != data->reconnect_wait_time)) {
 		ove_r37.enabled                   = data->enabled;
 		ove_r37.undervoltage_threshold_pu = data->undervoltage_threshold;
 		ove_r37.undervoltage_observe_ms   = data->undervoltage_observation_time;
 		ove_r37.reconnect_wait_s          = data->reconnect_wait_time;
-		ove_r37.start_delay_s             = data->start_delay;
 
 		evse_save_config();
 	}
+
+	// The start delay is volatile and not saved in eeprom
+	ove_r37_arm_start_delay(data->start_delay);
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -1263,7 +1264,7 @@ BootloaderHandleMessageResponse get_ove_r37_configuration(const GetOVER37Configu
 	response->undervoltage_threshold        = ove_r37.undervoltage_threshold_pu;
 	response->undervoltage_observation_time = ove_r37.undervoltage_observe_ms;
 	response->reconnect_wait_time           = ove_r37.reconnect_wait_s;
-	response->start_delay                   = ove_r37.start_delay_s;
+	response->start_delay                   = ove_r37_get_start_delay_remaining_s();
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
