@@ -340,6 +340,9 @@ BootloaderHandleMessageResponse set_charging_slot_clear_on_disconnect(const SetC
 	}
 
 	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
+	if((iec61851.state == IEC61851_STATE_A) && data->clear_on_disconnect) {
+		charging_slot.max_current[data->slot] = 0;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
