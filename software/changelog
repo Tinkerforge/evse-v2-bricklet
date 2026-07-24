@@ -250,4 +250,4 @@
 2026-07-XX: 2.2.25 (TBD)
 - Add support for OVE-Richtlinie R 37
 - Only save to flash if config changed
-- Clear slot if no ev is connected and clear on disconnect is set
+- Set slot to default value, if defaults change

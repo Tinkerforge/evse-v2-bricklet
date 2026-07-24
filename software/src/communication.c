@@ -340,9 +340,6 @@ BootloaderHandleMessageResponse set_charging_slot_clear_on_disconnect(const SetC
 	}
 
 	charging_slot.clear_on_disconnect[data->slot] = data->clear_on_disconnect;
-	if((iec61851.state == IEC61851_STATE_A) && data->clear_on_disconnect) {
-		charging_slot.max_current[data->slot] = 0;
-	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -388,6 +385,10 @@ BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotD
 		charging_slot.max_current_default[slot]         = data->max_current;
 		charging_slot.active_default[slot]              = data->active;
 		charging_slot.clear_on_disconnect_default[slot] = data->clear_on_disconnect;
+
+		charging_slot.max_current[slot]         = data->max_current;
+		charging_slot.active[slot]              = data->active;
+		charging_slot.clear_on_disconnect[slot] = data->clear_on_disconnect;
 
 		evse_save_config();
 	}
