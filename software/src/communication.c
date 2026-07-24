@@ -386,9 +386,9 @@ BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotD
 		charging_slot.active_default[slot]              = data->active;
 		charging_slot.clear_on_disconnect_default[slot] = data->clear_on_disconnect;
 
-		charging_slot.max_current[slot]         = data->max_current;
-		charging_slot.active[slot]              = data->active;
-		charging_slot.clear_on_disconnect[slot] = data->clear_on_disconnect;
+		charging_slot.max_current[slot+2]         = data->max_current;
+		charging_slot.active[slot+2]              = data->active;
+		charging_slot.clear_on_disconnect[slot+2] = data->clear_on_disconnect;
 
 		evse_save_config();
 	}
