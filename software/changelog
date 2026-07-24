@@ -249,3 +249,4 @@
 
 2026-07-XX: 2.2.25 (TBD)
 - Add support for OVE-Richtlinie R 37
+- Only save to flash if config changed

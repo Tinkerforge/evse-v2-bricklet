@@ -379,11 +379,15 @@ BootloaderHandleMessageResponse set_charging_slot_default(const SetChargingSlotD
 
 	const uint8_t slot = data->slot - 2;
 
-	charging_slot.max_current_default[slot]         = data->max_current;
-	charging_slot.active_default[slot]              = data->active;
-	charging_slot.clear_on_disconnect_default[slot] = data->clear_on_disconnect;
+	if((charging_slot.max_current_default[slot]         != data->max_current) ||
+	   (charging_slot.active_default[slot]              != data->active)      ||
+	   (charging_slot.clear_on_disconnect_default[slot] != data->clear_on_disconnect)) {
+		charging_slot.max_current_default[slot]         = data->max_current;
+		charging_slot.active_default[slot]              = data->active;
+		charging_slot.clear_on_disconnect_default[slot] = data->clear_on_disconnect;
 
-	evse_save_config();
+		evse_save_config();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -465,6 +469,10 @@ BootloaderHandleMessageResponse reset_dc_fault_current_state(const ResetDCFaultC
 }
 
 BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguration *data) {
+	const bool changed = (evse.shutdown_input_configuration != data->shutdown_input_configuration) ||
+	                     (evse.input_configuration          != data->input_configuration)          ||
+	                     (evse.output_configuration         != data->output_configuration);
+
 	evse.shutdown_input_configuration = data->shutdown_input_configuration;
 	evse.input_configuration          = data->input_configuration;
 	evse.output_configuration         = data->output_configuration;
@@ -478,7 +486,9 @@ BootloaderHandleMessageResponse set_gpio_configuration(const SetGPIOConfiguratio
 		}
 	}
 
-	evse_save_config(); // Save shutdown input, input and output config
+	if(changed) {
+		evse_save_config(); // Save shutdown input, input and output config
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -619,9 +629,11 @@ BootloaderHandleMessageResponse set_button_configuration(const SetButtonConfigur
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	button.configuration = data->button_configuration;
+	if(button.configuration != data->button_configuration) {
+		button.configuration = data->button_configuration;
 
-	evse_save_config(); // Save button config
+		evse_save_config(); // Save button config
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -648,8 +660,10 @@ BootloaderHandleMessageResponse set_ev_wakeup(const SetEVWakeup *data) {
 	// If ev wakeup is enabled we adhere to IEC 61851 Annex A.5.3
 	// Information on difficulties encountered with some legacy EVs
 	// for wake-up after a long period of inactivity.
-	evse.ev_wakeup_enabled = data->ev_wakeup_enabled;
-	evse_save_config();
+	if(evse.ev_wakeup_enabled != data->ev_wakeup_enabled) {
+		evse.ev_wakeup_enabled = data->ev_wakeup_enabled;
+		evse_save_config();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -798,8 +812,10 @@ BootloaderHandleMessageResponse get_button_press_boot_time(const GetButtonPressB
 }
 
 BootloaderHandleMessageResponse set_boost_mode(const SetBoostMode *data) {
-	evse.boost_mode_enabled = data->boost_mode_enabled;
-	evse_save_config();
+	if(evse.boost_mode_enabled != data->boost_mode_enabled) {
+		evse.boost_mode_enabled = data->boost_mode_enabled;
+		evse_save_config();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -1191,8 +1207,10 @@ BootloaderHandleMessageResponse set_phase_switch_wait_time(const SetPhaseSwitchW
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	phase_control.phase_switch_wait_time = data->phase_switch_wait_time;
-	evse_save_config();
+	if(phase_control.phase_switch_wait_time != data->phase_switch_wait_time) {
+		phase_control.phase_switch_wait_time = data->phase_switch_wait_time;
+		evse_save_config();
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
