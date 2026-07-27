@@ -48,6 +48,7 @@
 #include "eichrecht.h"
 #include "plc.h"
 #include "ove_r37.h"
+#include "iskra_display.h"
 
 #define LOW_LEVEL_PASSWORD 0x4223B00B
 
@@ -128,6 +129,10 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_OVE_R37_CONFIGURATION:             return length != sizeof(SetOVER37Configuration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_ove_r37_configuration(message);
 		case FID_GET_OVE_R37_CONFIGURATION:             return length != sizeof(GetOVER37Configuration)           ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_ove_r37_configuration(message, response);
 		case FID_GET_OVE_R37_STATUS:                    return length != sizeof(GetOVER37Status)                  ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_ove_r37_status(message, response);
+		case FID_SET_ENERGY_METER_DISPLAY_TEXT:         return length != sizeof(SetEnergyMeterDisplayText)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_energy_meter_display_text(message);
+		case FID_GET_ENERGY_METER_DISPLAY_TEXT:         return length != sizeof(GetEnergyMeterDisplayText)        ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_energy_meter_display_text(message, response);
+		case FID_SET_ENERGY_METER_DISPLAY_BACKLIGHT:    return length != sizeof(SetEnergyMeterDisplayBacklight)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : set_energy_meter_display_backlight(message);
+		case FID_GET_ENERGY_METER_DISPLAY_BACKLIGHT:    return length != sizeof(GetEnergyMeterDisplayBacklight)   ? HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER : get_energy_meter_display_backlight(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -1296,6 +1301,39 @@ BootloaderHandleMessageResponse get_ove_r37_status(const GetOVER37Status *data, 
 	response->state         = ove_r37.state;
 	response->trip_reason   = ove_r37.trip_reason;
 	response->flags         = ove_r37_get_flags();
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_energy_meter_display_text(const SetEnergyMeterDisplayText *data) {
+	memcpy(iskra_display.text,  data->text,  ISKRA_DISPLAY_TEXT_LENGTH);
+	memcpy(iskra_display.label, data->label, ISKRA_DISPLAY_LABEL_LENGTH);
+	iskra_display.text_pending = true;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_energy_meter_display_text(const GetEnergyMeterDisplayText *data, GetEnergyMeterDisplayText_Response *response) {
+	response->header.length = sizeof(GetEnergyMeterDisplayText_Response);
+	memcpy(response->text,  iskra_display.text,  ISKRA_DISPLAY_TEXT_LENGTH);
+	memcpy(response->label, iskra_display.label, ISKRA_DISPLAY_LABEL_LENGTH);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_energy_meter_display_backlight(const SetEnergyMeterDisplayBacklight *data) {
+	if(data->backlight > EVSE_V2_ENERGY_METER_DISPLAY_BACKLIGHT_AUTOMATIC) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	iskra_display.backlight_mode = data->backlight;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_energy_meter_display_backlight(const GetEnergyMeterDisplayBacklight *data, GetEnergyMeterDisplayBacklight_Response *response) {
+	response->header.length = sizeof(GetEnergyMeterDisplayBacklight_Response);
+	response->backlight     = iskra_display.backlight_mode;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

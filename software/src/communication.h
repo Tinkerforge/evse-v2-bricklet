@@ -274,6 +274,10 @@ void communication_init(void);
 #define EVSE_V2_OVE_R37_FLAGS_CURRENT_VALID 8
 #define EVSE_V2_OVE_R37_FLAGS_FREQUENCY_VALID 16
 
+#define EVSE_V2_ENERGY_METER_DISPLAY_BACKLIGHT_OFF 0
+#define EVSE_V2_ENERGY_METER_DISPLAY_BACKLIGHT_ON 1
+#define EVSE_V2_ENERGY_METER_DISPLAY_BACKLIGHT_AUTOMATIC 2
+
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define EVSE_V2_BOOTLOADER_MODE_FIRMWARE 1
 #define EVSE_V2_BOOTLOADER_MODE_BOOTLOADER_WAIT_FOR_REBOOT 2
@@ -363,6 +367,10 @@ void communication_init(void);
 #define FID_SET_OVE_R37_CONFIGURATION 71
 #define FID_GET_OVE_R37_CONFIGURATION 72
 #define FID_GET_OVE_R37_STATUS 73
+#define FID_SET_ENERGY_METER_DISPLAY_TEXT 74
+#define FID_GET_ENERGY_METER_DISPLAY_TEXT 75
+#define FID_SET_ENERGY_METER_DISPLAY_BACKLIGHT 76
+#define FID_GET_ENERGY_METER_DISPLAY_BACKLIGHT 77
 
 #define FID_CALLBACK_ENERGY_METER_VALUES 45
 #define FID_CALLBACK_EICHRECHT_DATASET_LOW_LEVEL 59
@@ -1069,6 +1077,37 @@ typedef struct {
 	uint8_t flags;
 } __attribute__((__packed__)) GetOVER37Status_Response;
 
+typedef struct {
+	TFPMessageHeader header;
+	char text[8];
+	char label[4];
+} __attribute__((__packed__)) SetEnergyMeterDisplayText;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEnergyMeterDisplayText;
+
+typedef struct {
+	TFPMessageHeader header;
+	char text[8];
+	char label[4];
+} __attribute__((__packed__)) GetEnergyMeterDisplayText_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t backlight;
+} __attribute__((__packed__)) SetEnergyMeterDisplayBacklight;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetEnergyMeterDisplayBacklight;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t backlight;
+} __attribute__((__packed__)) GetEnergyMeterDisplayBacklight_Response;
+
+
 
 // Function prototypes
 BootloaderHandleMessageResponse get_state(const GetState *data, GetState_Response *response);
@@ -1141,6 +1180,10 @@ BootloaderHandleMessageResponse get_test_mode(const GetTestMode *data, GetTestMo
 BootloaderHandleMessageResponse set_ove_r37_configuration(const SetOVER37Configuration *data);
 BootloaderHandleMessageResponse get_ove_r37_configuration(const GetOVER37Configuration *data, GetOVER37Configuration_Response *response);
 BootloaderHandleMessageResponse get_ove_r37_status(const GetOVER37Status *data, GetOVER37Status_Response *response);
+BootloaderHandleMessageResponse set_energy_meter_display_text(const SetEnergyMeterDisplayText *data);
+BootloaderHandleMessageResponse get_energy_meter_display_text(const GetEnergyMeterDisplayText *data, GetEnergyMeterDisplayText_Response *response);
+BootloaderHandleMessageResponse set_energy_meter_display_backlight(const SetEnergyMeterDisplayBacklight *data);
+BootloaderHandleMessageResponse get_energy_meter_display_backlight(const GetEnergyMeterDisplayBacklight *data, GetEnergyMeterDisplayBacklight_Response *response);
 
 // Callbacks
 bool handle_energy_meter_values_callback(void);

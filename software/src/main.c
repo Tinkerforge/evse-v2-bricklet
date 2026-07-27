@@ -47,6 +47,7 @@
 #include "plc.h"
 #include "frequency.h"
 #include "ove_r37.h"
+#include "iskra_display.h"
 
 int main(void) {
 	logging_init();
@@ -71,6 +72,7 @@ int main(void) {
 	eichrecht_init();
 	plc_init();
 	frequency_init();
+	iskra_display_init();
 
 	while(true) {
 		bootloader_tick();
@@ -91,5 +93,6 @@ int main(void) {
 		plc_tick();
 		frequency_tick();
 		ove_r37_tick();
+		iskra_display_tick();
 	}
 }
