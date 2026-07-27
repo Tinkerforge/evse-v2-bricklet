@@ -792,6 +792,9 @@ BootloaderHandleMessageResponse get_all_data_2(const GetAllData2 *data, GetAllDa
 	get_ove_r37_status(NULL, (GetOVER37Status_Response*)&parts);
 	memcpy(&response->ove_r37_state, parts.data, sizeof(GetOVER37Status_Response) - sizeof(TFPMessageHeader));
 
+	get_energy_meter_display_backlight(NULL, (GetEnergyMeterDisplayBacklight_Response*)&parts);
+	memcpy(&response->energy_meter_display_backlight, parts.data, sizeof(GetEnergyMeterDisplayBacklight_Response) - sizeof(TFPMessageHeader));
+
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 

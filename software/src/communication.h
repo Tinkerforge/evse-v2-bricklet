@@ -710,6 +710,7 @@ typedef struct {
 	uint8_t ove_r37_state;
 	uint8_t ove_r37_trip_reason;
 	uint8_t ove_r37_flags;
+	uint8_t energy_meter_display_backlight;
 } __attribute__((__packed__)) GetAllData2_Response;
 
 typedef struct {
