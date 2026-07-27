@@ -251,3 +251,4 @@
 - Add support for OVE-Richtlinie R 37
 - Only save to flash if config changed
 - Set slot to default value, if defaults change
+- Add support for iskra meter display control (backlight, text and label)
