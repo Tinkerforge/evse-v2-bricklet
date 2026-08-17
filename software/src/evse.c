@@ -418,10 +418,16 @@ void evse_set_cp_duty_cycle(const float duty_cycle) {
 		adc_boost = EVSE_BOOST_MODE_US;
 	}
 
-	const uint16_t current_cp_duty_cycle = evse_get_cp_pwm_duty_cycle();
-	const uint16_t new_cp_duty_cycle     = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5f);
+	// Note: We must not compare against evse_get_cp_pwm_duty_cycle() here to find out if
+	// the compare value has to be updated. XMC_CCU4_SLICE_SetTimerCompareMatch() writes the
+	// shadow register (CRS), while XMC_CCU4_SLICE_GetTimerCompareMatch() reads the active
+	// register (CR), which is only updated on the next period match (up to 1ms later).
+	static uint16_t last_written_cp_duty_cycle = 0xFFFF; // impossible value (valid range 0-48000)
+	const uint16_t new_cp_duty_cycle = (uint16_t)(48000 - (duty_cycle + adc_boost)*48 + 0.5f);
 
-	if(current_cp_duty_cycle != new_cp_duty_cycle) {
+	if(last_written_cp_duty_cycle != new_cp_duty_cycle) {
+		last_written_cp_duty_cycle = new_cp_duty_cycle;
+
 		adc_enable_all(duty_cycle > 999.99f);
 
 		// EVSE V2 uses CCU40, EVSE V3 and V4 uses CCU41

@@ -73,6 +73,9 @@ typedef struct {
 	uint32_t pp_pe_resistance;
 
 	bool cp_pe_is_ignored;
+
+	uint32_t stall_recovery_counter;
+	uint32_t stall_recovery_consecutive;
 } ADCResult;
 
 extern ADC *adc;

@@ -217,6 +217,39 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) ad
 }
 #endif
 
+static void adc_init_background(void) {
+	const XMC_VADC_BACKGROUND_CONFIG_t adc_background_config = {
+		.conv_start_mode   = XMC_VADC_STARTMODE_CIR,       // Conversion start mode selected as cancel inject repeat
+		.req_src_priority  = XMC_VADC_GROUP_RS_PRIORITY_1, // Priority of the Background request source in the VADC module
+		.trigger_signal    = hardware_version.is_v2 ?  XMC_VADC_REQ_TR_A : XMC_VADC_REQ_TR_C, // If Trigger needed then this denotes the Trigger signal
+		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
+		.gate_signal       = hardware_version.is_v2 ?  XMC_VADC_REQ_GT_A : XMC_VADC_REQ_GT_C, // If Gating needed then this denotes the Gating signal
+		.timer_mode        = 0,							   // Timer Mode Disabled
+		.external_trigger  = 1,                            // Trigger is Enabled
+		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled
+		.enable_auto_scan  = 0,
+		.load_mode         = XMC_VADC_SCAN_LOAD_OVERWRITE
+	};
+
+	XMC_VADC_GLOBAL_BackgroundInit(VADC, &adc_background_config);
+}
+
+static bool adc_scan_all_channels = true;
+
+// Apply the background scan channel selection with a single BRSSEL register write per group.
+static void adc_apply_channel_selection(void) {
+	uint32_t brssel[2] = {0, 0};
+
+	// If PWM is off we evaluate all ADC channels, otherwise only CP/PE
+	const uint8_t num = adc_scan_all_channels ? ADC_NUM : ADC_NUM_WITH_PWM;
+	for(uint8_t i = 0; i < num; i++) {
+		brssel[adc[i].group_index] |= 1UL << adc[i].channel_num;
+	}
+
+	VADC->BRSSEL[0] = brssel[0];
+	VADC->BRSSEL[1] = brssel[1];
+}
+
 void adc_init_adc(void) {
 	if(hardware_version.is_v2) {
 		adc = adc_v2;
@@ -272,20 +305,6 @@ void adc_init_adc(void) {
 		.event_gen_enable   	= 0  // Disable Result event
 	};
 
-	// LLD Background Scan Init Structure
-	const XMC_VADC_BACKGROUND_CONFIG_t adc_background_config = {
-		.conv_start_mode   = XMC_VADC_STARTMODE_CIR,       // Conversion start mode selected as cancel inject repeat
-		.req_src_priority  = XMC_VADC_GROUP_RS_PRIORITY_1, // Priority of the Background request source in the VADC module
-		.trigger_signal    = hardware_version.is_v2 ?  XMC_VADC_REQ_TR_A : XMC_VADC_REQ_TR_C, // If Trigger needed then this denotes the Trigger signal
-		.trigger_edge      = XMC_VADC_TRIGGER_EDGE_RISING,   // If Trigger needed then this denotes Trigger edge selected
-		.gate_signal       = hardware_version.is_v2 ?  XMC_VADC_REQ_GT_A : XMC_VADC_REQ_GT_C, // If Gating needed then this denotes the Gating signal
-		.timer_mode        = 0,							   // Timer Mode Disabled
-		.external_trigger  = 1,                            // Trigger is Enabled
-		.req_src_interrupt = 1,                            // Background Request source interrupt Enabled
-		.enable_auto_scan  = 0,
-		.load_mode         = XMC_VADC_SCAN_LOAD_OVERWRITE
-	};
-
 	const XMC_VADC_GROUP_CONFIG_t group_init_handle = {
 		.emux_config = {
 			.stce_usage                  = 0, 					           // Use STCE when the setting changes
@@ -330,7 +349,7 @@ void adc_init_adc(void) {
 	XMC_VADC_GLOBAL_InputClassInit(VADC, adc_global_iclass_config, XMC_VADC_GROUP_CONV_STD, 0);
 
 	// Initialize the Background Scan hardware
-	XMC_VADC_GLOBAL_BackgroundInit(VADC, &adc_background_config);
+	adc_init_background();
 
 	// Initialize the global result register
 	XMC_VADC_GLOBAL_ResultInit(VADC, &adc_global_result_config);
@@ -395,18 +414,13 @@ void adc_ignore_results(const uint8_t count) {
 }
 
 void adc_enable_all(const bool all) {
-	if(all) { // If PWM is off we evaluate all ADC channels
-		for(uint8_t i = 0; i < ADC_NUM; i++) {
-			XMC_VADC_GLOBAL_BackgroundAddChannelToSequence(VADC, adc[i].group_index, adc[i].channel_num);
-		}
- 	} else { // If PWM is on we only evaluate CP/PE
-		for(uint8_t i = 0; i < ADC_NUM_WITH_PWM; i++) {
-			XMC_VADC_GLOBAL_BackgroundAddChannelToSequence(VADC, adc[i].group_index, adc[i].channel_num);
-		}
-		for(uint8_t i = ADC_NUM_WITH_PWM; i < ADC_NUM; i++) {
-			XMC_VADC_GLOBAL_BackgroundRemoveChannelFromSequence(VADC, adc[i].group_index, adc[i].channel_num);
-		}
+	// Only touch the channel selection if it actually changes.
+	if(adc_scan_all_channels == all) {
+		return;
 	}
+	adc_scan_all_channels = all;
+
+	adc_apply_channel_selection();
 }
 
 void adc_check_result(const uint8_t i) {
@@ -435,14 +449,30 @@ void adc_check_result(const uint8_t i) {
 
 		if(i == 0) {
 			adc->timeout = system_timer_get_ms();
+			adc_result.stall_recovery_consecutive = 0;
 		}
 	} else {
-		if((i == 0) && system_timer_is_time_elapsed_ms(adc->timeout, 60000)) {
-			// Trigger watchdog if we did not get a new result for adc channel 0 for 60 seconds.
-			// In this case something went horribly wrong, since the adc should be triggered automatically in the background at all times.
-			while(true) {
-				__NOP();
+		// If there is no new result for 1s, we re-initialize the background request
+		// source and trigger a new conversion to recover.
+		// This is "defence in depth" it should not happen.
+		if((i == 0) && system_timer_is_time_elapsed_ms(adc->timeout, 1000)) {
+			adc_result.stall_recovery_counter++;
+			adc_result.stall_recovery_consecutive++;
+
+			// If repeated re-initialization does not fix the stall, something went
+			// horribly wrong. In this case we stop the main loop, so the watchdog is
+			// not serviced anymore and the EVSE is reset as a last resort.
+			if(adc_result.stall_recovery_consecutive >= 60) {
+				while(true) {
+					__NOP();
+				}
 			}
+
+			adc_init_background();
+			adc_apply_channel_selection();
+			XMC_VADC_GLOBAL_BackgroundTriggerConversion(VADC);
+
+			adc->timeout = system_timer_get_ms();
 		}
 	}
 }
