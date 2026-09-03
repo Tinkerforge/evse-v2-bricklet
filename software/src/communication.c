@@ -319,10 +319,17 @@ BootloaderHandleMessageResponse set_charging_slot_max_current(const SetChargingS
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	// 7 = CHARGING_SLOT_CHARGE_MANAGER.
+	// The charge manager charging slot needs the "clear on disconnect" feature level triggered instead of edge triggered
+	if((data->slot == 7) && (iec61851.state == IEC61851_STATE_A)) {
+		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	}
+
 	// If button is pressed we don't allow to change the max current in the button slot
 	if(!((data->slot == CHARGING_SLOT_BUTTON) && (button.state == BUTTON_STATE_PRESSED) && (button.configuration & EVSE_V2_BUTTON_CONFIGURATION_STOP_CHARGING))) {
 		charging_slot.max_current[data->slot] = data->max_current;
 	}
+
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
