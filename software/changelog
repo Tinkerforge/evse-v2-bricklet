@@ -252,3 +252,4 @@
 - Only save to flash if config changed
 - Set slot to default value, if defaults change
 - Add support for iskra meter display control (backlight, text and label)
+- Handle clear on disconnect for charge manager slot as level trigger
