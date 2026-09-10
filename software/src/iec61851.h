@@ -76,6 +76,7 @@ typedef struct {
 	uint32_t force_state_f_time;
 
 	bool test_mode;
+	bool test_mode_no_pwm;
 } IEC61851;
 
 extern IEC61851 iec61851;

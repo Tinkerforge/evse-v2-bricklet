@@ -1256,7 +1256,14 @@ BootloaderHandleMessageResponse get_plc_modem(const GetPLCModem *data, GetPLCMod
 
 BootloaderHandleMessageResponse set_test_mode(const SetTestMode *data) {
 	if(data->password == 0xdeadbeef) {
-		iec61851.test_mode = data->test_mode_enabled;
+		iec61851.test_mode        = data->test_mode_enabled;
+		iec61851.test_mode_no_pwm = false;
+		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+	}
+
+	if(data->password == 0xbeefdead) {
+		iec61851.test_mode        = false;
+		iec61851.test_mode_no_pwm = data->test_mode_enabled;
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
