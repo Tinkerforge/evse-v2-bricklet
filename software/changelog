@@ -254,6 +254,6 @@
 - Add support for iskra meter display control (backlight, text and label)
 - Handle clear on disconnect for charge manager slot as level trigger
 
-2026-09-16 2.2.26 (TBD)
+2026-09-16 2.2.26 (ecf2b1c89)
 - Save lock bit for non-eichrecht iskra meter on startup (to remove "not set" from display)
 - Fix race condition between fast read and backlight configuration
