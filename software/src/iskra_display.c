@@ -36,14 +36,17 @@
 #define ISKRA_DISPLAY_REG_LCD_PARAMS    (7062+1) // Row 2 mode bitmask
 #define ISKRA_DISPLAY_REG_CUSTOM_STRING (7063+1) // 8 chars (4 registers)
 #define ISKRA_DISPLAY_REG_CUSTOM_LABEL  (7067+1) // 4 chars (2 registers)
+#define ISKRA_DISPLAY_REG_OPERATOR_COMMAND (12+1)
+#define ISKRA_DISPLAY_REG_CHANGE_LOCK      (7097+1)
+#define ISKRA_DISPLAY_REG_CHANGE_SETTING   (7098+1)
 
-#define ISKRA_DISPLAY_LCD_PARAMS_CONSUMPTION   (1 << 0)
 #define ISKRA_DISPLAY_LCD_PARAMS_CUSTOM_STRING (1 << 3)
 
-// The LCD params register is written without a subsequent "Save Settings"
-// command, so the change is never stored in the EEPROM of the meter.
+// WM3M4 LCD params are saved before permanently locking the configuration.
+// WM3M4C display changes remain volatile.
 
 #define ISKRA_DISPLAY_TIMEOUT 3000
+#define ISKRA_DISPLAY_RETRY_DELAY 10000
 
 IskraDisplay iskra_display;
 
@@ -56,16 +59,6 @@ static bool iskra_display_backlight_write_needed(void) {
 	return !iskra_display.backlight_written_valid || (iskra_display.backlight_written != iskra_display.backlight_desired);
 }
 
-static bool iskra_display_text_is_empty(void) {
-	for(uint8_t i = 0; i < ISKRA_DISPLAY_TEXT_LENGTH; i++) {
-		if((iskra_display.text[i] != '\0') && (iskra_display.text[i] != ' ')) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void iskra_display_tick(void) {
 	const uint32_t t = system_timer_get_ms();
 
@@ -73,9 +66,7 @@ void iskra_display_tick(void) {
 		iskra_display.meter_type_last = (uint8_t)meter.type;
 		if((meter.type == METER_TYPE_WM3M4) || (meter.type == METER_TYPE_WM3M4C)) {
 			iskra_display.backlight_written_valid = false;
-			if(!iskra_display_text_is_empty()) {
-				iskra_display.text_pending = true;
-			}
+			iskra_display.text_pending = true;
 		}
 	}
 
@@ -112,17 +103,54 @@ void iskra_display_tick(void) {
 }
 
 bool iskra_display_has_work(void) {
-	return (iskra_display.state != 0) || iskra_display.text_pending || iskra_display_backlight_write_needed();
+	if(iskra_display.retry_pending && !system_timer_is_time_elapsed_ms(iskra_display.retry_time, ISKRA_DISPLAY_RETRY_DELAY)) {
+		return false;
+	}
+	return (iskra_display.state != 0) || iskra_display.text_pending || iskra_display.lock_pending || iskra_display_backlight_write_needed();
+}
+
+static void iskra_display_retry(void) {
+	modbus_clear_request(&rs485);
+	iskra_display.state = 0;
+	iskra_display.retry_pending = true;
+	iskra_display.retry_time = system_timer_get_ms();
+}
+
+static void iskra_display_read(const uint16_t reg, const uint8_t next_state) {
+	meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, reg, 1);
+	iskra_display.state_time = system_timer_get_ms();
+	iskra_display.state = next_state;
+}
+
+static void iskra_display_write(const uint16_t reg, const uint16_t value, const uint8_t next_state) {
+	MeterRegisterType payload;
+	payload.u16_single = value;
+	meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, reg, &payload);
+	iskra_display.state_time = system_timer_get_ms();
+	iskra_display.state = next_state;
 }
 
 void iskra_display_modbus_tick(void) {
+	if(iskra_display.retry_pending) {
+		if(!system_timer_is_time_elapsed_ms(iskra_display.retry_time, ISKRA_DISPLAY_RETRY_DELAY)) {
+			return;
+		}
+		iskra_display.retry_pending = false;
+	}
+
 	if(iskra_display.state != 0) {
+		// The meter response helpers report completion, including failed requests.
+		// Handle errors before consuming a response or advancing towards the lock.
+		if(rs485.modbus_rtu.request.cb_invoke &&
+		   (rs485.modbus_rtu.request.master_request_timed_out ||
+		    (rs485.modbus_rtu.request.rx_frame[1] == (rs485.modbus_rtu.request.tx_frame[1] + 0x80)))) {
+			// Count the failed response using the common meter response handler.
+			meter_get_write_register_response(rs485.modbus_rtu.request.tx_frame[1]);
+			iskra_display_retry();
+			return;
+		}
 		if(system_timer_is_time_elapsed_ms(iskra_display.state_time, ISKRA_DISPLAY_TIMEOUT)) {
-			modbus_clear_request(&rs485);
-			iskra_display.text_pending            = false;
-			iskra_display.backlight_written       = iskra_display.backlight_desired;
-			iskra_display.backlight_written_valid = true;
-			iskra_display.state                   = 0;
+			iskra_display_retry();
 			return;
 		}
 	}
@@ -138,6 +166,12 @@ void iskra_display_modbus_tick(void) {
 			} else if(iskra_display.text_pending) {
 				meter_write_string(meter.slave_address, ISKRA_DISPLAY_REG_CUSTOM_STRING, iskra_display.text, ISKRA_DISPLAY_TEXT_LENGTH);
 				iskra_display.state = 2;
+			} else if(iskra_display.lock_pending) {
+				if(meter.type == METER_TYPE_WM3M4) {
+					iskra_display_read(ISKRA_DISPLAY_REG_LCD_PARAMS, 5);
+				} else {
+					iskra_display.lock_pending = false;
+				}
 			}
 			break;
 		}
@@ -166,15 +200,10 @@ void iskra_display_modbus_tick(void) {
 			if(meter_get_write_register_response(MODBUS_FC_WRITE_MULTIPLE_REGISTERS)) {
 				modbus_clear_request(&rs485);
 
-				// If a text is set it replaces the normal display values (only the
-				// custom string is shown on row 2). If the text is empty the meter
-				// default is shown again.
+				// Always show the custom string on row 2, including an empty string
+				// by default. Clearing the text must not change the locked LCD mode.
 				MeterRegisterType payload;
-				if(iskra_display_text_is_empty()) {
-					payload.u16_single = ISKRA_DISPLAY_LCD_PARAMS_CONSUMPTION;
-				} else {
-					payload.u16_single = ISKRA_DISPLAY_LCD_PARAMS_CUSTOM_STRING;
-				}
+				payload.u16_single = ISKRA_DISPLAY_LCD_PARAMS_CUSTOM_STRING;
 				meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, meter.slave_address, ISKRA_DISPLAY_REG_LCD_PARAMS, &payload);
 				iskra_display.state_time = system_timer_get_ms();
 				iskra_display.state = 4;
@@ -186,7 +215,81 @@ void iskra_display_modbus_tick(void) {
 			if(meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER)) {
 				modbus_clear_request(&rs485);
 				iskra_display.text_pending = false;
+				iskra_display.lock_pending = (meter.type == METER_TYPE_WM3M4);
 				iskra_display.state = 0;
+			}
+			break;
+		}
+
+		case 5: { // verify that only custom text is selected before locking
+			uint16_t mode = 0;
+			if(meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &mode, 1)) {
+				modbus_clear_request(&rs485);
+				if(mode == ISKRA_DISPLAY_LCD_PARAMS_CUSTOM_STRING) {
+					iskra_display_read(ISKRA_DISPLAY_REG_CHANGE_LOCK, 6);
+				} else {
+					iskra_display.lock_pending = false;
+					iskra_display.state = 0;
+				}
+			}
+			break;
+		}
+
+		case 6: { // check lock status on every attempt, including retries
+			uint16_t locked = 0;
+			if(meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &locked, 1)) {
+				modbus_clear_request(&rs485);
+				if((locked == 0) && (meter.type == METER_TYPE_WM3M4) && !iskra_display.text_pending) {
+					// 47062 is not automatically saved by Change Lock. Persist it
+					// first, otherwise a power cycle could restore an immutable old mode.
+					iskra_display_write(ISKRA_DISPLAY_REG_OPERATOR_COMMAND, 1, 7);
+				} else {
+					iskra_display.lock_pending = false;
+					iskra_display.state = 0;
+				}
+			}
+			break;
+		}
+
+		case 7: { // settings saved -> enable Change Lock writes for 60 seconds
+			if(meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER)) {
+				modbus_clear_request(&rs485);
+				iskra_display_write(ISKRA_DISPLAY_REG_CHANGE_SETTING, 12345, 8);
+			}
+			break;
+		}
+
+		case 8: { // password accepted -> permanently lock WM3M4 configuration
+			if(meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER)) {
+				modbus_clear_request(&rs485);
+				if((meter.type == METER_TYPE_WM3M4) && !iskra_display.text_pending) {
+					iskra_display_write(ISKRA_DISPLAY_REG_CHANGE_LOCK, 1, 9);
+				} else {
+					iskra_display.lock_pending = false;
+					iskra_display.state = 0;
+				}
+			}
+			break;
+		}
+
+		case 9: { // confirm the lock, rather than relying only on the write response
+			if(meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER)) {
+				modbus_clear_request(&rs485);
+				iskra_display_read(ISKRA_DISPLAY_REG_CHANGE_LOCK, 10);
+			}
+			break;
+		}
+
+		case 10: {
+			uint16_t locked = 0;
+			if(meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &locked, 1)) {
+				if(locked != 1) {
+					iskra_display_retry();
+				} else {
+					modbus_clear_request(&rs485);
+					iskra_display.lock_pending = false;
+					iskra_display.state = 0;
+				}
 			}
 			break;
 		}

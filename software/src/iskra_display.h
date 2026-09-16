@@ -34,6 +34,9 @@ typedef struct {
     char text[ISKRA_DISPLAY_TEXT_LENGTH];
     char label[ISKRA_DISPLAY_LABEL_LENGTH];
     bool text_pending;
+    bool lock_pending;
+    bool retry_pending;
+    uint32_t retry_time;
 
     uint8_t backlight_mode;
     bool backlight_desired;
