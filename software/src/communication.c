@@ -467,8 +467,7 @@ BootloaderHandleMessageResponse reset_energy_meter_relative_energy(const ResetEn
 }
 
 BootloaderHandleMessageResponse reset_dc_fault_current_state(const ResetDCFaultCurrentState *data) {
-	// TODO: Only do dc fault reset if currently no calibration running
-	if(data->password == 0xDC42FA23) {
+	if((data->password == 0xDC42FA23) && !dc_fault.calibration_running) {
 		// Set back dc fault state to normal
 		dc_fault.state = DC_FAULT_NORMAL_CONDITION;
 
