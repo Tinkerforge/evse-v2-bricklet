@@ -562,6 +562,8 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 
 	response->header.length = sizeof(SetIndicatorLED_Response);
 
+	const bool color_changed = (led.set_h != data->color_h) || (led.set_s != data->color_s) || (led.set_v != data->color_v);
+
 	led.set_h = data->color_h;
 	led.set_s = data->color_s;
 	led.set_v = data->color_v;
@@ -592,9 +594,9 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 		}
 	}
 
-	// If the state and indication stays the same we just update the duration
+	// If the state, indication and color stays the same we just update the duration
 	// This way the animation does not become choppy
-	if((led.state == LED_STATE_API) && (led.api_indication == data->indication)) {
+	if((led.state == LED_STATE_API) && (led.api_indication == data->indication) && !color_changed) {
 
 		led.api_duration = data->duration;
 		led.api_start    = system_timer_get_ms();
@@ -617,6 +619,9 @@ BootloaderHandleMessageResponse set_indicator_led(const SetIndicatorLED *data, S
 		led.api_nag_counter  = 0;
 		led.api_nag_index    = 0;
 		led.api_nag_time     = 0;
+
+		// Restart external blink pattern (e.g. same blink indication with new color)
+		led.blink_external   = -1;
 
 		if(data->indication < 0) {
 			// If LED state is currently LED_STATE_OFF or LED_STATE_ON we
