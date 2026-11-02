@@ -257,3 +257,7 @@
 2026-09-16 2.2.26 (ecf2b1c89)
 - Save lock bit for non-eichrecht iskra meter on startup (to remove "not set" from display)
 - Fix race condition between fast read and backlight configuration
+
+TBD: 2.2.27 (TBD)
+- Only allow dc fault reset when no calibration running
+- Restart indicator LED animation if color changes for same indication
